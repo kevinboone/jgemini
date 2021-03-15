@@ -1,0 +1,15 @@
+Caching (but how, given the lack of timestamp?)
+
+Refresh (is it needed?)
+
+Do something with broken links like "about:xxx" and "gopher:xxx"
+
+Catch redirect loops
+
+Consider tidying up list item spacing
+
+Tidy up Markdown formatting
+
+Fix relative links in Markdown (maybe -- they probably aren't used)
+
+Gopher support?
