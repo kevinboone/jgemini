@@ -106,6 +106,9 @@ public class GeminiConnection extends URLConnection
 	    content_buffer.write (data, 0, nRead);
 	    }
           }
+        catch (java.net.SocketException e)
+          {
+          }
         catch (javax.net.ssl.SSLException e)
           {
           // I think that sometimes the server closes its end of the
