@@ -48,6 +48,10 @@ public class TopBar extends JPanel
     ImageIcon homeIcon = new ImageIcon (homeImgURL);
     JButton homeButton = new JButton (homeIcon);
     homeButton.addActionListener((event) -> htmlViewer.goHome());
+    java.net.URL refreshImgURL = getClass().getResource("/images/refresh.png");
+    ImageIcon refreshIcon = new ImageIcon (refreshImgURL);
+    JButton refreshButton = new JButton (refreshIcon);
+    refreshButton.addActionListener((event) -> htmlViewer.refresh());
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 1.0;
@@ -56,6 +60,7 @@ public class TopBar extends JPanel
 
     add (backButton);
     add (homeButton);
+    add (refreshButton);
     add (urlBox, c);
     }
 

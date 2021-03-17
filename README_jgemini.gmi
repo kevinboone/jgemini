@@ -1,4 +1,4 @@
-# JGemini 
+# JGemini
 
 A Java-based graphical browser for the Gemini protocol. 
 

@@ -68,9 +68,8 @@ or
 
     java -jar /path/to/jgemini-1.0.jar gemini://host:port/path.gmi
 
-Note that you need to specify a URL even for local files. The `file:`
-URL has three forward-slashes in a row -- this is not a typo, and
-Java is fussy about this sort of thing. If the name of a local
+For convenience, local filenames don't need a full URL -- just the filename
+will do. JGemini will expand it to a URL internally. If the name of a local
 file ends in `.gmi`, it is treated as Gemtext, otherwise as 
 plain text in platform-default encoding. The filename does not matter
 with content fetched from a server, and the server will indicate the

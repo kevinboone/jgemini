@@ -58,7 +58,20 @@ public class Main
         viewer.setVisible (true);
         Logger.log (Main.class, "Show first page on startup");
         if (args.length >= 1)
-          viewer.loadURL (args[0]);
+	  {
+	  // Just for ease of use, let's see if it's a local file
+	  File file = new File (args[0]);
+	  if (file.isFile())
+	    {
+	    // It don't know if this will work on Windows. But who
+	    //   uses the command line on Windows?
+            viewer.loadURL ("file://" + file.getAbsolutePath());
+	    }
+	  else
+	    {
+            viewer.loadURL (args[0]);
+	    }
+	  }
         else
           viewer.loadURL (Config.getConfig().getHomePage());
         }

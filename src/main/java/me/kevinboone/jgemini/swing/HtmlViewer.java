@@ -641,9 +641,35 @@ System.out.println (" ext=" + ext);
 
 /*=========================================================================
   
-   loadURL
+   refresh 
 
    Load any kind of URL. If it doesn't start with gemini://, treat is
+   as external, which means invoking the desktop on it.
+
+=========================================================================*/
+  public void refresh()
+    {
+    Logger.log (getClass(), "Refresh");
+    if (baseUrl != null)
+      {
+      // This is potentially nasty. We have to pop the back-link at TOS
+      // because loadURL() will replace it. But loadURL() won't replace
+      // it unless the load succeeds -- we don't want a dead link lurking
+      // on the stack. But loadURL() won't do this itself -- it will 
+      // schedule it to be done when the load completes (if it completes).
+      // So we pop the TOS here, with no guarantee that it will actually
+      // get put back. In practice, we're refreshing a link that previously
+      // loaded OK; so it should be fine. Still, it's a bit ugly.
+      backlinks.pop();
+      loadURL (baseUrl);
+      }
+    }
+
+/*=========================================================================
+  
+   loadURL
+
+   Load any kind of URL. If it doesn't start with gemini://, treat it
    as external, which means invoking the desktop on it.
 
 =========================================================================*/
