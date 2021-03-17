@@ -1020,6 +1020,14 @@ System.out.println (" ext=" + ext);
     findNextMenuItem.addActionListener((event) -> findNext());
     editMenu.add (findNextMenuItem);
 
+    JMenu viewMenu = new JMenu("View");
+    viewMenu.setMnemonic (KeyEvent.VK_V);
+    JMenuItem refreshMenuItem = new JMenuItem ("Refresh");
+    refreshMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_R, ActionEvent.CTRL_MASK));
+    refreshMenuItem.addActionListener((event) -> refresh());
+    viewMenu.add (refreshMenuItem);
+
     JMenu goMenu = new JMenu("Go");
     goMenu.setMnemonic (KeyEvent.VK_G);
     JMenuItem backMenuItem = new JMenuItem ("Back");
@@ -1043,6 +1051,7 @@ System.out.println (" ext=" + ext);
 
     menuBar.add (fileMenu);
     menuBar.add (editMenu);
+    menuBar.add (viewMenu);
     menuBar.add (goMenu);
     menuBar.add (helpMenu);
     }
