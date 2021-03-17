@@ -523,11 +523,20 @@ System.out.println (" ext=" + ext);
       content_buffer.close();
 
       if (url.toString().endsWith ("gmi"))
+        {
+	baseUrl = url;
+        topBar.showUrl (url.toString());
+        backlinks.push (url);
+	}
+
+      if (url.toString().endsWith ("gmi"))
         renderGemtext (content, null /* don't know encoding*/);
       else if (url.toString().endsWith ("md"))
         renderMarkdown (content, null /* don't know encoding*/);
-      else
+      else if (url.toString().endsWith ("txt"))
         renderPlain (content, null /* don't know encoding*/);
+      else
+       loadForeignURL (url);
       }
     catch (Exception e)
       {
@@ -628,10 +637,7 @@ System.out.println (" ext=" + ext);
       }
     else if (url.getProtocol().equals ("file"))
       {
-      baseUrl = url;
       loadLocalFile (url);
-      topBar.showUrl (url.toString());
-      backlinks.push (url);
       }
     else
       {
