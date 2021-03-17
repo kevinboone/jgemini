@@ -18,8 +18,8 @@ public class GemConverter
   {
   private boolean verbatim;
   private URL baseUrl;
-  private static Pattern italicPattern = Pattern.compile ("_(.*?)_");
-  private static Pattern boldPattern = Pattern.compile ("\\*(.*?)\\*");
+  private static Pattern italicPattern = Pattern.compile ("_(\\w+?)_");
+  private static Pattern boldPattern = Pattern.compile ("\\*(\\w+?)\\*");
 
   /** Construct a GemConverter, supplying a base URL. We need the URL so
       we can construct proper links. */
@@ -112,13 +112,13 @@ public class GemConverter
     if (gem.length() == 0) return "<br/>\n";
     if (gem.startsWith (">"))
       return "<blockquote>" + escapeHtml(gem.substring(1)) + "</blockquote>\n";
-    if (gem.startsWith ("# "))
+    if (gem.startsWith ("#"))
       return "<h1>" + escapeHtml(gem.substring(2)) + "</h1>\n";
-    if (gem.startsWith ("## "))
+    if (gem.startsWith ("##"))
       return "<h2>" + escapeHtml(gem.substring(3)) + "</h2>\n";
-    if (gem.startsWith ("### "))
+    if (gem.startsWith ("###"))
       return "<h3>" + escapeHtml(gem.substring(4)) + "</h3>\n";
-    if (gem.startsWith ("* "))
+    if (gem.startsWith ("*"))
       return "<ul><li>&nbsp;" + escapeHtml(gem.substring(2)) + "</li></ul>\n";
     if (gem.startsWith ("=>"))
       return parseLink (gem.substring(2).trim());
