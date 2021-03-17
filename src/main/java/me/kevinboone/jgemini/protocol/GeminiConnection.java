@@ -87,7 +87,6 @@ public class GeminiConnection extends URLConnection
          if (c != '\r') line += c + "";
          } while (c != -1);
      
-
       int status = parseStatus (line);
       String meta = parseMeta (line);
       if (status >= 20 && status < 30)

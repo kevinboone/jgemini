@@ -136,7 +136,7 @@ satisfactory clients for many different platforms. For all I know, there
 might be perfectly satisfactory clients for Linux too -- I just couldn't
 find one.
 
-_There is no TLS certificate check_. JGemini uses encrypted TLS 
+There is _no_ TLS certificate check. JGemini uses encrypted TLS 
 communication because Gemini demands this. However, my experience is
 that most Gemini servers do not issue recognized certificates.
 So, rather than prompting the user to confirm every site, JGemini
@@ -148,7 +148,8 @@ to use.
 There is no bookmark support yet.
 
 JGemini is designed to be operated with a mouse. The only keystrokes
-that the program recognizes are page-up and page-down.
+that the program recognizes, apart from menu short-cuts, 
+ are up, down, page-up, page-down.
 
 JGemini is based on Java features that have not changed since about 
 2005. Frankly, I'm surprised some of them still exist in the JDK.
@@ -158,6 +159,14 @@ HTML viewer. That viewer has not been updated since HTML 3 was a new
 think but, to be honest, that's more than enough to show Gemtext
 content. In any event, it's possible that these features will be removed
 from Java at some point, and relegated to optional downloads.
+
+JGemini has no separate "download" function. It is not designed for 
+retrieving large documents. Although it will download a file and
+store it if it needs to invoke another program to handle it, 
+files that it can display, are displayed, however, large they are. 
+If you start downloading a large file that _can't_ be displayed,
+then any navigation will cancel the download. Sorry, but it's a
+browser, not a download manager.
 
 In order to keep the user interface responsive, all the content-fetching
 is done asynchronously, in background threads. It's not always easy
@@ -230,6 +239,9 @@ The Markdown viewer does not support relative links, only full links
 with a protocol and a path. This seems the right approach to me, because
 authors providing Markdown files are probably expecting them to be
 used in an external viewer, where relative links will make no sense.
+
+JGemini does not support feeds of any kind. If you select a feed,
+you'll probably get a page of XML.
 
 ## Building JGemini 
 

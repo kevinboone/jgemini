@@ -69,7 +69,7 @@ Oh, where to start...
 
 JGemini is intended for Linux. It _should_ work on any platform with a relatively modern JVM, but I don't care about anything except  Linux. That's not bias -- there are already a number of perfectly  satisfactory clients for many different platforms. For all I know, there might be perfectly satisfactory clients for Linux too -- I just couldn't find one. 
 
-_There is no TLS certificate check_. JGemini uses encrypted TLS  communication because Gemini demands this. However, my experience is that most Gemini servers do not issue recognized certificates. So, rather than prompting the user to confirm every site, JGemini simply carries out no certificate checks. Is this a security problem? Sure. If you're planning world domination, or think governments are monitoring your communication, this isn't the software to use.  
+There is _no_ TLS certificate check. JGemini uses encrypted TLS  communication because Gemini demands this. However, my experience is that most Gemini servers do not issue recognized certificates. So, rather than prompting the user to confirm every site, JGemini simply carries out no certificate checks. Is this a security problem? Sure. If you're planning world domination, or think governments are monitoring your communication, this isn't the software to use.  
 
 There is no bookmark support yet. 
 
@@ -96,6 +96,8 @@ JGemini supports multiple windows, but not tabs. I hate tabs, and have no plan t
 Markdown support is _very_ rudimentary. Although it looks simple, the Markdown format is considerably more difficult to lay out neatly in a viewer than Gemtext is (and, of course, plain text is easiest of all). This situation can be improved, if there's any interest. 
 
 The Markdown viewer does not support relative links, only full links with a protocol and a path. This seems the right approach to me, because authors providing Markdown files are probably expecting them to be used in an external viewer, where relative links will make no sense. 
+
+JGemini does not support feeds of any kind. If you select a feed, you'll probably get a page of XML. 
 
 ## Building JGemini  
 

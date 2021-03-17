@@ -811,6 +811,38 @@ public class HtmlViewer extends JFrame
 
 /*=========================================================================
   
+  fiddleWithKeyMap 
+
+  Make the HTML editor stopp grabbing the backspace and ctrl+H keys, which
+  it seems to want, and accept the up/down keys, which it doesn't.
+
+  Honestly, I have next to no idea what I'm doing here -- I got this
+  working by trial and error.
+
+=========================================================================*/
+  void fiddleWithKeyMap (HTMLEditorKit kit)
+    {
+    InputMap inputMap = jEditorPane.getInputMap();
+    inputMap.put (KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0),
+      "none");
+    inputMap.put (KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK),
+      "none");
+
+    KeyStroke key1 = KeyStroke.getKeyStroke (KeyEvent.VK_UP, 0); 
+    inputMap.put (key1, kit.upAction);
+    KeyStroke key2 = KeyStroke.getKeyStroke (KeyEvent.VK_DOWN, 0); 
+    inputMap.put (key2, kit.downAction);
+
+    String keyStrokeAndKey = "UP";
+    KeyStroke keyStroke = KeyStroke.getKeyStroke (keyStrokeAndKey);
+    jEditorPane.getInputMap().put(keyStroke, keyStrokeAndKey);
+    keyStrokeAndKey = "DOWN";
+    keyStroke = KeyStroke.getKeyStroke (keyStrokeAndKey);
+    jEditorPane.getInputMap().put(keyStroke, keyStrokeAndKey);
+    }
+
+/*=========================================================================
+  
   Constructor
 
 =========================================================================*/
@@ -827,12 +859,8 @@ public class HtmlViewer extends JFrame
     // In order to use ctrl+h and backspace in the menu, we have
     //  to disable them in the editor, even when (sigh) is it set
     //  to read-only
-    InputMap inputMap = jEditorPane.getInputMap();
-    inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0),
-      "none");
-    inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK),
-      "none");
-
+    fiddleWithKeyMap (kit);
+  
     jEditorPane.addHyperlinkListener(new HyperlinkListener()
           {
           public void hyperlinkUpdate(HyperlinkEvent e) 
@@ -883,7 +911,9 @@ public class HtmlViewer extends JFrame
     URL iconURL = getClass().getResource ("/images/jgemini.png");
     ImageIcon icon = new ImageIcon (iconURL);
     setIconImage (icon.getImage());
+
     }
+
 
 /*=========================================================================
   
@@ -951,7 +981,7 @@ public class HtmlViewer extends JFrame
            Rectangle viewRect = jEditorPane.modelToView (searchPos);
            jEditorPane.scrollRectToVisible (viewRect);
            jEditorPane.setCaretPosition (searchPos + findLength);
-           jEditorPane .moveCaretPosition (searchPos);
+           jEditorPane.moveCaretPosition (searchPos);
            searchPos += findLength;
            }
         else
