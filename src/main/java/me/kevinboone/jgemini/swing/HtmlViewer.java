@@ -17,6 +17,7 @@ import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.HyperlinkEvent;
+import javax.swing.filechooser.*;
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.net.*;
@@ -38,6 +39,8 @@ public class HtmlViewer extends JFrame
   private SwingWorker loadWorker = null;
   private String searchText = "java"; // TODO
   private int searchPos = 0;
+  private GeminiContent lastContent = null; // Last successful download
+  private javax.swing.Timer loadTimer = null;
 
 
 /*=========================================================================
@@ -286,9 +289,7 @@ public class HtmlViewer extends JFrame
     {
     try
       {
-System.out.println ("mime=" + mime);
       String ext = FileUtil.getDefaultExtension (mime);
-System.out.println (" ext=" + ext);
       File tempFile = File.createTempFile ("gemini-", "." + ext);
       tempFile.deleteOnExit();
       FileUtil.byteArrayToFile (tempFile, content);
@@ -339,6 +340,8 @@ System.out.println (" ext=" + ext);
       {
       Logger.log (getClass(), "Cancelling load");
       loadWorker.cancel (true);
+      if (loadTimer != null) loadTimer.stop();
+      loadTimer = null;
       }
     else
       {
@@ -366,6 +369,26 @@ System.out.println (" ext=" + ext);
 
 /*=========================================================================
   
+  removeLastContent
+
+=========================================================================*/
+  private void removeLastContent()
+    {
+    lastContent = null;
+    }
+  
+/*=========================================================================
+  
+  setLastContent
+
+=========================================================================*/
+  private void setLastContent (GeminiContent gc)
+    {
+    lastContent = gc;
+    }
+  
+/*=========================================================================
+  
   loadGemini
   
   We have a gemini:// URL. Load it through its content handler.
@@ -377,7 +400,16 @@ System.out.println (" ext=" + ext);
 =========================================================================*/
   private void loadGemini (URL url, String qparam)
     {
+    ActionListener loadTimerListener = new ActionListener() 
+      {
+      public void actionPerformed (ActionEvent evt) 
+        {
+	setStatus ("Loading...");
+        }
+      };
+
     cancelLoad(); // Kill any existing background load
+    removeLastContent(); // Delete any data associated with the last request
     try
       {
       Logger.log (getClass(), "loadGemini(), url=" 
@@ -409,9 +441,12 @@ System.out.println (" ext=" + ext);
       @Override
       protected String doInBackground() throws Exception  
         { 
+        loadTimer = new javax.swing.Timer (1000, loadTimerListener);
+        loadTimer.setRepeats (true);
+        loadTimer.start();
         setStatus ("Loading " + fullUrl);
         gc = loadGeminiContent (fullUrl); 
-        return "foo";
+        return "foo"; // Meaningless return
         } 
 
       @Override
@@ -423,6 +458,8 @@ System.out.println (" ext=" + ext);
       @Override
       protected void done()  
         { 
+	loadTimer.stop();
+	loadTimer = null;
         if (!isCancelled())
           {
           clearStatus ();
@@ -440,6 +477,7 @@ System.out.println (" ext=" + ext);
               renderGemtext (gc.getContent(), encoding);
               topBar.showUrl (fullUrl.toString());
               backlinks.push (fullUrl);
+	      setLastContent (gc);
               }
             else if (mime.startsWith ("text/plain"))
               {
@@ -450,6 +488,7 @@ System.out.println (" ext=" + ext);
               String encoding = getEncodingFromMime (mime);
               renderPlain (gc.getContent(), encoding);
               topBar.showUrl (fullUrl.toString());
+	      setLastContent (gc);
               backlinks.push (fullUrl);
               }
             else if (mime.startsWith ("text/markdown"))
@@ -461,6 +500,7 @@ System.out.println (" ext=" + ext);
               String encoding = getEncodingFromMime (mime);
               renderMarkdown (gc.getContent(), encoding);
               topBar.showUrl (fullUrl.toString());
+	      setLastContent (gc);
               backlinks.push (fullUrl);
               }
             else
@@ -766,6 +806,7 @@ System.out.println (" ext=" + ext);
     styleSheet.addRule ("a:hover {" 
         + Config.getConfig().getProperty 
             (Config.STYLE_A_HOVER, Config.DEFLT_STYLE_A_HOVER)  + "}");
+    styleSheet.addRule ("ul {margin: 0.5em}");
     }
 
 /*=========================================================================
@@ -940,6 +981,38 @@ System.out.println (" ext=" + ext);
 
 /*=========================================================================
   
+  save 
+
+=========================================================================*/
+  public void save()
+    {
+    Logger.log (getClass(), "save()");
+    if (lastContent != null)
+      {
+      String ext = FileUtil.getDefaultExtension (lastContent.getMime());
+      JFileChooser fc = new JFileChooser();
+      javax.swing.filechooser.FileFilter filter = 
+        new FileNameExtensionFilter (lastContent.getMime(), ext);
+      fc.addChoosableFileFilter (filter);
+      if (fc.showSaveDialog (this) == JFileChooser.APPROVE_OPTION)
+        {
+	Logger.log (getClass(), "Save file " + fc.getSelectedFile());
+	try
+	  {
+	  FileUtil.byteArrayToFile 
+	     (fc.getSelectedFile(), lastContent.getContent());
+	  setStatus ("Wrote file " + fc.getSelectedFile());
+	  }
+	catch (IOException e)
+	  {
+	  reportException (fc.getSelectedFile().toString(), e);
+	  }
+	}
+      }
+    }
+
+/*=========================================================================
+  
   about 
 
 =========================================================================*/
@@ -982,6 +1055,12 @@ System.out.println (" ext=" + ext);
     openMenuItem.setMnemonic (KeyEvent.VK_O);
     openMenuItem.addActionListener((event) -> openLink());
     fileMenu.add (openMenuItem);
+    JMenuItem saveMenuItem = new JMenuItem ("Save");
+    saveMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+    saveMenuItem.setMnemonic (KeyEvent.VK_S);
+    saveMenuItem.addActionListener((event) -> save());
+    fileMenu.add (saveMenuItem);
     JMenuItem closeMenuItem = new JMenuItem ("Close");
     closeMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_W, ActionEvent.CTRL_MASK));

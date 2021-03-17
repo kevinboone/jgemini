@@ -22,7 +22,7 @@ To run JGemini you'll need a computer with some kind of graphical desktop, and a
 
 ## Features 
 
-* Handles Gemtext and plain (usually UTF-8) text - Rudimentary support for Markdown - Can render local Gemtext files as well as server content - Text styling can be configured to suit the display and user preference - Uses anti-aliased font rendering for a smoother text appearance - Fetches documents in the background to improve user interface responsiveness - Supports text selection with cut-and-paste - Search in document - Allows multiple windows 
+* Handles Gemtext and plain (usually UTF-8) text - Rudimentary support for Markdown - Can render local Gemtext files as well as server content - Text styling can be configured to suit the display and user preference - Uses anti-aliased font rendering for a smoother text appearance - Fetches documents in the background to improve user interface responsiveness - Supports text selection with cut-and-paste - Search in document - Downloaded documents can be saved - Allows multiple windows 
 ## Running JGemini 
 
 So long as you have a Java JVM installed, you can run JGemini from a  prompt like this: 

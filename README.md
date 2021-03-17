@@ -46,6 +46,7 @@ JGemini from source, you'll probably need Maven.
 - Fetches documents in the background to improve user interface responsiveness
 - Supports text selection with cut-and-paste
 - Search in document
+- Downloaded documents can be saved
 - Allows multiple windows
 
 ## Running JGemini

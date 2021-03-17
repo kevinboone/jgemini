@@ -1,12 +1,8 @@
 Caching (but how, given the lack of timestamp?)
 
-Refresh (is it needed?)
-
-Do something with broken links like "about:xxx" and "gopher:xxx"
+Do something with broken links like "about:xxx" and "gopher:xxx" -- probably impossible without re-implementing the viewer completely.
 
 Catch redirect loops
-
-Consider tidying up list item spacing
 
 Tidy up Markdown formatting
 
