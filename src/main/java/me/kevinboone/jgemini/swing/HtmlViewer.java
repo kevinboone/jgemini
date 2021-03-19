@@ -45,6 +45,94 @@ public class HtmlViewer extends JFrame
 
 /*=========================================================================
   
+  Constructor
+
+=========================================================================*/
+  public HtmlViewer ()
+    {
+    super();
+    Logger.log (getClass(), "HtmlViewer constructor");
+    jEditorPane = new JEditorPane();
+        
+    HTMLEditorKit kit = new HTMLEditorKit();
+    jEditorPane.setEditorKit (kit);
+    jEditorPane.setEditable (false);
+
+    // In order to use ctrl+h and backspace in the menu, we have
+    //  to disable them in the editor, even when (sigh) is it set
+    //  to read-only
+    fiddleWithKeyMap (kit);
+  
+    // Add a listener for "hyperlink" events. These amount to left-clicks
+    //   on links in the editor. We need a separate, customer class
+    //   (sigh) for right-clicks
+    jEditorPane.addHyperlinkListener (new HyperlinkListener()
+          {
+          public void hyperlinkUpdate(HyperlinkEvent e) 
+            {
+            if (e.getEventType() == HyperlinkEvent.EventType.ENTERED)
+              {
+              handleLinkHover (e.getURL());
+              }
+            else if (e.getEventType() == HyperlinkEvent.EventType.EXITED)
+              {
+              handleLinkUnhover (e.getURL());
+              }
+            else if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED)
+              {
+              handleLink (e.getURL());
+              }
+            } 
+          });
+   
+    // Add a custom listener for right-click events
+    jEditorPane.addMouseListener (new RightMouseLinkListener()
+      {
+      public void clicked (String href, int x, int y)
+        {
+        rightClick (href, x, y);
+        }
+      });
+
+    // Get focus to the editor whenever this frame gets focus. We
+    //   need this to happen, so that the navigation keys work
+    addWindowListener (new WindowAdapter() 
+      {
+      public void windowOpened(WindowEvent e) 
+        {
+        jEditorPane.requestFocus();
+        }
+      });
+
+    applyStylesFromConfig ();
+
+    // Create the frame components and layout.
+    topBar = new TopBar(this);
+    statusBar = new StatusBar();
+    JScrollPane scrollPane = new JScrollPane (jEditorPane);
+    getContentPane().add(topBar, BorderLayout.NORTH);
+    getContentPane().add(scrollPane, BorderLayout.CENTER);
+    getContentPane().add(statusBar, BorderLayout.SOUTH);
+    Document doc = kit.createDefaultDocument();
+    jEditorPane.setDocument(doc);
+    jEditorPane.setText (EMPTY_WINDOW_TEXT);
+    setSize (Config.getConfig().getWindowWidth(), 
+       Config.getConfig().getWindowHeight());
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+    createMenuBar();
+    setJMenuBar (menuBar);
+    setTitle (WINDOW_CAPTION);
+
+    // Set the frame's icon from a file in the JAR
+    URL iconURL = getClass().getResource ("/images/jgemini.png");
+    ImageIcon icon = new ImageIcon (iconURL);
+    setIconImage (icon.getImage());
+    }
+
+
+/*=========================================================================
+  
   clearStatus    
 
 =========================================================================*/
@@ -431,7 +519,6 @@ public class HtmlViewer extends JFrame
       return;
       }
 
-
     final URL fullUrl = url;
 
     loadWorker = new SwingWorker()  
@@ -547,24 +634,16 @@ public class HtmlViewer extends JFrame
 =========================================================================*/
   public void loadLocalFile (URL url)
     {
-    try (InputStream is = url.openConnection().getInputStream())
+    try
       {
-      ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
+      byte[] content = FileUtil.urlToByteArray (url);
 
-      int nRead;
-      byte[] data = new byte[16384];
-
-      while ((nRead = is.read (data, 0, data.length)) != -1) 
+      // TODO Ugh -- tidy this up
+      if (url.toString().endsWith ("gmi") 
+           || url.toString().endsWith ("md") 
+           || url.toString().endsWith ("txt"))
         {
-        content_buffer.write (data, 0, nRead);
-        }
-
-      byte[] content = content_buffer.toByteArray();
-      content_buffer.close();
-
-      if (url.toString().endsWith ("gmi"))
-        {
-	baseUrl = url;
+	baseUrl = url; // We must do this before render
         topBar.showUrl (url.toString());
         backlinks.push (url);
 	}
@@ -689,8 +768,7 @@ public class HtmlViewer extends JFrame
   
    refresh 
 
-   Load any kind of URL. If it doesn't start with gemini://, treat is
-   as external, which means invoking the desktop on it.
+   Reload the current URL
 
 =========================================================================*/
   public void refresh()
@@ -751,7 +829,8 @@ public class HtmlViewer extends JFrame
   
    handleLinkHover
 
-   TODO TODO TODO
+   Write the link as a status message when the mouse moves over a 
+   link in the HTML editor
 
 =========================================================================*/
   private void handleLinkHover (URL linkUrl)
@@ -765,7 +844,8 @@ public class HtmlViewer extends JFrame
   
    handleLinkUnhover
 
-   TODO TODO TODO
+   // TODO: do we actually need this? Messages in the status area
+   // time out automatically
 
 =========================================================================*/
   private void handleLinkUnhover (URL linkUrl)
@@ -778,6 +858,9 @@ public class HtmlViewer extends JFrame
 /*=========================================================================
   
   applyStylesFromConfig 
+
+  Read the CSS styles from the Config class, and apply them to
+  the HTML editor
 
 =========================================================================*/
   private void applyStylesFromConfig ()
@@ -843,83 +926,125 @@ public class HtmlViewer extends JFrame
 
 /*=========================================================================
   
-  Constructor
+  downloadURL 
+
+  Download a URL to the specified file. This takes place in a background
+  thread and, at present, there's no control over it when it's started
+  (except by quitting the program).
 
 =========================================================================*/
-  public HtmlViewer ()
+  void downloadURL (String href, File file)
     {
-    super();
-    Logger.log (getClass(), "HtmlViewer constructor");
-    jEditorPane = new JEditorPane();
-        
-    HTMLEditorKit kit = new HTMLEditorKit();
-    jEditorPane.setEditorKit (kit);
-    jEditorPane.setEditable (false);
-
-    // In order to use ctrl+h and backspace in the menu, we have
-    //  to disable them in the editor, even when (sigh) is it set
-    //  to read-only
-    fiddleWithKeyMap (kit);
-  
-    jEditorPane.addHyperlinkListener(new HyperlinkListener()
+    SwingWorker dlWorker = new SwingWorker()  
+      { 
+      byte[] b = null;
+      Exception e = null;
+      @Override
+      protected String doInBackground() 
+        { 
+        try
           {
-          public void hyperlinkUpdate(HyperlinkEvent e) 
+          e = null;
+          b = FileUtil.urlToByteArray (new URL (href)); 
+          }
+        catch (Exception e1)
+          {
+          e = e1;
+          }
+        return "foo"; // Meaningless return
+        } 
+
+      @Override
+      protected void process (java.util.List chunks) { } 
+
+      @Override
+      protected void done()  
+        { 
+        if (b != null)
+          {
+          try
             {
-            if (e.getEventType() == HyperlinkEvent.EventType.ENTERED)
-              {
-              handleLinkHover (e.getURL());
-              }
-            else if (e.getEventType() == HyperlinkEvent.EventType.EXITED)
-              {
-              handleLinkUnhover (e.getURL());
-              }
-            else if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED)
-              {
-              handleLink (e.getURL());
-              }
+            FileUtil.byteArrayToFile (file, b);
+	    setStatus ("Saved file " + file);
             } 
-          });
-
-    addWindowListener (new WindowAdapter() 
-      {
-      public void windowOpened(WindowEvent e) 
-        {
-        jEditorPane.requestFocus();
+          catch (Exception e)
+            {
+            reportException (href, e);
+            }
+          }
+        else if (e != null)
+          {
+          reportException (href, e);
+          }
         }
-      });
+      }; 
 
-    applyStylesFromConfig ();
-
-    topBar = new TopBar(this);
-    statusBar = new StatusBar();
-    JScrollPane scrollPane = new JScrollPane (jEditorPane);
-    getContentPane().add(topBar, BorderLayout.NORTH);
-    getContentPane().add(scrollPane, BorderLayout.CENTER);
-    getContentPane().add(statusBar, BorderLayout.SOUTH);
-    Document doc = kit.createDefaultDocument();
-    jEditorPane.setDocument(doc);
-    jEditorPane.setText (EMPTY_WINDOW_TEXT);
-    setSize (Config.getConfig().getWindowWidth(), 
-       Config.getConfig().getWindowHeight());
-    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-    createMenuBar();
-    setJMenuBar (menuBar);
-    setTitle (WINDOW_CAPTION);
-
-    // Set the frame's icon from a file in the JAR
-    URL iconURL = getClass().getResource ("/images/jgemini.png");
-    ImageIcon icon = new ImageIcon (iconURL);
-    setIconImage (icon.getImage());
-
+    dlWorker.execute();  
     }
 
+/*=========================================================================
+  
+  promptDownloadURL 
+
+  Prompt the user for a filename, then start the download process
+  for the specified link. 
+
+=========================================================================*/
+  void promptDownloadURL (String href)
+    {
+    JFileChooser fc = new JFileChooser();
+    int p = href.lastIndexOf ('/');
+    String saveFilename;
+    if (p >= 0)
+      saveFilename = href.substring (p + 1);
+    else
+      saveFilename = "download";
+
+    fc.setSelectedFile (new File (saveFilename));
+    // TODO extract filename
+    if (fc.showSaveDialog (this) == JFileChooser.APPROVE_OPTION)
+      {
+      downloadURL (href, fc.getSelectedFile());
+      }
+    }
+
+/*=========================================================================
+  
+  rightClick 
+
+  Handle right-clicks on links by popping up the link menu.
+
+=========================================================================*/
+  void rightClick (String href, int x, int y)
+    {
+    JPopupMenu linkMenu = new JPopupMenu ("Link action"); 
+
+    JMenuItem openMenuItem = new JMenuItem ("Open");
+    openMenuItem.addActionListener ((event) -> loadURL (href));
+
+    JMenuItem openNewMenuItem = new JMenuItem ("Open in new window");
+    openNewMenuItem.addActionListener ((event) -> newWindow (href));
+    
+    JMenuItem copyLinkMenuItem = new JMenuItem ("Copy link");
+    copyLinkMenuItem.addActionListener 
+      ((event) -> Clipboard.copyTextToClipboard (href));
+
+    JMenuItem downloadMenuItem = new JMenuItem ("Download");
+    downloadMenuItem.addActionListener((event) -> promptDownloadURL (href));
+
+    linkMenu.add (openMenuItem);
+    linkMenu.add (openNewMenuItem);
+    linkMenu.add (copyLinkMenuItem);
+    linkMenu.add (downloadMenuItem);
+    linkMenu.show (jEditorPane, x, y); 
+    }
 
 /*=========================================================================
   
   setHtml
 
-  Set the HTML shown by this viewer to the supplied text 
+  Set the HTML shown by this viewer to the supplied text. Scroll to
+  the top.
 
 =========================================================================*/
   public void setHtml (String s)
@@ -1001,7 +1126,20 @@ public class HtmlViewer extends JFrame
   newWindow 
 
 =========================================================================*/
-  public void newWindow ()
+  public static void newWindow (String url)
+    {
+    Logger.log (HtmlViewer.class, "newWindow() url=" + url);
+    HtmlViewer viewer = new HtmlViewer();
+    viewer.setVisible (true);
+    viewer.loadURL (url);
+    }
+
+/*=========================================================================
+  
+  newWindow 
+
+=========================================================================*/
+  public static void newWindow ()
     {
     HtmlViewer viewer = new HtmlViewer();
     viewer.setVisible (true);
@@ -1174,7 +1312,6 @@ public class HtmlViewer extends JFrame
     {
     statusBar.setStatus (s);
     }
-
 
   }
 

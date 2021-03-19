@@ -113,11 +113,11 @@ public class GemConverter
     if (gem.startsWith (">"))
       return "<blockquote>" + escapeHtml(gem.substring(1)) + "</blockquote>\n";
     if (gem.startsWith ("###"))
-      return "<h3>" + escapeHtml(gem.substring(4)) + "</h3>\n";
+      return "<h3>" + escapeHtml(gem.substring(3)) + "</h3>\n";
     if (gem.startsWith ("##"))
-      return "<h2>" + escapeHtml(gem.substring(3)) + "</h2>\n";
+      return "<h2>" + escapeHtml(gem.substring(2)) + "</h2>\n";
     if (gem.startsWith ("#"))
-      return "<h1>" + escapeHtml(gem.substring(2)) + "</h1>\n";
+      return "<h1>" + escapeHtml(gem.substring(1)) + "</h1>\n";
     if (gem.startsWith ("*"))
       return "<ul><li>&nbsp;" + escapeHtml(gem.substring(2)) + "</li></ul>\n";
     if (gem.startsWith ("=>"))
@@ -141,6 +141,7 @@ public class GemConverter
     //System.out.println ("gem=" + gem);
     StringBuffer sb = new StringBuffer();
     String lines[] = gem.split ("\n");
+    //sb.append ("<html><meta charset=\"UTF-8\"><head><body>\n");
     sb.append ("<html><head><body>\n");
 
     for (int i = 0; i < lines.length; i++)

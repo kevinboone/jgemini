@@ -14,6 +14,7 @@
 package me.kevinboone.jgemini.swing;
 import java.util.*;
 import java.io.*;
+import java.net.*;
 
 public class FileUtil 
   {
@@ -518,6 +519,29 @@ static
     FileOutputStream fos = new FileOutputStream (file);
     fos.write (b);
     fos.close();
+    }
+
+  public static byte[] urlToByteArray (URL url)
+      throws IOException
+    {
+    InputStream is = url.openConnection().getInputStream();
+
+    ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
+
+    int nRead;
+    byte[] data = new byte[16384];
+
+    while ((nRead = is.read (data, 0, data.length)) != -1) 
+      {
+      content_buffer.write (data, 0, nRead);
+      }
+
+    byte[] content = content_buffer.toByteArray();
+
+    content_buffer.close();
+    is.close();
+
+    return content;
     }
 
   }

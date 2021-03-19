@@ -7,9 +7,11 @@ import java.net.*;
 
 public class GeminiConnection extends URLConnection
   {
-  SSLSocket s = null;
-  String contentType = null;
-  byte[] content = null;
+  private SSLSocket s = null;
+  private String contentType = null;
+  private InputStream is = null;
+  private byte[] content = null;
+  private String meta = null;
 
   public GeminiConnection (URL url) 
     {
@@ -37,6 +39,11 @@ public class GeminiConnection extends URLConnection
       return args[1]; 
     else
       return "";
+    }
+
+  private void readToData()
+    {
+
     }
 
   @Override
@@ -68,18 +75,17 @@ public class GeminiConnection extends URLConnection
       SSLContext sc = SSLContext.getInstance("SSL");
       sc.init (null, trustAllCerts, new java.security.SecureRandom());
       s = (SSLSocket)sc.getSocketFactory().createSocket (host, port); 
-      InputStream is = s.getInputStream();
+      is = s.getInputStream();
       OutputStream os = s.getOutputStream();
       PrintStream pos = new PrintStream (os);
-      InputStreamReader isr = new InputStreamReader (is);
 
       pos.print (getURL().toString());
       pos.print ("\r\n"); 
       pos.flush();
 
-       char c; 
-       String line = ""; 
-       do 
+      char c; 
+      String line = ""; 
+      do 
          {
          c = (char)is.read(); 
          if (c == '\n')
@@ -88,41 +94,11 @@ public class GeminiConnection extends URLConnection
          } while (c != -1);
      
       int status = parseStatus (line);
-      String meta = parseMeta (line);
+      meta = parseMeta (line);
       if (status >= 20 && status < 30)
         {
-        contentType = meta;
-	ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
-
-	int nRead;
-	byte[] data = new byte[16384];
-
-        try
-          {
-	  while (s.isConnected() && 
-               (nRead = is.read (data, 0, data.length)) != -1) 
-	    {
-	    content_buffer.write (data, 0, nRead);
-	    }
-          }
-        catch (java.net.SocketException e)
-          {
-          }
-        catch (javax.net.ssl.SSLException e)
-          {
-          // I think that sometimes the server closes its end of the
-          //  socket so abrubptly that isConnected() can say that the
-          //  connection is still open, but the following read() can
-          //  fail. We don't even get to a position where the read()
-          //  returns -1 to indicate EOT. But do we need to distinguish
-          //  this from "real" SSL errors? I really don't know. 
-          }
-
-	content = content_buffer.toByteArray();
-
-        content_buffer.close();
-        s.close();
-        s = null;
+        // Nothing to do -- input stream is now positioned
+        //  to read data
         }
       else
         {
@@ -157,10 +133,6 @@ public class GeminiConnection extends URLConnection
       }
     }
 
-  public void readToData()
-    {
-    }
-
   @Override
   public String getContentType()
     {
@@ -175,6 +147,40 @@ public class GeminiConnection extends URLConnection
     try
       {
       connect();
+
+        contentType = meta;
+	ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
+
+	int nRead;
+	byte[] data = new byte[16384];
+
+        try
+          {
+	  while (s.isConnected() && 
+               (nRead = is.read (data, 0, data.length)) != -1) 
+	    {
+	    content_buffer.write (data, 0, nRead);
+	    }
+          }
+        catch (java.net.SocketException e)
+          {
+          }
+        catch (javax.net.ssl.SSLException e)
+          {
+          // I think that sometimes the server closes its end of the
+          //  socket so abrubptly that isConnected() can say that the
+          //  connection is still open, but the following read() can
+          //  fail. We don't even get to a position where the read()
+          //  returns -1 to indicate EOT. But do we need to distinguish
+          //  this from "real" SSL errors? I really don't know. 
+          }
+
+	content = content_buffer.toByteArray();
+
+        content_buffer.close();
+        s.close();
+        s = null;
+
       return content;
       }
     catch (IOException e)
@@ -191,8 +197,8 @@ public class GeminiConnection extends URLConnection
   public InputStream getInputStream() 
       throws IOException 
     {
-    throw new UnsupportedOperationException 
-      ("The getInputStream() method is not supported");
+    connect();
+    return is;
     }
   }
 

@@ -1,6 +1,6 @@
 Caching (but how, given the lack of timestamp?)
 
-Do something with broken links like "about:xxx" and "gopher:xxx" -- probably impossible without re-implementing the viewer completely.
+Do something with broken links like "about:xxx" and "gopher:xxx" -- may be impossible without re-implementing the viewer completely.
 
 Catch redirect loops
 
@@ -9,3 +9,5 @@ Tidy up Markdown formatting
 Fix relative links in Markdown (maybe -- they probably aren't used)
 
 Gopher support?
+
+Download manager? At least, find a way to prevent the program exiting whilst a download is in progress.
