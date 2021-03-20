@@ -76,6 +76,10 @@ plain text in platform-default encoding. The filename does not matter
 with content fetched from a server, and the server will indicate the
 type of the content.
 
+If you want to install "properly" on Linux, there's a sample installation
+script and `.desktop` file in the `samples` directory of the source
+code bundle.
+
 ## Configuration
 
 The only configuration (at present) is via a properties file. 

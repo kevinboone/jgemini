@@ -61,6 +61,8 @@ or
 
 For convenience, local filenames don't need a full URL -- just the filename will do. JGemini will expand it to a URL internally. If the name of a local file ends in `.gmi`, it is treated as Gemtext, otherwise as  plain text in platform-default encoding. The filename does not matter with content fetched from a server, and the server will indicate the type of the content. 
 
+If you want to install "properly" on Linux, there's a sample installation script and `.desktop` file in the `samples` directory of the source code bundle. 
+
 ## Configuration 
 
 The only configuration (at present) is via a properties file.  JGemini will read the file $HOME/.jgemini.properties if it exists. The interpretation of "$HOME" on systems other than Linux is variable. On Windows, it might be "C:\users\username". There is a sample configuration file in the source code bundle, in the `samples` directory. I hope that the settings in that file are pretty self-explanatory. 

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=JGemini
+GenericName=JGemini
+Comment=Browse Gemini capsules
+Keywords=internet
+Icon=jgemini
+Type=Application
+Categories=Internet
+Exec=jgemini %F
+StartupNotify=false
+Terminal=false
+MimeType=text/gemini
+
