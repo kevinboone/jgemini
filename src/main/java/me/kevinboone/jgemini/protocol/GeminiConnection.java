@@ -4,6 +4,7 @@ import java.io.*;
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.net.*;
+import java.util.Collections;
 
 public class GeminiConnection extends URLConnection
   {
@@ -75,6 +76,9 @@ public class GeminiConnection extends URLConnection
       SSLContext sc = SSLContext.getInstance("SSL");
       sc.init (null, trustAllCerts, new java.security.SecureRandom());
       s = (SSLSocket)sc.getSocketFactory().createSocket (host, port); 
+      SSLParameters params = new SSLParameters();
+      params.setServerNames(Collections.singletonList(new SNIHostName(host)));
+      s.setSSLParameters(params);
       is = s.getInputStream();
       OutputStream os = s.getOutputStream();
       PrintStream pos = new PrintStream (os);
