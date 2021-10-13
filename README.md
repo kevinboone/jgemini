@@ -2,7 +2,7 @@
 
 A Java-based graphical browser for the Gemini protocol.
 
-Version 1.0, Kevin Boone, March 2021.
+Version 1.0a, Kevin Boone, October 2021.
 
 ## Why another Gemini client?
 
@@ -263,6 +263,11 @@ probably do more work on it. Right now, howver, it's good enough for
 my purposes.
 
 
- 
+## Change log
+
+Version 0.1 -- March 2021 -- first release
+
+Version 0.1a -- October 2021
+- Added code to apply SNI header to the TLS communication (contributed by omar-polo) 
 
 
