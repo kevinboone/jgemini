@@ -18,10 +18,11 @@ public class Config extends Properties
   public final static String APP_NAME = "JGemini";
   public final static String VERSION = "1.0";
   private boolean debug = false;
+  private final static String SYS_PREFS_FILE = "jgemini.properties"; 
   private final static String PREFS_FILE = ".jgemini.properties"; 
   public final static String URL_HOME = "url.home";
   public final static String DEFLT_URL_HOME = 
-      "gemini://gemini.circumlunar.space/index.gmi";
+      "gemini://geminiprotocol.net/";
   public final static String STYLE_BODY = "style.body";
   public final static String DEFLT_STYLE_BODY = 
       "color:black; font: 16px Serif; margin-left: 20px; margin-right: 20px; margin-bottom: 10px";
@@ -108,10 +109,22 @@ public class Config extends Properties
 
   public void load()
     {
-    Logger.log (Config.class, "Loading configuration");
+    Logger.log (Config.class, "Loading system configuration");
+    String sysPropsFile = "/etc/jgemini/" + SYS_PREFS_FILE; 
+    Logger.log (Config.class, "System properties file is " + sysPropsFile);
+    try (InputStream is = new FileInputStream (new File (sysPropsFile)))
+      {
+      load (is);
+      }
+    catch (Exception e)
+      {
+      // This may not be an error
+      Logger.log (this.getClass(), e.toString());
+      }
+    Logger.log (Config.class, "Loading user configuration");
     String home = System.getProperty ("user.home");
     String propsFile = home + File.separator + PREFS_FILE;
-    Logger.log (Config.class, "Properties file is " + propsFile);
+    Logger.log (Config.class, "User properties file is " + propsFile);
     try (InputStream is = new FileInputStream (new File (propsFile)))
       {
       load (is);

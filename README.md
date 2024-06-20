@@ -2,7 +2,7 @@
 
 A Java-based graphical browser for the Gemini protocol.
 
-Version 1.0a, Kevin Boone, October 2021.
+Version 1.0b, Kevin Boone, June 2024 
 
 ## Why another Gemini client?
 
@@ -82,15 +82,21 @@ code bundle.
 
 ## Configuration
 
-The only configuration (at present) is via a properties file. 
-JGemini will read the file $HOME/.jgemini.properties if it exists.
+The only configuration (at present) is via properties files. 
+JGemini will read a system-level properties file, if it exists,
+at `/etc/jgemini/jgemini.properties`, and then a user properties
+file at $HOME/.jgemini.properties if it exists.
 The interpretation of "$HOME" on systems other than Linux is variable.
 On Windows, it might be "C:\users\username". There is a sample configuration
 file in the source
 code bundle, in the `samples` directory. I hope that the settings
 in that file are pretty self-explanatory.
 
-Note that this static configuration of appearance is pretty crude; there
+If you want to change the default home page, add an entry `url.home`
+to either configuration file.
+
+Note that the static configuration of the program's 
+appearance is pretty crude; there
 is, so far, not even a way to zoom in or out at run-time. However, as
 Gemini provides no way for an author to control the text appearance
 (that's one of its strengths), text size and font, etc., should
@@ -150,6 +156,10 @@ monitoring your communication, this isn't the software
 to use. 
 
 There is no bookmark support yet.
+
+In fact, JGemini saves not state at all, not even the window size. 
+If you don't like the default window size, modify `window.w` and
+`window.h` in the configuration file.
 
 JGemini is designed to be operated with a mouse. The only keystrokes
 that the program recognizes, apart from menu short-cuts, 
@@ -269,5 +279,10 @@ Version 0.1 -- March 2021 -- first release
 
 Version 0.1a -- October 2021
 - Added code to apply SNI header to the TLS communication (contributed by omar-polo) 
+
+Version 0.2a -- June 2024
+- Added a system-level configuration file
+- Changed the default homepage
+- Improved the documentation slightly
 
 
