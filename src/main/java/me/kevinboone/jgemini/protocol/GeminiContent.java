@@ -1,3 +1,12 @@
+/*============================================================================
+
+  JGemini
+
+  GeminiContent 
+
+  Copyright (c)2021-2026 Kevin Boone, GPLv3.0
+
+============================================================================*/
 package me.kevinboone.jgemini.protocol;
 import java.net.URL;
 

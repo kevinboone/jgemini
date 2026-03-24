@@ -114,6 +114,10 @@ Not easily, and JGemini doesn't check anything in the certificate,
 anyway. If there ever comes a time when Gemini servers start using
 verifiable certificates as a matter of course, I might change that.
 
+_How do I sent a client certificate with my requests?_
+
+Please see the separate document README.client\_certs.
+
 _Is there a progress indicator?_
 
 It would be nice to see the progress of large downloads but, so far
@@ -122,23 +126,23 @@ size of the content. Clients are expected to read until the server
 closes the connection. This makes it hard to report, or even to know,
 how much of the content has been read. 
 
+_Why aren't emojis displayed properly?_
 
+You need the appropriate fonts and configuration -- not all fonts
+contain glyphs for the emoji characters. I usually install Segoe UI Emoji.
+On Linux I use the `font-manager` utility to add the font's TTF file to the
+appropriate place. 
 
+Note that Java Swing is pretty fussy about what fonts it's prepared to use.
+However, once there is a suitable font in place, you don't have to tell 
+JGemini to use it -- the JVM is smart enough to find a font that contains
+the relevant glyphs if the usual font does not have them.
 
+_How do I change the fonts?_
 
+Edit the configuration file. Look for lines beginning `style.`.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+_How do I find out what fonts are available?_
+ 
+    java -jar jgemini-0.1.jar -Djgemini.dumpfonts 
 

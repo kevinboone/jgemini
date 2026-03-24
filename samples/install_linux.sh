@@ -31,7 +31,7 @@ if [ -f pom.xml ]; then
   cp binaries/jgemini-$VERSION.jar $DESTDIR/$MYSHAREDIR 
   cat << EOF > $DESTDIR/$BINDIR/jgemini 
   #!/bin/bash
-  exec java -jar $DESTDIR/$MYSHAREDIR/jgemini-$VERSION.jar "\$@"
+  exec java -jar $MYSHAREDIR/jgemini-$VERSION.jar "\$@"
 EOF
 
   chmod 755 $DESTDIR/$BINDIR/jgemini

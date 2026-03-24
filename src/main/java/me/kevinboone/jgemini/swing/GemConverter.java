@@ -13,6 +13,7 @@ package me.kevinboone.jgemini.swing;
 import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
+import me.kevinboone.jgemini.base.*;
 
 public class GemConverter
   {

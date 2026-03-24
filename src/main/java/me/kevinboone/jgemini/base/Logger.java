@@ -13,7 +13,7 @@
 
 =========================================================================*/
 
-package me.kevinboone.jgemini.swing;
+package me.kevinboone.jgemini.base;
 
 public class Logger 
   {

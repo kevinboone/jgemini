@@ -1,3 +1,12 @@
+/*============================================================================
+
+  JGemini
+
+  GeminiConnection
+
+  Copyright (c)2021-2026 Kevin Boone, GPLv3.0
+
+============================================================================*/
 package me.kevinboone.jgemini.protocol;
 
 import java.io.*;
@@ -5,6 +14,9 @@ import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.net.*;
 import java.util.Collections;
+import java.security.KeyStore;
+import me.kevinboone.jgemini.ssl.*;
+import me.kevinboone.jgemini.base.*;
 
 public class GeminiConnection extends URLConnection
   {
@@ -70,14 +82,18 @@ public class GeminiConnection extends URLConnection
       String path = getURL().getPath();
       int port = getURL().getPort();
       if (port == -1) port = 1965;
-      //System.out.println ("host=" + host);
-      //System.out.println ("port=" + port);
-      //System.out.println ("path=" + path);
+
+      KeyManagerFactory kmf = 
+        ClientCertManager.getKMFForURL (url); 
+
       SSLContext sc = SSLContext.getInstance("SSL");
-      sc.init (null, trustAllCerts, new java.security.SecureRandom());
+      if (kmf != null)
+        sc.init (kmf.getKeyManagers(), trustAllCerts, new java.security.SecureRandom());
+      else
+        sc.init (null, trustAllCerts, new java.security.SecureRandom());
       s = (SSLSocket)sc.getSocketFactory().createSocket (host, port); 
       SSLParameters params = new SSLParameters();
-      params.setServerNames(Collections.singletonList(new SNIHostName(host)));
+      params.setServerNames (Collections.singletonList(new SNIHostName(host)));
       s.setSSLParameters(params);
       is = s.getInputStream();
       OutputStream os = s.getOutputStream();
@@ -98,6 +114,7 @@ public class GeminiConnection extends URLConnection
          } while (c != -1);
      
       int status = parseStatus (line);
+      Logger.log (getClass(), "Got status code " + status);
       meta = parseMeta (line);
       if (status >= 20 && status < 30)
         {
@@ -119,7 +136,8 @@ public class GeminiConnection extends URLConnection
           }
         else if (status >= 30 && status < 40)
           {
-          throw new RedirectedException (new URL(meta));
+          Logger.log (getClass(), "Throwing a redirect to " + meta);
+          throw new RedirectedException (new URL(getURL(), meta));
           }
         else if (status >= 40)
           {

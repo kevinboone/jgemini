@@ -14,7 +14,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
-
+import me.kevinboone.jgemini.base.*;
 
 public class StatusBar extends JPanel
   {

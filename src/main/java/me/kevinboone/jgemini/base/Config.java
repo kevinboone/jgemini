@@ -9,9 +9,10 @@
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
-package me.kevinboone.jgemini.swing;
+package me.kevinboone.jgemini.base;
 import java.util.*;
 import java.io.*;
+import me.kevinboone.jgemini.base.*;
 
 public class Config extends Properties
   {
@@ -105,6 +106,17 @@ public class Config extends Properties
   public String getUserFont()
     {
     return getProperty (UI_USER_FONT, DEFLT_UI_USER_FONT);
+    }
+
+  /** The method returns null if there is no entry in the configuration 
+        file for the specific host. */
+  public String getClientCertSpecForHost (String hostname)
+    {
+    String key = "clientcert." + hostname; 
+    String result = getProperty (key);
+    if (result == null)
+      result = getProperty ("clientcert.*");
+    return result;
     }
 
   public void load()

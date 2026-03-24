@@ -23,6 +23,7 @@ import java.security.cert.X509Certificate;
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import me.kevinboone.jgemini.base.*;
 
 public class HtmlViewer extends JFrame 
   {
@@ -334,15 +335,16 @@ public class HtmlViewer extends JFrame
     String str = JOptionPane.showInputDialog (this, prompt, DIALOG_CAPTION, 1);
     if(str != null)
       {
-      try
-        {
+      //try
+      //  {
         Logger.log (getClass(), "handleStatus10(): Retrying URL " + retryUrl);
-        loadGemini (retryUrl, URLEncoder.encode (str, "UTF-8")); 
-        }
-      catch (UnsupportedEncodingException e)
-        {
+        //loadGemini (retryUrl, URLEncoder.encode (str, "UTF-8")); 
+        loadGemini (retryUrl, str); 
+      //  }
+      //catch (UnsupportedEncodingException e)
+      //  {
         // Screw that. If the JVM doesn't support UTF8, we're in big trouble
-        }
+      //  }
       }
     }
 
@@ -799,6 +801,10 @@ public class HtmlViewer extends JFrame
 =========================================================================*/
   public void loadURL (String url)
     {
+    // We need to do something if what the user enters doesn't seem
+    //   to be a full URL. The following is a pretty crude approach.
+    if (!url.contains ("://"))
+       url = "gemini://" + url;
     try
       {
       loadURL (new URL(url));

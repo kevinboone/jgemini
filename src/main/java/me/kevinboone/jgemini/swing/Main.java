@@ -20,6 +20,7 @@ import java.security.cert.X509Certificate;
 import java.net.*;
 import java.io.*;
 import java.awt.GraphicsEnvironment;
+import me.kevinboone.jgemini.base.*;
 
 public class Main
   {
