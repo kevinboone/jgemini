@@ -15,39 +15,36 @@ Java JVM.
 
 _Why does JGemini not remember the window size/position?_
 
-Because I didn't implement this. In fact, JGemini is
-_completely stateless_ by design. It remembers nothing -- no settings,
-no cache, nothing. This is intentional, although it won't suit
-everyone.
+Because I didn't implement this. In fact, JGemini is _completely stateless_ by
+design. It remembers nothing -- no settings, no history, no cache, nothing.
+This is intentional, although it won't suit everyone.
 
 _How do I install JGemini?_
 
-You don't need to do anything in particular. Just copy the program's
-JAR file `jgemini-1.0.jar` to any convenient directory, and run it
-using `java -jar jgemini-1.0.jar`.
+You don't need to do anything in particular. Just copy the program's JAR file
+`jgemini-1.0.jar` to any convenient directory, and run it using `java -jar
+jgemini-1.0.jar`.
 
-If you want to be able to run JGemini by just running `jgemini` at the
-prompt, you'll need to create a script that runs the Java JVM, and
-puts the JAR file in a useful location. 
+If you want to be able to run JGemini by just running `jgemini` at the prompt,
+you'll need to create a script that runs the Java JVM, and puts the JAR file in
+a useful location. 
 
-If you want to be able to click something on a desktop, or in a menu,
-you'll need more steps. Most Linux desktops have a particular layout
-of application files, and expect to find a `.desktop` file in some
-particular place -- often `/usr/share/applications`. There is a 
-sample `.desktop` file in the `samples` directory.
+If you want to be able to click something on a desktop, or in a menu, you'll
+need more steps. Most Linux desktops have a particular layout of application
+files, and expect to find a `.desktop` file in some particular place -- often
+`/usr/share/applications`. There is a sample `.desktop` file in the `samples`
+directory.
 
-The `.desktop` file defines the program's icon files, and these
-need to go in specific locations as well. Again, there are reasonably
-standard locations.
+The `.desktop` file defines the program's icon files, and these need to go in
+specific locations as well. Again, there are reasonably standard locations.
 
-You can run (as `root`) the `install-linux.sh` script, which will do
-the basic set-up, copying the relevant files to the usual places. However,
-you'll probably need to tell your desktop environment that you've made
-changes, and there's no standard way to do that. With the Gnome
-desktop, I find that the changes get picked up eventually, but it can
-take minutes to hours. You can speed this up using Gnome-specific
-tricks, but I'm not going to explain them here, because they'll have 
-changed by the time you read this.
+You can run (as `root`) the `install-linux.sh` script, which will do the basic
+set-up, copying the relevant files to the usual places. However, you'll
+probably need to tell your desktop environment that you've made changes, and
+there's no standard way to do that. With the Gnome desktop, I find that the
+changes get picked up eventually, but it can take minutes to hours. You can
+speed this up using Gnome-specific tricks, but I'm not going to explain them
+here, because they'll have changed by the time you read this.
 
 _How do I open a local .gmi file?_
 
@@ -60,14 +57,14 @@ just be able to click the `.gmi` file in a file manager.
 
 _How do I store bookmarks?_
 
-Sorry, you can't. JGemini is stateless by design, and doesn't save
-any information. You can create a `.gmi` file containing only 
-bookmarks, stored some place in your home directory. Then you can,
+Sorry, you can't. JGemini is stateless by design, and doesn't save any
+information. You can create a `.gmi` file containing only bookmarks, stored
+some place in your home directory or on a server of your choice. Then you can,
 if you wish, set it as the home page as described above.
 
 _What Java version do I need?_
 
-Any Java 8 or later should be fine. Because Gemini is based on TLS, 
+Any Java 11 or later should be fine. Because Gemini is based on TLS, 
 you might find old, or cryptographically limited, JVMs don't work
 properly. 
 
@@ -79,19 +76,23 @@ If you don't have a configuration file, use the one in the
 
 _Does JGemini handle images?_
 
-Yes, but it doesn't in-line them. It just displays a clickable
-link with the image's accompanying text. Clicking the link saves
-the image and hands it over to the desktop to display. What software
-the desktop uses to do that is not under the control of JGemini. 
+Yes, but it doesn't in-line them when displaying Gemini files.  It just
+displays a clickable link with the image's accompanying text. Clicking the link
+saves the image and hands it over to the desktop to display. What software the
+desktop uses to do that is not under the control of JGemini. 
 
-Some Gemini clients in-line images, but this is a nuisace in situations
-where the page author has linked an enormous image. Neither the GMI
-page format nor the Gemini protocol provide any way for a Gemini client
-to know how large an image is, except by downloading it.
+Some Gemini clients in-line images, but this is a nuisance in situations where
+the page author has linked an enormous image. Neither the GMI page format nor
+the Gemini protocol provide any way for a Gemini client to know how large an
+image is, except by downloading it.
 
-The option to have JGemini in-line images -- with the user's 
-agreement -- is something I've considered,
-but so far I haven't been motivated to implement it. 
+The option to have JGemini in-line images from Gemtext files -- with the user's
+agreement -- is something I've considered, but so far I haven't been motivated
+to implement it. 
+
+Note that images _are_ in-lined when displaying Markdown, because I assume that
+people who use Markdown are familiar with that, and will have scaled images
+appropriately. 
 
 _What happens if I follow a non-Gemini link in a GMI page?_
 
@@ -114,7 +115,7 @@ Not easily, and JGemini doesn't check anything in the certificate,
 anyway. If there ever comes a time when Gemini servers start using
 verifiable certificates as a matter of course, I might change that.
 
-_How do I sent a client certificate with my requests?_
+_How do I send a client certificate with my requests?_
 
 Please see the separate document README.client\_certs.
 
@@ -145,4 +146,12 @@ Edit the configuration file. Look for lines beginning `style.`.
 _How do I find out what fonts are available?_
  
     java -jar jgemini-0.1.jar -Djgemini.dumpfonts 
+
+_How do I go to the top-level directory of a Gemini capsule?_
+
+The Lagrange client displays a caption bar which you can click to navigate to
+the root level of a Gemini capsule. This is convenient, but the bar takes up a
+lot of screen space. JGemini provides a menu command Go|Root which has the same
+effect. 
+
 

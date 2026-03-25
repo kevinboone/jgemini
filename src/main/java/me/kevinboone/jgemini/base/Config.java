@@ -48,6 +48,9 @@ public class Config extends Properties
   public final static String STYLE_A_HOVER = "style.a_hover";
   public final static String DEFLT_STYLE_A_HOVER = 
       "text-decoration: none; color: red; font-weight: bold";
+  public final static String STYLE_BLOCKQUOTE = "style.blockquote";
+  public final static String DEFLT_STYLE_BLOCKQUOTE = 
+      "background: #E0E0E0";
   public final static String DEBUG = "debug";
   public final static String DEFLT_DEBUG = "1";
   public final static String WINDOW_W = "window.w";

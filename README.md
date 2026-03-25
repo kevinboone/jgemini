@@ -10,8 +10,8 @@ There's no good reason. I wrote JGemini a long time ago, before there were any
 reasonable graphical clients for Linux. Times have changed, and there are a
 number of clients for Linux that are superior to JGemini: Lagrange and Alhena,
 for example.  I maintain JGemini for my own experiments -- I doubt it would be
-much use to anybody else. It has the putative advantage over other clients
-that it natively supports Markdown documents as well as Gemtext.
+much use to anybody else. It has the small, putative advantage over other
+clients that it natively supports Markdown documents as well as Gemtext.
 
 ## What is JGemini?
 
@@ -40,15 +40,6 @@ source, you'll probably need Maven.
 - Search in document
 - Downloaded documents can be saved
 - Allows multiple windows
-
-## Building JGemini
-
-There should be a compiled JAR file in the repository, so there's no need to build, just
-to run JGemini. If you do need to build, it's just
-
-    $ mvn package
-
-This will generate the compiled JARs in `target/`.
 
 ## Running JGemini
 
@@ -101,13 +92,12 @@ if it takes a bit of trial and error.
 
 Here are a few notes on the individual settings.
 
-JGemini only uses six text styles for the document display, denoted "body"
-(normal text), "h1...h3" (headings) "pre" (for preformatted text), "code" 
-(for technical terms) and "a" (for
-links). The fonts that can be applied to these styles are JVM fonts, which may
-be named differently to platform fonts (and, in some cases, are more
-extensive). To get a list all JVM fonts, run JGemini with the Java command-line
-switch 
+JGemini only uses seven text styles for the document display, denoted "body"
+(normal text), "h1...h3" (headings) "pre" (for preformatted text), "code" (for
+technical terms), "blockquote", and "a" (for links). The fonts that can be
+applied to these styles are JVM fonts, which may be named differently to
+platform fonts (and, in some cases, are more extensive). To get a list all JVM
+fonts, run JGemini with the Java command-line switch 
 
     -Djgemini.dumpfonts 
 
@@ -243,6 +233,13 @@ However, images in Markdown _are_ in-lined into the text, for the same reason.
 JGemini does not support feeds of any kind. If you select a feed, you'll
 probably get a page of XML.
 
+When displaying Gemtext, JGemini uses an arrow symbol to indicate a link
+that can be followed, as well as displaying in a different colour. 
+If the first character of the link text is an emoji, then the link doesn't
+get the arrow -- I assume that the author is using emojis to highlight 
+links. However, it's not as easy to detect emojis in Java as it ought to be
+(before Java 21), and sometimes this test doesn't work properly.
+
 ## Building JGemini 
 
 To build JGemini from source, you'll need Maven, configured for the usual
@@ -251,11 +248,14 @@ directory:
 
      mvn package
 
+This will generate the compiled JARs in `target/`.
+
+
 ## Closing remarks
 
 There's a lot that could be done to JGemini to make it a more useful, more
 aesthetically pleasing application. If there's interest, I can probably do more
-work on it. Right now, howver, it's good enough for my purposes.
+work on it. Right now, however, it's good enough for my purposes.
 
 
 ## Change log
@@ -278,5 +278,8 @@ Version 0.1d -- March 2026
 
 Version 0.1e -- March 2026
 - Improved Markdown support 
+- Added Go|Root
+- Added styling for block quotes
+- Improved the text entry dialog box, and added a character count
 
 

@@ -14,6 +14,7 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 import me.kevinboone.jgemini.base.*;
+import com.vdurmont.emoji.EmojiManager;
 
 public class GemConverter
   {
@@ -68,6 +69,18 @@ public class GemConverter
     return boldPattern.matcher(s).replaceAll("<b>$1</b>");
     }
 
+  private String getLinkIcon (String link, String text)
+    {
+    if (text == null) return "";
+    if (text.length() < 2) return "";
+    if (EmojiManager.isEmoji(text.substring(0,2))) 
+      return ""; // Don't decorate an emoji
+    if (link.endsWith(".gif") || link.endsWith (".jpg") || 
+      link.endsWith (".png") || link.endsWith (".jpeg"))
+      return "📷";
+    return "⇨";
+    }
+
   /** Parse and convert a Gemtext link line. */
   private String parseLink (String gem)
     {
@@ -76,8 +89,8 @@ public class GemConverter
       {
       String link = args[0];
       String text = args[1];
-      return "<a href=\"" + rewriteLink (link) + "\">" 
-        + escapeHtml(text) + "</a><br/>\n"; 
+      return "<a href=\"" + rewriteLink (link) + "\">" + 
+        getLinkIcon (link, text) + " " + escapeHtml(text) + "</a><br/>\n"; 
       }
     else if (args.length == 1)
       {
@@ -112,7 +125,7 @@ public class GemConverter
     if (verbatim) return escapeHtml(gem) + "\n";
     if (gem.length() == 0) return "<br/>\n";
     if (gem.startsWith (">"))
-      return "<blockquote>" + escapeHtml(gem.substring(1)) + "</blockquote>\n";
+      return "<blockquote> ❝ " + escapeHtml(gem.substring(1)) + "</blockquote>\n";
     if (gem.startsWith ("###"))
       return "<h3>" + escapeHtml(gem.substring(3)) + "</h3>\n";
     if (gem.startsWith ("##"))

@@ -320,6 +320,27 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
+   goRoot
+
+   Go the site root 
+
+=========================================================================*/
+  protected void goRoot()
+    {
+    System.out.println ("root=" + baseUrl);
+    try
+      {
+      java.net.URL newUrl = new URL (baseUrl, "/"); 
+      loadURL (newUrl);
+      }
+    catch (Exception e)
+      {
+      e.printStackTrace();
+      }
+    }
+
+/*=========================================================================
+  
   handleStatus10 
 
   Deal with "Status 10" responses, that require further input.
@@ -332,19 +353,15 @@ public class MainWindow extends JFrame
     Logger.log (getClass(), "handleStatus10(): Handling status 10, hide= " 
       + hide + "with promt=" + prompt + ", url=" + retryUrl);
 
-    String str = JOptionPane.showInputDialog (this, prompt, DIALOG_CAPTION, 1);
+    int startingCount = retryUrl.toString().getBytes().length;
+    // Max URL is 1024 for Gemini
+    TextEntryDialog d = new TextEntryDialog (this, 1024 - startingCount);
+    d.setVisible (true);
+    String str = d.getInput();
     if(str != null)
       {
-      //try
-      //  {
-        Logger.log (getClass(), "handleStatus10(): Retrying URL " + retryUrl);
-        //loadGemini (retryUrl, URLEncoder.encode (str, "UTF-8")); 
-        loadGemini (retryUrl, str); 
-      //  }
-      //catch (UnsupportedEncodingException e)
-      //  {
-        // Screw that. If the JVM doesn't support UTF8, we're in big trouble
-      //  }
+      Logger.log (getClass(), "handleStatus10(): Retrying URL " + retryUrl);
+      loadGemini (retryUrl, str); 
       }
     }
 
@@ -505,7 +522,15 @@ public class MainWindow extends JFrame
         + url.toString() + ", qparam=" + qparam);
 
       if (qparam != null)
-        url = new URL (url.toString() + "?" + qparam);
+        {
+        // URLEncoder does seem on its own to generate encodings that Gemini 
+        //   services like. They seem to prefer "$20" to "+" for plain spaces.
+        //   Since %20 will always work, munge the encoded string to use 
+        //   this format.
+        URL tempUrl = new URL (url.toString() + "?" + URLEncoder.encode (qparam));
+        String sURL = tempUrl.toString().replace("+","%20");
+        url = new URL (sURL);
+        }
 
       if (url.getPath().length() == 0)
         {
@@ -904,6 +929,12 @@ public class MainWindow extends JFrame
     styleSheet.addRule ("a:hover {" 
         + Config.getConfig().getProperty 
             (Config.STYLE_A_HOVER, Config.DEFLT_STYLE_A_HOVER)  + "}");
+
+    styleSheet.addRule ("blockquote {" 
+        + Config.getConfig().getProperty 
+            (Config.STYLE_BLOCKQUOTE, Config.DEFLT_STYLE_BLOCKQUOTE)  + "}");
+
+    // These aren't in the config file yet
     styleSheet.addRule ("ul {margin: 0.5em}");
     }
 
@@ -1297,11 +1328,16 @@ public class MainWindow extends JFrame
       (KeyEvent.VK_BACK_SPACE, 0));
     backMenuItem.addActionListener((event) -> goBack());
     goMenu.add (backMenuItem);
-    JMenuItem homeMenuItem = new JMenuItem ("home");
+    JMenuItem homeMenuItem = new JMenuItem ("Home");
     homeMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_H, ActionEvent.CTRL_MASK));
     homeMenuItem.addActionListener((event) -> goHome());
     goMenu.add (homeMenuItem);
+    JMenuItem rootMenuItem = new JMenuItem ("Root");
+    //rootMenuItem.setAccelerator (KeyStroke.getKeyStroke
+    //  (KeyEvent.VK_T, ActionEvent.CTRL_MASK));
+    rootMenuItem.addActionListener((event) -> goRoot());
+    goMenu.add (rootMenuItem);
 
     JMenu helpMenu = new JMenu("Help");
     helpMenu.setMnemonic (KeyEvent.VK_H);
