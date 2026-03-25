@@ -2,7 +2,7 @@
 
 A Java-based graphical browser for the Gemini protocol.
 
-Version 1.0d, Kevin Boone, March 2026
+Version 1.0e, Kevin Boone, March 2026
 
 ## Why another Gemini client?
 
@@ -10,7 +10,8 @@ There's no good reason. I wrote JGemini a long time ago, before there were any
 reasonable graphical clients for Linux. Times have changed, and there are a
 number of clients for Linux that are superior to JGemini: Lagrange and Alhena,
 for example.  I maintain JGemini for my own experiments -- I doubt it would be
-much use to anybody else.
+much use to anybody else. It has the putative advantage over other clients
+that it natively supports Markdown documents as well as Gemtext.
 
 ## What is JGemini?
 
@@ -22,14 +23,14 @@ by the Gemini specification, and little else.  It is, however, useable.
 ## Pre-requisites
 
 To run JGemini you'll need a computer with some kind of graphical desktop, and
-a Java JVM. JGemini should work with any Java version after 8.0. I've tested it
-with OpenJDK versions 11-21. If you want to build JGemini from source, you'll
-probably need Maven. 
+a Java JVM. JGemini should work with any Java JVM of version 11.0 or later.
+I've tested it with OpenJDK versions 11-21. If you want to build JGemini from
+source, you'll probably need Maven. 
 
 ## Features
 
 - Handles Gemtext and plain (usually UTF-8) text
-- Rudimentary support for Markdown
+- Native support for CommonMark Markdown
 - Can render local Gemtext files as well as server content
 - Per-server client certificate selection, for authentication
 - Text styling can be configured to suit the display and user preference
@@ -39,6 +40,15 @@ probably need Maven.
 - Search in document
 - Downloaded documents can be saved
 - Allows multiple windows
+
+## Building JGemini
+
+There should be a compiled JAR file in the repository, so there's no need to build, just
+to run JGemini. If you do need to build, it's just
+
+    $ mvn package
+
+This will generate the compiled JARs in `target/`.
 
 ## Running JGemini
 
@@ -92,7 +102,8 @@ if it takes a bit of trial and error.
 Here are a few notes on the individual settings.
 
 JGemini only uses six text styles for the document display, denoted "body"
-(normal text), "h1...h3" (headings) "pre" (for preformatted text) and "a" (for
+(normal text), "h1...h3" (headings) "pre" (for preformatted text), "code" 
+(for technical terms) and "a" (for
 links). The fonts that can be applied to these styles are JVM fonts, which may
 be named differently to platform fonts (and, in some cases, are more
 extensive). To get a list all JVM fonts, run JGemini with the Java command-line
@@ -117,17 +128,17 @@ other than links and headers, I often see people using markdown-style emphasis
 markup, such as the asterisk and underscore, in Gemtext documents.
 Consequently, JGemini respects those marks, and shows the text in bold and
 italic respectively. In principle, this could cause problems if these
-characters were used and _weren't_ intend to emphasise text.
+characters were used and _weren't_ intend to emphasise text.  I could make this
+behaviour user-configurable, if there was a need.
 
-I could make this behaviour user-configurable, if there was a need.
+Naturally, these formatting marks are respected in Markdown.
 
 ## Caveats
 
 Oh, where to start...
 
-JGemini is intended for Linux. It _should_ work on any platform with
-a relatively modern JVM, but I don't care about anything except 
-Linux. 
+JGemini is intended for Linux. It _should_ work on any platform with a
+relatively modern JVM, but I don't care about anything except Linux. 
 
 There is _no_ TLS certificate check, not even trust-on-first-use.  JGemini uses
 encrypted TLS communication because Gemini demands this. However, my experience
@@ -139,7 +150,7 @@ communication, this isn't the software to use.
 
 There is no bookmark support yet.
 
-In fact, JGemini saves not state at all, not even the window size.  If you
+In fact, JGemini saves no state at all, not even the window size.  If you
 don't like the default window size, modify `window.w` and `window.h` in the
 configuration file.
 
@@ -150,17 +161,11 @@ page-down.
 JGemini is based on Java features that have not changed since about 2005.
 Frankly, I'm surprised some of them still exist in the JDK.  The user interface
 is based on that old warhorse, Java Swing. Internally, Gemtext is converted to
-HTML, and displayed using the Swing built-in HTML viewer. That viewer has not
+HTML, and displayed using Swing's built-in HTML viewer. That viewer has not
 been updated since HTML 3 was a new thing but, to be honest, that's more than
-enough to show Gemtext content. In any event, it's possible that these features
-will be removed from Java at some point, or relegated to optional downloads.
-
-JGemini has no separate "download" function. It is not designed for retrieving
-large documents. Although it will download a file and store it if it needs to
-invoke another program to handle it, files that it can display, are displayed,
-however, large they are.  If you start downloading a large file that _can't_ be
-displayed, then any navigation will cancel the download. Sorry, but it's a
-browser, not a download manager.
+enough to show Gemtext and Markdown content. In any event, it's possible that
+these features will be removed from Java at some point, or relegated to
+optional downloads.
 
 In order to keep the user interface responsive, all the content-fetching is
 done asynchronously, in background threads. It's not always easy to see if a
@@ -171,15 +176,20 @@ continue to run in the background until it completes, and then do nothing. This
 doesn't affect how JGemini looks to the user -- it just means that a bunch of
 moribund network operations can be going on invisibly.
 
-JGemini only displays text formats: Gemtext, plain text, and rudimentary
-support for Markdown. When content is fetched from a server, Gemtext is
-signalled by a content type of `text/gemini`, plain text if `text/plain`, and
-Markdown is `text/markdown`.  For local files, Gemtext is signalled by a
-filename ending in `.gmi` and Markdown as `.md`; everything else is treated as
-plain text.  For every other form of content, JGemini stores the downloaded
-data in a temporary file, and uses Java's desktop integration to launch it.
-What happens (if anything) if you click a link to an image, for example,
-depends entirely on how the desktop is configured.
+JGemini only displays text formats: Gemtext, plain text, and Markdown. When
+content is fetched from a server, Gemtext is signalled by a content type of
+`text/gemini`, plain text if `text/plain`, and Markdown is `text/markdown`.
+For local files, Gemtext is signalled by a filename ending in `.gmi` and
+Markdown as `.md`; any other local file is treated as plain text.  For every
+other form of content, JGemini stores the downloaded data in a temporary file,
+and uses Java's desktop integration to launch it.  What happens (if anything)
+if you click a link to an image, for example, depends entirely on how the
+desktop is configured.
+
+Note that, because Gemini servers often don't report the MIME type of Markdown
+correctly, JGemini treats any file it retrieves whose name ends in `.md` as
+Markdown, regardless of the MIME type the server reports. This behaviour could
+be made configurable if it turns out to be a nuisance.
 
 JGemini only supports the Gemini protocol, using URLs that begin `gemini://`.
 If a Gemtext document contains links to any other kind of protocol that Java
@@ -188,7 +198,7 @@ you follow an `http` link, for example, that should invoke a Web browser; but,
 again, this is not under the control of JGemini. If the URL is not one that
 Java understands (e.g., gopher:) then JGemini will not even attempt to follow
 the link, not even by invoking the desktop. Technically, this is because Java
-can't even construct an instance of java.net.URL to pass to the desktop.
+can't even construct an instance of `java.net.URL` to pass to the desktop.
 
 JGemini follows redirections. Although the "best practices" guide for Gemini
 warns against redirections they are, in fact, commonplace.  JGemini does not do
@@ -204,29 +214,31 @@ client should prompt the user and retry the request. JGemini does exactly that,
 and no more. 
 
 There is no caching of any kind, either on disk or in memory. This is a
-feature, not a bug. The problem is that the Gemini protocol does not allow
-content to be timestamped, so there is no robust way to implement a cache. The
-client would have absolutely no way to know whether the data in the cache is up
-to date. Even the "back" button causes the previous page to be re-requested. In
-future, I might implement some form of optimistic caching, but I'm not sure it
-would be safe. 
+feature, not a bug. The Gemini protocol does not allow content to be
+timestamped, so there is no robust way to implement a cache. The client would
+have absolutely no way to know whether the data in the cache is up to date.
+Even the "back" button causes the previous page to be re-requested. In future,
+I might implement some form of optimistic caching, but I'm not sure it would be
+safe. 
 
 Text search is only case-insensitive, and forward.
 
 JGemini supports multiple windows, but not tabs. I hate tabs, and have no plan
-to implement them. Using multiple windows looks this same, from the user
+to implement them. Using multiple windows looks the same, from the user
 perspective, as opening multiple instances of JGemini. However, since all
 windows share a JVM, the multi-window approach uses much less memory.
 
-Markdown support is _very_ rudimentary. Although it looks simple, the Markdown
-format is considerably more difficult to lay out neatly in a viewer than
-Gemtext is (and, of course, plain text is easiest of all).  This situation can
-be improved, if there's any interest.
+JGemini should handle the whole of the CommonMark specification, including the
+escaping and precedent rules, and also GitHub-style table markup. 
+Rendering is crude, however, and not configurable in any way. However,
+embedded links and images should work, including links that are
+images. The is a Markdown test page `samples/test.md` that demonstrates
+some of the supported features.
 
-The Markdown viewer does not support relative links, only full links with a
-protocol and a path. This seems the right approach to me, because authors
-providing Markdown files are probably expecting them to be used in an external
-viewer, where relative links will make no sense.
+In a Gemtext document, images are not in-lined into the text. You have to click
+on the link so see the image, which will be opened in an external viewer.
+JGemini works that way because it's what Gemtext authors have come to expect.
+However, images in Markdown _are_ in-lined into the text, for the same reason.
 
 JGemini does not support feeds of any kind. If you select a feed, you'll
 probably get a page of XML.
@@ -263,5 +275,8 @@ Version 0.1d -- March 2026
 - Added support for client certificate selection
 - Fixed a bug with redirection
 - Fix a bug with URL encoding in uploads
+
+Version 0.1e -- March 2026
+- Improved Markdown support 
 
 

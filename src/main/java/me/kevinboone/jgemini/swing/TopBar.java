@@ -19,12 +19,12 @@ import javax.swing.*;
 public class TopBar extends JPanel
   {
   private JTextField urlBox;
-  private HtmlViewer htmlViewer;
+  private MainWindow mainWindow;
 
-  public TopBar (HtmlViewer htmlViewer)
+  public TopBar (MainWindow mainWindow)
     {
     super();
-    this.htmlViewer = htmlViewer;
+    this.mainWindow = mainWindow;
     setLayout (new GridBagLayout());
 
     urlBox = new JTextField ("");
@@ -36,22 +36,22 @@ public class TopBar extends JPanel
          {
          String url = urlBox.getText();
          if (url.length() > 0)
-           htmlViewer.loadURL (url); 
+           mainWindow.loadURL (url); 
          }
       });
 
     java.net.URL backImgURL = getClass().getResource("/images/back.png");
     ImageIcon backIcon = new ImageIcon (backImgURL);
     JButton backButton = new JButton (backIcon);
-    backButton.addActionListener((event) -> htmlViewer.goBack());
+    backButton.addActionListener((event) -> mainWindow.goBack());
     java.net.URL homeImgURL = getClass().getResource("/images/home.png");
     ImageIcon homeIcon = new ImageIcon (homeImgURL);
     JButton homeButton = new JButton (homeIcon);
-    homeButton.addActionListener((event) -> htmlViewer.goHome());
+    homeButton.addActionListener((event) -> mainWindow.goHome());
     java.net.URL refreshImgURL = getClass().getResource("/images/refresh.png");
     ImageIcon refreshIcon = new ImageIcon (refreshImgURL);
     JButton refreshButton = new JButton (refreshIcon);
-    refreshButton.addActionListener((event) -> htmlViewer.refresh());
+    refreshButton.addActionListener((event) -> mainWindow.refresh());
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 1.0;

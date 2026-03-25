@@ -2,7 +2,7 @@
 
 A Java-based graphical browser for the Gemini protocol. 
 
-Version 1.0c, Kevin Boone, March 2026 
+Version 1.0d, Kevin Boone, March 2026 
 
 ## Why another Gemini client? 
 
@@ -70,7 +70,7 @@ Note that the static configuration of the program's appearance is pretty crude; 
 
 Here are a few notes on the individual settings. 
 
-JGemini only uses six text styles for the document display, denoted "body" (normal text), "h1...h3" (headings) "pre" (for preformatted text) and "a" (for links). The fonts that can be applied to these styles are JVM fonts, which may be named differently to platform fonts (and, in some cases, are more extensive). To get a list all JVM fonts, run JGemini with the Java command-line switch  
+JGemini only uses six text styles for the document display, denoted "body" (normal text), "h1...h3" (headings) "pre" (for preformatted text), "code"  (for technical terms) and "a" (for links). The fonts that can be applied to these styles are JVM fonts, which may be named differently to platform fonts (and, in some cases, are more extensive). To get a list all JVM fonts, run JGemini with the Java command-line switch  
 
 ```
     -Djgemini.dumpfonts 
@@ -154,5 +154,9 @@ Version 0.1 -- March 2021 -- first release
 
 * Updated documentation
 * Added support for client certificate selection
+* Fixed a bug with redirection
+* Fix a bug with URL encoding in uploads
+
+
 
 

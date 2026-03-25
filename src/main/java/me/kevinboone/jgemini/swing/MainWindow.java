@@ -2,13 +2,13 @@
   
   JGemini
 
-  HtmlViewer
+  MainWindow
 
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
 package me.kevinboone.jgemini.swing;
-import me.kevinboone.jgemini.protocol.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -18,14 +18,14 @@ import javax.swing.text.html.StyleSheet;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.filechooser.*;
-import javax.net.ssl.*;
-import java.security.cert.X509Certificate;
 import java.net.*;
 import java.io.*;
 import java.util.*;
 import me.kevinboone.jgemini.base.*;
+import me.kevinboone.jgemini.protocol.*;
+import me.kevinboone.jgemini.converters.*;
 
-public class HtmlViewer extends JFrame 
+public class MainWindow extends JFrame 
   {
   private final static String DIALOG_CAPTION = Config.APP_NAME;
   private final static String WINDOW_CAPTION = Config.APP_NAME;
@@ -40,7 +40,7 @@ public class HtmlViewer extends JFrame
   private SwingWorker loadWorker = null;
   private String searchText = "java"; // TODO
   private int searchPos = 0;
-  private GeminiContent lastContent = null; // Last successful download
+  private ResponseContent lastContent = null; // Last successful download
   private javax.swing.Timer loadTimer = null;
 
 
@@ -49,10 +49,10 @@ public class HtmlViewer extends JFrame
   Constructor
 
 =========================================================================*/
-  public HtmlViewer ()
+  public MainWindow ()
     {
     super();
-    Logger.log (getClass(), "HtmlViewer constructor");
+    Logger.log (getClass(), "MainWindow constructor");
     jEditorPane = new JEditorPane();
         
     HTMLEditorKit kit = new HTMLEditorKit();
@@ -369,7 +369,7 @@ public class HtmlViewer extends JFrame
   
   handleUnsupportedMime
 
-  At present, any response type other than text/gemini is written to
+  At present, any response type other than text/something is written to
   a temp file, and then the desktop is invoked on it. What happens
   after that is down to the interaction between the JVM and the
   platform.
@@ -393,16 +393,16 @@ public class HtmlViewer extends JFrame
 
 /*=========================================================================
   
-  loadGeminiContent
+  loadResponseContent
   
   Make the request on the server, and pack the results into a 
-  GeminiContent object. The results may include an exception -- this
+  ResponseContent object. The results may include an exception -- this
   method itself must not throw any exception
 
 =========================================================================*/
-  private GeminiContent loadGeminiContent (URL url)
+  private ResponseContent loadResponseContent (URL url)
     {
-    GeminiContent gc = new GeminiContent (url);
+    ResponseContent gc = new ResponseContent (url);
     try
       {
       URLConnection conn = url.openConnection();
@@ -472,7 +472,7 @@ public class HtmlViewer extends JFrame
   setLastContent
 
 =========================================================================*/
-  private void setLastContent (GeminiContent gc)
+  private void setLastContent (ResponseContent gc)
     {
     lastContent = gc;
     }
@@ -483,9 +483,8 @@ public class HtmlViewer extends JFrame
   
   We have a gemini:// URL. Load it through its content handler.
 
-  If the qparam arg is non-null, it is appended as a query paramter 
-  _as is_.  Probably whatever calls this method will need to URL-encode 
-  qparam first. 
+  If the qparam arg is non-null, it is appended as a query parameter 
+  _as is_.  
 
 =========================================================================*/
   private void loadGemini (URL url, String qparam)
@@ -525,7 +524,7 @@ public class HtmlViewer extends JFrame
 
     loadWorker = new SwingWorker()  
       { 
-      GeminiContent gc = null;
+      ResponseContent gc = null;
 
       @Override
       protected String doInBackground() throws Exception  
@@ -534,7 +533,7 @@ public class HtmlViewer extends JFrame
         loadTimer.setRepeats (true);
         loadTimer.start();
         setStatus ("Loading " + fullUrl);
-        gc = loadGeminiContent (fullUrl); 
+        gc = loadResponseContent (fullUrl); 
         return "foo"; // Meaningless return
         } 
 
@@ -556,7 +555,9 @@ public class HtmlViewer extends JFrame
           if (e == null)
             {
             String mime = gc.getMime();
-            if (mime.startsWith ("text/gemini"))
+            URL url = gc.getURL(); 
+            String urlStr = url.toString();
+            if (mime.startsWith ("text/gemini") || urlStr.endsWith (".gmi"))
               {
               baseUrl = fullUrl; 
               // We have to set this here, because renderGemtext
@@ -568,7 +569,7 @@ public class HtmlViewer extends JFrame
               backlinks.push (fullUrl);
 	      setLastContent (gc);
               }
-            else if (mime.startsWith ("text/plain"))
+            else if (mime.startsWith ("text/plain") || urlStr.endsWith (".txt"))
               {
               baseUrl = fullUrl; 
               // We have to set this here, because renderGemtext
@@ -580,7 +581,7 @@ public class HtmlViewer extends JFrame
 	      setLastContent (gc);
               backlinks.push (fullUrl);
               }
-            else if (mime.startsWith ("text/markdown"))
+            else if (mime.startsWith ("text/markdown") || urlStr.endsWith (".md"))
               {
               baseUrl = fullUrl; 
               // We have to set this here, because renderGemtext
@@ -676,7 +677,12 @@ public class HtmlViewer extends JFrame
     {
     e.printStackTrace();
     String messageFromServer = e.getMessage();
-    reportGenError (url, e.getMessage());
+    if (e instanceof UnknownHostException)
+      {
+      reportGenError (url, "Unknown host: " + e.getMessage());
+      }
+    else
+      reportGenError (url, e.getMessage());
     }
 
 /*=========================================================================
@@ -889,6 +895,9 @@ public class HtmlViewer extends JFrame
     styleSheet.addRule ("pre {" 
         + Config.getConfig().getProperty 
             (Config.STYLE_PRE, Config.DEFLT_STYLE_PRE)  + "}");
+    styleSheet.addRule ("code {" 
+        + Config.getConfig().getProperty 
+            (Config.STYLE_CODE, Config.DEFLT_STYLE_CODE)  + "}");
     styleSheet.addRule ("a {" 
         + Config.getConfig().getProperty 
             (Config.STYLE_A, Config.DEFLT_STYLE_A)  + "}");
@@ -1134,8 +1143,8 @@ public class HtmlViewer extends JFrame
 =========================================================================*/
   public static void newWindow (String url)
     {
-    Logger.log (HtmlViewer.class, "newWindow() url=" + url);
-    HtmlViewer viewer = new HtmlViewer();
+    Logger.log (MainWindow.class, "newWindow() url=" + url);
+    MainWindow viewer = new MainWindow();
     viewer.setVisible (true);
     viewer.loadURL (url);
     }
@@ -1147,7 +1156,7 @@ public class HtmlViewer extends JFrame
 =========================================================================*/
   public static void newWindow ()
     {
-    HtmlViewer viewer = new HtmlViewer();
+    MainWindow viewer = new MainWindow();
     viewer.setVisible (true);
     if (Config.getConfig().getNewWindowMode() == 0)
       viewer.goHome();

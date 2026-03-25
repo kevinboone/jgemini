@@ -9,7 +9,7 @@
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
-package me.kevinboone.jgemini.swing;
+package me.kevinboone.jgemini.converters;
 import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;

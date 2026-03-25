@@ -39,6 +39,9 @@ public class Config extends Properties
   public final static String STYLE_PRE = "style.pre";
   public final static String DEFLT_STYLE_PRE = 
       "color:black; font: 16px monospace";
+  public final static String STYLE_CODE = "style.code";
+  public final static String DEFLT_STYLE_CODE = 
+      "color:black; font: 16px monospace";
   public final static String STYLE_A = "style.a";
   public final static String DEFLT_STYLE_A = 
       "text-decoration: none; color: red";

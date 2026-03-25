@@ -4,7 +4,7 @@
 
   Main 
 
-  Program execution starts here. All we do is create an HtmlViewer
+  Program execution starts here. All we do is create an MainWindow
   object and have it load a page.
 
   Copyright (c)2021 Kevin Boone, GPLv3.0 
@@ -24,7 +24,7 @@ import me.kevinboone.jgemini.base.*;
 
 public class Main
   {
-  static HtmlViewer viewer;
+  static MainWindow viewer;
 
   public static void main (String[] args)
       throws Exception
@@ -55,7 +55,7 @@ public class Main
       {
       public void run()
         {
-        viewer = new HtmlViewer();
+        viewer = new MainWindow();
         viewer.setVisible (true);
         Logger.log (Main.class, "Show first page on startup");
         if (args.length >= 1)
