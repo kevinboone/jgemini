@@ -327,7 +327,6 @@ public class MainWindow extends JFrame
 =========================================================================*/
   protected void goRoot()
     {
-    System.out.println ("root=" + baseUrl);
     try
       {
       java.net.URL newUrl = new URL (baseUrl, "/"); 
@@ -942,7 +941,7 @@ public class MainWindow extends JFrame
   
   fiddleWithKeyMap 
 
-  Make the HTML editor stopp grabbing the backspace and ctrl+H keys, which
+  Make the HTML editor stop grabbing the backspace and ctrl+H keys, which
   it seems to want, and accept the up/down keys, which it doesn't.
 
   Honestly, I have next to no idea what I'm doing here -- I got this
@@ -957,10 +956,10 @@ public class MainWindow extends JFrame
     inputMap.put (KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK),
       "none");
 
-    KeyStroke key1 = KeyStroke.getKeyStroke (KeyEvent.VK_UP, 0); 
-    inputMap.put (key1, kit.upAction);
-    KeyStroke key2 = KeyStroke.getKeyStroke (KeyEvent.VK_DOWN, 0); 
-    inputMap.put (key2, kit.downAction);
+    KeyStroke keyUp = KeyStroke.getKeyStroke (KeyEvent.VK_UP, 0); 
+    inputMap.put (keyUp, kit.upAction);
+    KeyStroke keyDown = KeyStroke.getKeyStroke (KeyEvent.VK_DOWN, 0); 
+    inputMap.put (keyDown, kit.downAction);
 
     String keyStrokeAndKey = "UP";
     KeyStroke keyStroke = KeyStroke.getKeyStroke (keyStrokeAndKey);

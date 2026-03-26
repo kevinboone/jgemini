@@ -154,4 +154,8 @@ the root level of a Gemini capsule. This is convenient, but the bar takes up a
 lot of screen space. JGemini provides a menu command Go|Root which has the same
 effect. 
 
+_Why don't the Home/End keys work?_
+
+Some keystrokes only work when the input focus is in the document viewer window
+(and not, for example, in the URL bar). Just click the document.
 

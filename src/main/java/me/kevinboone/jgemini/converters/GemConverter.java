@@ -78,7 +78,7 @@ public class GemConverter
     if (link.endsWith(".gif") || link.endsWith (".jpg") || 
       link.endsWith (".png") || link.endsWith (".jpeg"))
       return "📷";
-    return "⇨";
+    return "→";
     }
 
   /** Parse and convert a Gemtext link line. */
@@ -166,7 +166,6 @@ public class GemConverter
       }
 
     sb.append ("</body></html>\n");
-    //System.out.println ("html=" + new String(sb));
     return new String (sb);
     }
 

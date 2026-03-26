@@ -111,6 +111,12 @@ allow qualifiers ("px", "em") the control fonts do not -- they are generic Java
 sizes. This all probably sounds more complicated than it really is: the sample
 configuration file should make it clear. 
 
+## Key bindings
+
+The usual arrow keys and page up/down should work. You can highlight text
+using shift+arrow combinations. To go to the top/bottom of the page,
+using ctrl+PgUp/PgDn.
+
 ## Implementation oddities
 
 Although the Gemtext format specification makes no provision for formatting
@@ -123,7 +129,21 @@ behaviour user-configurable, if there was a need.
 
 Naturally, these formatting marks are respected in Markdown.
 
-## Caveats
+JGemini is based on Java features that have not changed since about 2005.
+Frankly, I'm surprised some of them still exist in the JDK.  The user interface
+is based on that old warhorse, Java Swing. Internally, Gemtext is converted to
+HTML, and displayed using Swing's built-in HTML viewer. That viewer has not
+been updated since HTML 3 was a new thing but, to be honest, that's more than
+enough to show Gemtext and Markdown content. In any event, it's possible that
+these features will be removed from Java at some point, or relegated to
+optional downloads.
+
+In a Gemtext document, images are not in-lined into the text. You have to click
+on the link so see the image, which will be opened in an external viewer.
+JGemini works that way because it's what Gemtext authors have come to expect.
+However, images in Markdown _are_ in-lined into the text, for the same reason.
+
+## Caveats and limitations
 
 Oh, where to start...
 
@@ -143,19 +163,6 @@ There is no bookmark support yet.
 In fact, JGemini saves no state at all, not even the window size.  If you
 don't like the default window size, modify `window.w` and `window.h` in the
 configuration file.
-
-JGemini is designed to be operated with a mouse. The only keystrokes that the
-program recognizes, apart from menu short-cuts, are up, down, page-up,
-page-down.
-
-JGemini is based on Java features that have not changed since about 2005.
-Frankly, I'm surprised some of them still exist in the JDK.  The user interface
-is based on that old warhorse, Java Swing. Internally, Gemtext is converted to
-HTML, and displayed using Swing's built-in HTML viewer. That viewer has not
-been updated since HTML 3 was a new thing but, to be honest, that's more than
-enough to show Gemtext and Markdown content. In any event, it's possible that
-these features will be removed from Java at some point, or relegated to
-optional downloads.
 
 In order to keep the user interface responsive, all the content-fetching is
 done asynchronously, in background threads. It's not always easy to see if a
@@ -225,11 +232,6 @@ embedded links and images should work, including links that are
 images. The is a Markdown test page `samples/test.md` that demonstrates
 some of the supported features.
 
-In a Gemtext document, images are not in-lined into the text. You have to click
-on the link so see the image, which will be opened in an external viewer.
-JGemini works that way because it's what Gemtext authors have come to expect.
-However, images in Markdown _are_ in-lined into the text, for the same reason.
-
 JGemini does not support feeds of any kind. If you select a feed, you'll
 probably get a page of XML.
 
@@ -281,5 +283,5 @@ Version 0.1e -- March 2026
 - Added Go|Root
 - Added styling for block quotes
 - Improved the text entry dialog box, and added a character count
-
+- Updated documentation a little
 

@@ -1,13 +1,20 @@
-Caching (but how, given the lack of timestamp?)
+Handle Home/End keys.
 
-Do something with broken links like "about:xxx" and "gopher:xxx" -- may be impossible without re-implementing the viewer completely.
+Implement caching (but how, given the lack of timestamp?)
 
-Catch redirect loops
+Do something with un-actionable links like "about:xxx" and "gopher:xxx" -- may
+be impossible without re-implementing the viewer completely.
 
-Tidy up Markdown formatting
+Catch redirect loops.
 
-Fix relative links in Markdown (maybe -- they probably aren't used)
+Add support for Spartan, Nex, maybe Gopher.
 
-Gopher support?
+Implement a download manager. At least, find a way to prevent the program exiting whilst a 
+download is in progress.
 
-Download manager? At least, find a way to prevent the program exiting whilst a download is in progress.
+Store history, and allow past URIs to be recalled.
+
+Zoom/Scale (very difficult, without reimplementing HTMLEditorKit).
+
+Add bookmark support.
+
