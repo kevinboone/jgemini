@@ -1,4 +1,4 @@
-Handle Home/End keys.
+Add image download link on Markdown pages.
 
 Implement caching (but how, given the lack of timestamp?)
 

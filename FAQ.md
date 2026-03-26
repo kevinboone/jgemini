@@ -1,24 +1,5 @@
 # JGemini FAQ
 
-_How do I set the home page?_
-
-Add an entry `url.home` to the configuration file -- either the
-system-level configuration file or the user configuration file
-
-_Where is the configuration file?_
-
-On Linux, the system-level configuration file is
-`/etc/jgemini/jgemini.properties`, and the user-level configuration file is
-`$HOME/.jgemini.properties` (note the period at the start of the filename).
-On systems other than Windows -- I don't know. This is a matter for the
-Java JVM.
-
-_Why does JGemini not remember the window size/position?_
-
-Because I didn't implement this. In fact, JGemini is _completely stateless_ by
-design. It remembers nothing -- no settings, no history, no cache, nothing.
-This is intentional, although it won't suit everyone.
-
 _How do I install JGemini?_
 
 You don't need to do anything in particular. Just copy the program's JAR file
@@ -46,6 +27,43 @@ changes get picked up eventually, but it can take minutes to hours. You can
 speed this up using Gnome-specific tricks, but I'm not going to explain them
 here, because they'll have changed by the time you read this.
 
+_How do I set the home page?_
+
+Add an entry `url.home` to the configuration file -- either the
+system-level configuration file or the user configuration file
+
+_Where is the configuration file?_
+
+On Linux, the system-level configuration file is
+`/etc/jgemini/jgemini.properties`, and the user-level configuration file is
+`$HOME/.jgemini.properties` (note the period at the start of the filename).  On
+systems other than Windows -- I don't know. This is a matter for the Java JVM.
+
+_Why does JGemini not remember the window size/position?_
+
+JGemini is _completely stateless_ by design. It remembers nothing -- no
+settings, no history, no cache, nothing.  This is intentional (see below),
+although it won't suit everyone.
+
+_Why does JGemini not store anything from the user's session?_
+
+People who use Gemini and similar systems are often quite concerned about
+matters related to privacy. Storing browsing history, etc., is a potential
+privacy hazard. Although it there are ways to mitigate this hazard, I thought
+it would be easier, and safer, of JGemini simply didn't store anything at all. 
+
+I have to point out, however, that files that JGemini downloads, other than
+documents, might be stored in a temporary directory, if JGemini has to hand
+them off to the platform to be viewed.
+
+_How do I store bookmarks?_
+
+Sorry, you can't. See above. 
+
+You can create a `.gmi` file containing only bookmarks, stored some place in
+your home directory or on a server of your choice. Then you can, if you wish,
+set it as the home page. This is how I use JGemini.
+
 _How do I open a local .gmi file?_
 
 From the command line, just run
@@ -54,13 +72,6 @@ From the command line, just run
 
 If you've followed the desktop setup steps outlined above, you should
 just be able to click the `.gmi` file in a file manager.
-
-_How do I store bookmarks?_
-
-Sorry, you can't. JGemini is stateless by design, and doesn't save any
-information. You can create a `.gmi` file containing only bookmarks, stored
-some place in your home directory or on a server of your choice. Then you can,
-if you wish, set it as the home page as described above.
 
 _What Java version do I need?_
 
@@ -76,23 +87,23 @@ If you don't have a configuration file, use the one in the
 
 _Does JGemini handle images?_
 
-Yes, but it doesn't in-line them when displaying Gemini files.  It just
-displays a clickable link with the image's accompanying text. Clicking the link
-saves the image and hands it over to the desktop to display. What software the
-desktop uses to do that is not under the control of JGemini. 
+Yes. With Markdown documents, images are in-lined into the text by 
+default. With Gemtext documents, in-lining behaviour is controlled by
+the configuration file property `gemtext.inline.images`, which takes
+values `1` (yes) or `0` (no).
 
-Some Gemini clients in-line images, but this is a nuisance in situations where
-the page author has linked an enormous image. Neither the GMI page format nor
-the Gemini protocol provide any way for a Gemini client to know how large an
-image is, except by downloading it.
+If the images are inlined, they will all be displayed with the
+same width, controlled by the property `inline.image.width`. This
+is because Gemtext provides no way to set a particular image size,
+and it often isn't helpful to let the image display at its
+full size.
 
-The option to have JGemini in-line images from Gemtext files -- with the user's
-agreement -- is something I've considered, but so far I haven't been motivated
-to implement it. 
+_How do I see an image at a different size?_
 
-Note that images _are_ in-lined when displaying Markdown, because I assume that
-people who use Markdown are familiar with that, and will have scaled images
-appropriately. 
+Right-click the caption or URI under the image, and select "open". This will
+download the image and hand it off to the platform to open a relevant
+application. JGemini does not (yet) include an image viewer, other than
+in the document itself. 
 
 _What happens if I follow a non-Gemini link in a GMI page?_
 

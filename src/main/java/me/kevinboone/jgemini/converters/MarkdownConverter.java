@@ -43,7 +43,9 @@ class LinkAttributeProvider implements AttributeProvider
     {
     if (node instanceof Image) 
       {
+      Config config = Config.getConfig();
       String oldSrc = attributes.get ("src");
+      attributes.put("width", config.inlineImageWidth());
       try
         {
         URL src = new URL (baseUrl, oldSrc);

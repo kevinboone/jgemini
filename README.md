@@ -2,7 +2,7 @@
 
 A Java-based graphical browser for the Gemini protocol.
 
-Version 1.0e, Kevin Boone, March 2026
+Version 1.0f, Kevin Boone, March 2026
 
 ## Why another Gemini client?
 
@@ -138,10 +138,20 @@ enough to show Gemtext and Markdown content. In any event, it's possible that
 these features will be removed from Java at some point, or relegated to
 optional downloads.
 
-In a Gemtext document, images are not in-lined into the text. You have to click
-on the link so see the image, which will be opened in an external viewer.
-JGemini works that way because it's what Gemtext authors have come to expect.
-However, images in Markdown _are_ in-lined into the text, for the same reason.
+For compatibility with other Gemini browsers, JGemini can be configured _not_
+to in-line images from a Gemtext document into the text if preferred.  The
+default is to insert images into the document. The configuration property is
+`gemtext.inline.images=1|0`.
+
+Images are all displayed the same (configurable) size. This is because none of
+the docuent formats JGemini supports allow a size to be specified, and it looks
+odd if they're all different sizes.
+
+Images are fetched asynchronously. It's not always easy to tell when this is
+happening, except that images areas will be blank.  Although image widths will
+all be the same, heights might be differnt, to keep the correct aspect ratio.
+Because JGemini does not know the total size of an image until it's been
+retrieved, the page might redraw after downloading an image.
 
 ## Caveats and limitations
 
@@ -284,4 +294,8 @@ Version 0.1e -- March 2026
 - Added styling for block quotes
 - Improved the text entry dialog box, and added a character count
 - Updated documentation a little
+
+Version 1.0f -- March 2026
+- Added inline image support in Gemtext
+- Added configuration for image size
 

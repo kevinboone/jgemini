@@ -69,17 +69,38 @@ public class GemConverter
     return boldPattern.matcher(s).replaceAll("<b>$1</b>");
     }
 
+  private boolean isImageUri (String uri)
+    {
+    if (uri.endsWith(".gif") || uri.endsWith (".jpg") || 
+        uri.endsWith (".png") || uri.endsWith (".jpeg"))
+      return true;
+    return false;
+    }
+
   private String getLinkIcon (String link, String text)
     {
     if (text == null) return "";
     if (text.length() < 2) return "";
     if (EmojiManager.isEmoji(text.substring(0,2))) 
       return ""; // Don't decorate an emoji
-    if (link.endsWith(".gif") || link.endsWith (".jpg") || 
-      link.endsWith (".png") || link.endsWith (".jpeg"))
+    if (isImageUri (link))
       return "📷";
     return "→";
     }
+
+  private String writeLink (String uri, String title)
+    {
+    Config config = Config.getConfig();
+    if (isImageUri (uri) && config.gemtextInlineImages())
+      {
+      return "<img width=\"" + config.inlineImageWidth() + "\" src=\"" 
+        + rewriteLink (uri) + "\">" + "<br/>" + "<a href=\"" 
+           + rewriteLink (uri) + "\">" + getLinkIcon (uri, title) + " " 
+             + escapeHtml (title) + "</a><br/>\n"; 
+      }
+    return "<a href=\"" + rewriteLink (uri) + "\">" + 
+      getLinkIcon (uri, title) + " " + escapeHtml (title) + "</a><br/>\n"; 
+    } 
 
   /** Parse and convert a Gemtext link line. */
   private String parseLink (String gem)
@@ -87,17 +108,11 @@ public class GemConverter
     String[] args = gem.split ("\\s+", 2);
     if (args.length >= 2)
       {
-      String link = args[0];
-      String text = args[1];
-      return "<a href=\"" + rewriteLink (link) + "\">" + 
-        getLinkIcon (link, text) + " " + escapeHtml(text) + "</a><br/>\n"; 
+      return writeLink (args[0], args[1]);
       }
     else if (args.length == 1)
       {
-      String link = args[0];
-      String text = args[0];
-      return "<a href=\"" + rewriteLink (link) + "\">" 
-        + escapeHtml(text) + "</a><br/>\n"; 
+      return writeLink (args[0], args[0]);
       }
     else
       {

@@ -79,13 +79,21 @@ JGemini only uses seven text styles for the document display, denoted "body" (no
 
 The settings `ui.control_font` and `ui.user_font` control the appearance of the user interface elements other than the document display. Broadly, the "user" font applies to text entry controls, while the "control" font applies to everything else (menus, buttons...). I'm sorry about this, but the font configuration here is Java-like ("name size"), while the document display styles are CSS-like ("size name"). In addition, while the document font sizes allow qualifiers ("px", "em") the control fonts do not -- they are generic Java sizes. This all probably sounds more complicated than it really is: the sample configuration file should make it clear.  
 
+## Key bindings 
+
+The usual arrow keys and page up/down should work. You can highlight text using shift+arrow combinations. To go to the top/bottom of the page, using ctrl+PgUp/PgDn. 
+
 ## Implementation oddities 
 
 Although the Gemtext format specification makes no provision for formatting other than links and headers, I often see people using markdown-style emphasis markup, such as the asterisk and underscore, in Gemtext documents. Consequently, JGemini respects those marks, and shows the text in bold and italic respectively. In principle, this could cause problems if these characters were used and _weren't_ intend to emphasise text.  I could make this behaviour user-configurable, if there was a need. 
 
 Naturally, these formatting marks are respected in Markdown. 
 
-## Caveats 
+JGemini is based on Java features that have not changed since about 2005. Frankly, I'm surprised some of them still exist in the JDK.  The user interface is based on that old warhorse, Java Swing. Internally, Gemtext is converted to HTML, and displayed using Swing's built-in HTML viewer. That viewer has not been updated since HTML 3 was a new thing but, to be honest, that's more than enough to show Gemtext and Markdown content. In any event, it's possible that these features will be removed from Java at some point, or relegated to optional downloads. 
+
+In a Gemtext document, images are not in-lined into the text. You have to click on the link so see the image, which will be opened in an external viewer. JGemini works that way because it's what Gemtext authors have come to expect. However, images in Markdown _are_ in-lined into the text, for the same reason. 
+
+## Caveats and limitations 
 
 Oh, where to start... 
 
@@ -96,10 +104,6 @@ There is _no_ TLS certificate check, not even trust-on-first-use.  JGemini uses 
 There is no bookmark support yet. 
 
 In fact, JGemini saves no state at all, not even the window size.  If you don't like the default window size, modify `window.w` and `window.h` in the configuration file. 
-
-JGemini is designed to be operated with a mouse. The only keystrokes that the program recognizes, apart from menu short-cuts, are up, down, page-up, page-down. 
-
-JGemini is based on Java features that have not changed since about 2005. Frankly, I'm surprised some of them still exist in the JDK.  The user interface is based on that old warhorse, Java Swing. Internally, Gemtext is converted to HTML, and displayed using Swing's built-in HTML viewer. That viewer has not been updated since HTML 3 was a new thing but, to be honest, that's more than enough to show Gemtext and Markdown content. In any event, it's possible that these features will be removed from Java at some point, or relegated to optional downloads. 
 
 In order to keep the user interface responsive, all the content-fetching is done asynchronously, in background threads. It's not always easy to see if a download is still in progress. If you try to download something else while an existing download is ongoing, JGemini will try to cancel the previous transfer. It probably won't succeed, Java being what it is, and the old transfer will continue to run in the background until it completes, and then do nothing. This doesn't affect how JGemini looks to the user -- it just means that a bunch of moribund network operations can be going on invisibly. 
 
@@ -120,8 +124,6 @@ Text search is only case-insensitive, and forward.
 JGemini supports multiple windows, but not tabs. I hate tabs, and have no plan to implement them. Using multiple windows looks the same, from the user perspective, as opening multiple instances of JGemini. However, since all windows share a JVM, the multi-window approach uses much less memory. 
 
 JGemini should handle the whole of the CommonMark specification, including the escaping and precedent rules, and also GitHub-style table markup.  Rendering is crude, however, and not configurable in any way. However, embedded links and images should work, including links that are images. The is a Markdown test page `samples/test.md` that demonstrates some of the supported features. 
-
-In a Gemtext document, images are not in-lined into the text. You have to click on the link so see the image, which will be opened in an external viewer. JGemini works that way because it's what Gemtext authors have come to expect. However, images in Markdown _are_ in-lined into the text, for the same reason. 
 
 JGemini does not support feeds of any kind. If you select a feed, you'll probably get a page of XML. 
 
@@ -168,7 +170,6 @@ Version 0.1 -- March 2021 -- first release
 * Added Go|Root
 * Added styling for block quotes
 * Improved the text entry dialog box, and added a character count
-
-
+* Updated documentation a little
 
 

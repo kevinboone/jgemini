@@ -19,6 +19,7 @@ public class Config extends Properties
   public final static String APP_NAME = "JGemini";
   public final static String VERSION = "1.0";
   private boolean debug = false;
+  private boolean gemtextInlineImages = false;
   private final static String SYS_PREFS_FILE = "jgemini.properties"; 
   private final static String PREFS_FILE = ".jgemini.properties"; 
   public final static String URL_HOME = "url.home";
@@ -63,6 +64,10 @@ public class Config extends Properties
   public final static String DEFLT_UI_CONTROL_FONT = "Sans 20";
   public final static String UI_NEW_WINDOW_MODE = "ui,new_window";
   public final static String DEFLT_UI_NEW_WINDOW_MODE = "0";
+  public final static String GEMTEXT_INLINE_IMAGES = "gemtext.inline.images";
+  public final static String DEFLT_GEMTEXT_INLINE_IMAGES = "1";
+  public final static String INLINE_IMAGE_WIDTH = "inline.image.width";
+  public final static String DEFLT_INLINE_IMAGE_WIDTH = "600";
 
   private static Config instance = null;
 
@@ -86,6 +91,17 @@ public class Config extends Properties
   public boolean debug()
     {
     return debug;
+    }
+
+  public boolean gemtextInlineImages()
+    {
+    return gemtextInlineImages;
+    }
+
+  public String inlineImageWidth()
+    {
+    return getProperty 
+        (INLINE_IMAGE_WIDTH, DEFLT_INLINE_IMAGE_WIDTH);
     }
 
   public int getNewWindowMode ()
@@ -152,7 +168,14 @@ public class Config extends Properties
       // This may not be an error
       Logger.log (this.getClass(), e.toString());
       }
-    if (getProperty (DEBUG, "0").equals ("1")) debug = true;
+    if (getProperty (DEBUG, DEFLT_DEBUG).equals ("1")) 
+      debug = true;
+    else
+      debug = false;
+    if (getProperty (GEMTEXT_INLINE_IMAGES, DEFLT_GEMTEXT_INLINE_IMAGES).equals ("1")) 
+      gemtextInlineImages = true;
+    else
+      gemtextInlineImages = false;
     }
 
   }
