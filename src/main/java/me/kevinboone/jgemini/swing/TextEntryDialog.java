@@ -28,7 +28,7 @@ private int maxInputBytes;
 
 public TextEntryDialog (JFrame parent, int maxInputBytes)
   {
-  super (parent, "Enter text", Dialog.ModalityType.APPLICATION_MODAL);
+  super (parent, "Enter text", Dialog.ModalityType.DOCUMENT_MODAL);
 
   input = null;	
   this.maxInputBytes = maxInputBytes;

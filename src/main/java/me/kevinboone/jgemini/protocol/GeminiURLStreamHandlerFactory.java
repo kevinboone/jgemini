@@ -1,6 +1,4 @@
 package me.kevinboone.jgemini.protocol;
-import javax.net.ssl.*;
-import java.security.cert.X509Certificate;
 import java.net.*;
 import java.io.*;
 
@@ -12,6 +10,10 @@ public class GeminiURLStreamHandlerFactory implements URLStreamHandlerFactory
     if ("gemini".equals(protocol)) 
       {
       return new GeminiURLStreamHandler();
+      }
+    else if ("nex".equals(protocol)) 
+      {
+      return new NexURLStreamHandler();
       }
     return null;
     }

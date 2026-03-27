@@ -49,12 +49,13 @@ _Why does JGemini not store anything from the user's session?_
 
 People who use Gemini and similar systems are often quite concerned about
 matters related to privacy. Storing browsing history, etc., is a potential
-privacy hazard. Although it there are ways to mitigate this hazard, I thought
+privacy hazard. Although there are ways to mitigate this hazard, I thought
 it would be easier, and safer, of JGemini simply didn't store anything at all. 
 
 I have to point out, however, that files that JGemini downloads, other than
 documents, might be stored in a temporary directory, if JGemini has to hand
-them off to the platform to be viewed.
+them off to the platform to be viewed. Images of types that JGemini supports
+internally are not saved anywhere, except in memory.
 
 _How do I store bookmarks?_
 
@@ -92,20 +93,30 @@ default. With Gemtext documents, in-lining behaviour is controlled by
 the configuration file property `gemtext.inline.images`, which takes
 values `1` (yes) or `0` (no).
 
-If the images are inlined, they will all be displayed with the
-same width, controlled by the property `inline.image.width`. This
-is because Gemtext provides no way to set a particular image size,
-and it often isn't helpful to let the image display at its
-full size.
+If the images are in-lined, they will all be displayed with the same width,
+controlled by the property `inline.image.width`. This is because Gemtext
+provides no way to set a particular image size, and it often isn't helpful to
+let the image display at its full size.
 
-_How do I see an image at a different size?_
+_How do I see an image at full size?_
 
-Right-click the caption or URI under the image, and select "open". This will
-download the image and hand it off to the platform to open a relevant
-application. JGemini does not (yet) include an image viewer, other than
-in the document itself. 
+Right-click the caption or URI under the image, and select "Open" or "Open in
+new window" from the menu. This will display the image without size
+constraints.
 
-_What happens if I follow a non-Gemini link in a GMI page?_
+_How do I download an image?_
+
+Right-click the caption or URI under the image, and select "Download".  The
+File|Save menu won't work on a window that contains only an image, for tedious
+technical reasons.
+
+_Why can't I see a progress indicator when downloading a large image?_
+
+The Gemini protocol does not provide any indication of the size of the
+download, so there's no way for JGemini to know how close the download is to
+being completed.
+
+_What happens if I follow a non-Gemini link in a Gemtext page?_
 
 If it's a link to a protocol that Java understands, like `http:`, then
 JGemini will pass the link to the desktop, while will usually do

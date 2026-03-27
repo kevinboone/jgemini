@@ -1,0 +1,31 @@
+# Document display styles. Note that these are CSS-like
+
+style.body=background: black; color:white; font: 16px Serif; margin-left: 40px; margin-right: 40px; margin-bottom: 10px; 
+style.p=color: white
+style.h1=color: #C0F0; font: 30px Liberation Sans; font-weight: bold 
+style.h2=color: #F0F0; font: 24px Liberation Sans 
+style.h3=color: #C0F0; font: 22px Liberation Sans 
+style.pre=color:white; font: 16px monospace
+style.code=color:white; font: 16px monospace
+style.a=text-decoration: none; color: #8080C0
+style.a_hover=text-decoration: none; color: red; font-weight: bold
+style.blockquote= background: #101010; font-weight: bold; padding: 8px 
+
+# User interface font settings
+
+ui.control_font=Liberation Sans 20
+ui.user_font=Liberation Sans 20
+
+# Initial window size
+
+window.w=1200
+window.h=900
+
+# Inline image settings
+
+gemtext.inline.images=1
+inline.image.width=400
+
+# Logging on/off
+
+debug=0

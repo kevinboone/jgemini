@@ -4,7 +4,7 @@
 
   MainWindow
 
-  Copyright (c)2021 Kevin Boone, GPLv3.0 
+  Copyright (c)2021-6 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
 package me.kevinboone.jgemini.swing;
@@ -25,12 +25,11 @@ import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.protocol.*;
 import me.kevinboone.jgemini.converters.*;
 
-public class MainWindow extends JFrame 
+public class MainWindow extends JFrame
   {
-  private final static String DIALOG_CAPTION = Config.APP_NAME;
-  private final static String WINDOW_CAPTION = Config.APP_NAME;
-  private final static String EMPTY_WINDOW_TEXT = 
-    Config.APP_NAME + ": a browser for the Gemini protocol";
+  private final static String DIALOG_CAPTION = Strings.APP_NAME;
+  private final static String WINDOW_CAPTION = Strings.APP_NAME;
+  private final static String EMPTY_WINDOW_TEXT = Strings.EMPTY_WINDOW_TEXT;
   private JEditorPane jEditorPane;
   private URL baseUrl = null;
   private TopBar topBar;
@@ -54,7 +53,7 @@ public class MainWindow extends JFrame
     super();
     Logger.log (getClass(), "MainWindow constructor");
     jEditorPane = new JEditorPane();
-        
+       jEditorPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); 
     HTMLEditorKit kit = new HTMLEditorKit();
     jEditorPane.setEditorKit (kit);
     jEditorPane.setEditable (false);
@@ -86,7 +85,7 @@ public class MainWindow extends JFrame
             } 
           });
    
-    // Add a custom listener for right-click events
+    // Add a custom listener for right-click events on links
     jEditorPane.addMouseListener (new RightMouseLinkListener()
       {
       public void clicked (String href, int x, int y)
@@ -110,13 +109,14 @@ public class MainWindow extends JFrame
     // Create the frame components and layout.
     topBar = new TopBar(this);
     statusBar = new StatusBar();
+    StatusHandler.getInstance().addListener (statusBar);
     JScrollPane scrollPane = new JScrollPane (jEditorPane);
     getContentPane().add(topBar, BorderLayout.NORTH);
     getContentPane().add(scrollPane, BorderLayout.CENTER);
     getContentPane().add(statusBar, BorderLayout.SOUTH);
     Document doc = kit.createDefaultDocument();
     jEditorPane.setDocument(doc);
-    jEditorPane.setText (EMPTY_WINDOW_TEXT);
+    jEditorPane.setText ("<p align=\"center\">" + EMPTY_WINDOW_TEXT + "</p>");
     setSize (Config.getConfig().getWindowWidth(), 
        Config.getConfig().getWindowHeight());
     setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -216,6 +216,42 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
+  renderNex
+
+  Convert the Nex-flavoured plain text to HTML and display it
+
+=========================================================================*/
+  private void renderNex (byte[] content, String encoding)
+    {
+    if (content.length > 0)
+      {
+      try
+        {
+        Logger.log (getClass(), "Converting ex plain text to HTML");
+        String stringForm;
+        Logger.log (getClass(), "Encoding is " + encoding);
+        if (encoding != null && encoding.length() > 0)
+          stringForm = new String (content, encoding);
+        else
+          stringForm = new String (content);
+        String html = new NexConverter(baseUrl).textToHtml 
+           (stringForm, null); // Some work to do here
+        setHtml (html);
+        }
+      catch (UnsupportedEncodingException e)
+        {
+        setHtml ("[Server returned a response with an unsupported encoding: " 
+          + encoding + "]");
+        }
+      }
+    else
+      {
+      setHtml ("[Server returned a valid, but empty, response]");
+      }
+    }
+
+/*=========================================================================
+  
   renderGemtext  
 
   Convert the text returned from the server in a text/gemini response
@@ -262,7 +298,7 @@ public class MainWindow extends JFrame
   private void openLink ()
     {
     Logger.log (getClass(), "Prompt for link");
-    String url = JOptionPane.showInputDialog (this, "Enter a Gemini URL:", 
+    String url = JOptionPane.showInputDialog (this, Strings.ENTER_GEMINI_URL, 
       DIALOG_CAPTION, 1);
     if (url != null)
       {
@@ -492,6 +528,71 @@ public class MainWindow extends JFrame
     {
     lastContent = gc;
     }
+
+/*=========================================================================
+  
+  handleResponseContent 
+
+=========================================================================*/
+  private void handleResponseContent (URL fullUrl, ResponseContent gc)
+    {
+    String mime = gc.getMime();
+    URL url = gc.getURL(); 
+    String urlStr = url.toString();
+    if (mime.startsWith ("text/gemini") || urlStr.endsWith (".gmi"))
+      {
+      baseUrl = fullUrl; 
+      // We have to set this here, because renderGemtext
+      //  needs it, for forming links in the HTML
+      Logger.log (getClass(), "Content is text/gemini");
+      String encoding = getEncodingFromMime (mime);
+      renderGemtext (gc.getContent(), encoding);
+      topBar.showUrl (fullUrl.toString());
+      backlinks.push (fullUrl);
+      setLastContent (gc);
+      }
+    else if (mime.startsWith ("text/plain") || urlStr.endsWith (".txt"))
+      {
+      baseUrl = fullUrl; 
+      // We have to set this here, because renderGemtext
+      //  needs it, for forming links in the HTML
+      Logger.log (getClass(), "Content is text/plain");
+      String encoding = getEncodingFromMime (mime);
+      renderPlain (gc.getContent(), encoding);
+      topBar.showUrl (fullUrl.toString());
+      setLastContent (gc);
+      backlinks.push (fullUrl);
+      }
+    else if (mime.startsWith ("text/nex")) 
+      {
+      baseUrl = fullUrl; 
+      // We have to set this here, because renderGemtext
+      //  needs it, for forming links in the HTML
+      Logger.log (getClass(), "Content is text/nex");
+      String encoding = getEncodingFromMime (mime);
+      renderNex (gc.getContent(), encoding);
+      topBar.showUrl (fullUrl.toString());
+      setLastContent (gc);
+      backlinks.push (fullUrl);
+      }
+    else if (mime.startsWith ("text/markdown") || urlStr.endsWith (".md"))
+      {
+      baseUrl = fullUrl; 
+      // We have to set this here, because renderGemtext
+      //  needs it, for forming links in the HTML
+      Logger.log (getClass(), "Content is text/markdown");
+      String encoding = getEncodingFromMime (mime);
+      renderMarkdown (gc.getContent(), encoding);
+      topBar.showUrl (fullUrl.toString());
+      setLastContent (gc);
+      backlinks.push (fullUrl);
+      }
+    else
+      {
+      Logger.log (getClass(), "Content is " + mime);
+      handleUnsupportedMime (fullUrl, mime, gc.getContent());
+      }
+    }
   
 /*=========================================================================
   
@@ -509,7 +610,7 @@ public class MainWindow extends JFrame
       {
       public void actionPerformed (ActionEvent evt) 
         {
-	setStatus ("Loading...");
+	setStatus (Strings.LOADING);
         }
       };
 
@@ -556,7 +657,7 @@ public class MainWindow extends JFrame
         loadTimer = new javax.swing.Timer (1000, loadTimerListener);
         loadTimer.setRepeats (true);
         loadTimer.start();
-        setStatus ("Loading " + fullUrl);
+        setStatus (Strings.LOADING + fullUrl);
         gc = loadResponseContent (fullUrl); 
         return "foo"; // Meaningless return
         } 
@@ -578,50 +679,7 @@ public class MainWindow extends JFrame
           Exception e = gc.getException();
           if (e == null)
             {
-            String mime = gc.getMime();
-            URL url = gc.getURL(); 
-            String urlStr = url.toString();
-            if (mime.startsWith ("text/gemini") || urlStr.endsWith (".gmi"))
-              {
-              baseUrl = fullUrl; 
-              // We have to set this here, because renderGemtext
-              //  needs it, for forming links in the HTML
-              Logger.log (getClass(), "Content is text/gemini");
-              String encoding = getEncodingFromMime (mime);
-              renderGemtext (gc.getContent(), encoding);
-              topBar.showUrl (fullUrl.toString());
-              backlinks.push (fullUrl);
-	      setLastContent (gc);
-              }
-            else if (mime.startsWith ("text/plain") || urlStr.endsWith (".txt"))
-              {
-              baseUrl = fullUrl; 
-              // We have to set this here, because renderGemtext
-              //  needs it, for forming links in the HTML
-              Logger.log (getClass(), "Content is text/plain");
-              String encoding = getEncodingFromMime (mime);
-              renderPlain (gc.getContent(), encoding);
-              topBar.showUrl (fullUrl.toString());
-	      setLastContent (gc);
-              backlinks.push (fullUrl);
-              }
-            else if (mime.startsWith ("text/markdown") || urlStr.endsWith (".md"))
-              {
-              baseUrl = fullUrl; 
-              // We have to set this here, because renderGemtext
-              //  needs it, for forming links in the HTML
-              Logger.log (getClass(), "Content is text/markdown");
-              String encoding = getEncodingFromMime (mime);
-              renderMarkdown (gc.getContent(), encoding);
-              topBar.showUrl (fullUrl.toString());
-	      setLastContent (gc);
-              backlinks.push (fullUrl);
-              }
-            else
-              {
-              Logger.log (getClass(), "Content is " + mime);
-              handleUnsupportedMime (fullUrl, mime, gc.getContent());
-              }
+            handleResponseContent (fullUrl, gc);
             }
          else
             {
@@ -635,6 +693,113 @@ public class MainWindow extends JFrame
               handleRedirect (((RedirectedException)e).getURL());
               }
             else if (e instanceof ErrorResponseException)
+              {
+              e.printStackTrace();
+              reportErrorResponseException (fullUrl.toString(), 
+                 (ErrorResponseException)e); 
+              }
+            else 
+              {
+              e.printStackTrace();
+              reportException (fullUrl.toString(), e); 
+              }
+            }
+          }
+        loadWorker = null;
+        }
+      }; 
+
+    loadWorker.execute();  
+    }
+
+
+/*=========================================================================
+  
+  loadNex
+  
+  We have a nex:// URL. Load it through its content handler.
+
+  If the qparam arg is non-null, it is appended as a query parameter
+  after encoding.
+
+=========================================================================*/
+  private void loadNex (URL url, String qparam)
+    {
+    ActionListener loadTimerListener = new ActionListener() 
+      {
+      public void actionPerformed (ActionEvent evt) 
+        {
+	setStatus (Strings.LOADING);
+        }
+      };
+
+    cancelLoad(); // Kill any existing background load
+    removeLastContent(); // Delete any data associated with the last request
+    try
+      {
+      Logger.log (getClass(), "loadNex(), url=" 
+        + url.toString() + ", qparam=" + qparam);
+
+      if (qparam != null)
+        {
+        // URLEncoder does seem on its own to generate encodings that Gemini 
+        //   services like. They seem to prefer "$20" to "+" for plain spaces.
+        //   Since %20 will always work, munge the encoded string to use 
+        //   this format.
+        URL tempUrl = new URL (url.toString() + "?" + URLEncoder.encode (qparam));
+        String sURL = tempUrl.toString().replace("+","%20");
+        url = new URL (sURL);
+        }
+
+      if (url.getPath().length() == 0)
+        {
+        Logger.log (getClass(), "Adding path to URL that lacks one");
+        url = new URL (url.toString() + "/");
+        }
+      }
+    catch (Exception e)
+      {
+      // Fallen at that first hurdle.
+      reportException (url.toString(), e);
+      return;
+      }
+
+    final URL fullUrl = url;
+
+    loadWorker = new SwingWorker()  
+      { 
+      ResponseContent gc = null;
+
+      @Override
+      protected String doInBackground() throws Exception  
+        { 
+        loadTimer = new javax.swing.Timer (1000, loadTimerListener);
+        loadTimer.setRepeats (true);
+        loadTimer.start();
+        setStatus (Strings.LOADING + fullUrl);
+        gc = loadResponseContent (fullUrl); 
+        return "foo"; // Meaningless return
+        } 
+
+      @Override
+      protected void process (java.util.List chunks) { } 
+
+      @Override
+      protected void done()  
+        { 
+	loadTimer.stop();
+	loadTimer = null;
+        if (!isCancelled())
+          {
+          clearStatus ();
+          Exception e = gc.getException();
+          if (e == null)
+            {
+            handleResponseContent (fullUrl, gc);
+            }
+         else
+            {
+            if (e instanceof ErrorResponseException)
               {
               e.printStackTrace();
               reportErrorResponseException (fullUrl.toString(), 
@@ -703,7 +868,7 @@ public class MainWindow extends JFrame
     String messageFromServer = e.getMessage();
     if (e instanceof UnknownHostException)
       {
-      reportGenError (url, "Unknown host: " + e.getMessage());
+      reportGenError (url, Strings.UNKNOWN_HOST + e.getMessage());
       }
     else
       reportGenError (url, e.getMessage());
@@ -737,12 +902,19 @@ public class MainWindow extends JFrame
   private void reportGenError (String url, String message)
     {
     StringBuffer sb = new StringBuffer();
-    sb.append ("<html><body width=\"300px\">");
+    // We need to override styles here, because the styles applied to the
+    //   main window -- which is also an HTML viewer -- will also be
+    //   partially applied here, and look odd. 
+    sb.append ("<html><body width=\"400px\" style=\"margin: 30\">");
     sb.append ("<p><b>");
+    // Be aware that a URL could, in theory, be > 1000 characters long.
+    // We don't want to put all those into the dialog box.
+    if (url.length() > 50)
+      url = url.substring (0, 20) + "...";
     sb.append (url);
-    sb.append ("</b></p><p></p>");
+    sb.append ("</b></p><p></p><p>");
     sb.append (message);
-    sb.append ("<p></p>");
+    sb.append ("</p><p></p>");
     JOptionPane.showMessageDialog (this, new String(sb), 
          DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
     sb.append ("</body></html>");
@@ -770,6 +942,21 @@ public class MainWindow extends JFrame
       }
     }
 
+
+/*=========================================================================
+  
+   loadURLEmbedImage
+
+
+=========================================================================*/
+  public void loadURLEmbedImage (URL url)
+    {
+    removeLastContent();
+    setHtml ("<img src=\"" + url + "\"/>");
+    topBar.showUrl (url.toString());
+    backlinks.push (url);
+    }
+
 /*=========================================================================
   
    loadURL
@@ -781,19 +968,32 @@ public class MainWindow extends JFrame
   public void loadURL (URL url)
     {
     Logger.log (getClass(), "loadURL(), URL is " + url);
-    if (url.getProtocol().equals ("gemini"))
+
+    if (GemConverter.isImageUri (url.toString()))
       {
-      loadGemini (url, null);
-      baseUrl = url;
-      }
-    else if (url.getProtocol().equals ("file"))
-      {
-      loadLocalFile (url);
+      loadURLEmbedImage (url);
       }
     else
-      {
-      loadForeignURL (url);
-      } 
+      { 
+      if (url.getProtocol().equals ("gemini"))
+	{
+	loadGemini (url, null);
+	baseUrl = url;
+	}
+      else if (url.getProtocol().equals ("nex"))
+	{
+	loadNex (url, null);
+	baseUrl = url;
+	}
+      else if (url.getProtocol().equals ("file"))
+	{
+	loadLocalFile (url);
+	}
+      else
+	{
+	loadForeignURL (url);
+	} 
+      }
     }
 
 /*=========================================================================
@@ -858,7 +1058,7 @@ public class MainWindow extends JFrame
     if (url != null)
       loadURL (url);
     else
-      reportGenError ("unknown", "Could not parse link");
+      reportGenError (Strings.UNKNOWN, Strings.COULD_NOT_PARSE_URI);
     }
 
 /*=========================================================================
@@ -907,6 +1107,9 @@ public class MainWindow extends JFrame
     styleSheet.addRule ("body {" 
         + Config.getConfig().getProperty 
             (Config.STYLE_BODY, Config.DEFLT_STYLE_BODY)  + "}");
+    styleSheet.addRule ("p {" 
+        + Config.getConfig().getProperty 
+            (Config.STYLE_P, Config.DEFLT_STYLE_P)  + "}");
     styleSheet.addRule ("h1 {" 
         + Config.getConfig().getProperty 
             (Config.STYLE_H1, Config.DEFLT_STYLE_H1)  + "}");
@@ -1010,7 +1213,7 @@ public class MainWindow extends JFrame
           try
             {
             FileUtil.byteArrayToFile (file, b);
-	    setStatus ("Saved file " + file);
+	    setStatus (Strings.SAVED_FILE + " '"  + file + "'");
             } 
           catch (Exception e)
             {
@@ -1064,17 +1267,17 @@ public class MainWindow extends JFrame
     {
     JPopupMenu linkMenu = new JPopupMenu ("Link action"); 
 
-    JMenuItem openMenuItem = new JMenuItem ("Open");
+    JMenuItem openMenuItem = new JMenuItem (Strings.OPEN);
     openMenuItem.addActionListener ((event) -> loadURL (href));
 
-    JMenuItem openNewMenuItem = new JMenuItem ("Open in new window");
+    JMenuItem openNewMenuItem = new JMenuItem (Strings.OPEN_IN_NEW_WINDOW);
     openNewMenuItem.addActionListener ((event) -> newWindow (href));
     
-    JMenuItem copyLinkMenuItem = new JMenuItem ("Copy link");
+    JMenuItem copyLinkMenuItem = new JMenuItem (Strings.COPY_LINK);
     copyLinkMenuItem.addActionListener 
       ((event) -> Clipboard.copyTextToClipboard (href));
 
-    JMenuItem downloadMenuItem = new JMenuItem ("Download");
+    JMenuItem downloadMenuItem = new JMenuItem (Strings.DOWNLOAD);
     downloadMenuItem.addActionListener((event) -> promptDownloadURL (href));
 
     linkMenu.add (openMenuItem);
@@ -1106,8 +1309,8 @@ public class MainWindow extends JFrame
 =========================================================================*/
   public void find()
     {
-    String text = JOptionPane.showInputDialog (this, "Enter text to search:", 
-      DIALOG_CAPTION, 1);
+    String text = JOptionPane.showInputDialog (this, 
+      Strings.ENTER_SEARCH_TEXT, DIALOG_CAPTION, 1);
     if (text != null)
       {
       searchPos = 0;
@@ -1131,7 +1334,7 @@ public class MainWindow extends JFrame
       if (searchPos + findLength > doc.getLength()) 
         {
         searchPos = 0; // Wrap around to beginning
-        setStatus ("Search wrapped around to top");
+        setStatus (Strings.SEARCH_WRAPPED_AROUND);
         }
       try
         {
@@ -1155,7 +1358,7 @@ public class MainWindow extends JFrame
            searchPos += findLength;
            }
         else
-          setStatus ("Not found");
+          setStatus (Strings.NOT_FOUND);
          }
        catch (BadLocationException e)
          {
@@ -1222,6 +1425,11 @@ public class MainWindow extends JFrame
 	  }
 	}
       }
+    else
+      {
+      JOptionPane.showMessageDialog (this, Strings.SAVE_ONLY_TEXT_MESSAGE,
+        Strings.NO_TEXT_TO_SAVE, JOptionPane.ERROR_MESSAGE);
+      }
     }
 
 /*=========================================================================
@@ -1231,16 +1439,11 @@ public class MainWindow extends JFrame
 =========================================================================*/
   public void about ()
     {
-    String s = "<html><head></head><body>";
-    s += "<h1>" + Config.APP_NAME + "</h1>";
-    s += "<h3>" + "Version " + Config.VERSION + "</h3>";
-    s += "<p>A browser for Project Gemini servers and content</p>";
-    s += "<p>Maintained by Kevin Boone, and distributed under the terms ";
-    s += "of the GNU PUblic Licence, v3.0&nbsp;&nbsp;</p>";
-    s += "<p>For more information, see ";
-    s +=  "<b>https://kevinboone.me/jgemini.html</b></p>";
-    s +=  "<p>&nbsp;</p>";
-    s += "</body></html>\n";
+    String s = "<html><head></head><body style='margin: 20'>";
+    s += "<h1>" + Strings.APP_NAME + "</h1>";
+    s += "<h3>" + Strings.VERSION + " " + Config.VERSION + "</h3>";
+    s += "<p>" + Strings.ABOUT_MESSAGE + "</p>\n";
+    s += "<p>&nbsp;</p></body>\n";
     JOptionPane.showMessageDialog (this, s, 
          DIALOG_CAPTION, JOptionPane.INFORMATION_MESSAGE); 
     }
@@ -1254,94 +1457,97 @@ public class MainWindow extends JFrame
     {
     menuBar = new JMenuBar();
 
-    JMenu fileMenu = new JMenu("File");
+    // TODO: we need to change the accelerator keys if the menu
+    //   text changes.
+
+    JMenu fileMenu = new JMenu(Strings.FILE);
     fileMenu.setMnemonic (KeyEvent.VK_F);
-    JMenuItem newMenuItem = new JMenuItem ("New");
+    JMenuItem newMenuItem = new JMenuItem (Strings.NEW);
     newMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_N, ActionEvent.CTRL_MASK));
     newMenuItem.setMnemonic (KeyEvent.VK_N);
     newMenuItem.addActionListener((event) -> newWindow());
     fileMenu.add (newMenuItem);
-    JMenuItem openMenuItem = new JMenuItem ("Open link...");
+    JMenuItem openMenuItem = new JMenuItem (Strings.OPEN_LINK);
     openMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_O, ActionEvent.CTRL_MASK));
     openMenuItem.setMnemonic (KeyEvent.VK_O);
     openMenuItem.addActionListener((event) -> openLink());
     fileMenu.add (openMenuItem);
-    JMenuItem saveMenuItem = new JMenuItem ("Save");
+    JMenuItem saveMenuItem = new JMenuItem (Strings.SAVE);
     saveMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_S, ActionEvent.CTRL_MASK));
     saveMenuItem.setMnemonic (KeyEvent.VK_S);
     saveMenuItem.addActionListener((event) -> save());
     fileMenu.add (saveMenuItem);
-    JMenuItem closeMenuItem = new JMenuItem ("Close");
+    JMenuItem closeMenuItem = new JMenuItem (Strings.CLOSE);
     closeMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_W, ActionEvent.CTRL_MASK));
     closeMenuItem.setMnemonic (KeyEvent.VK_C);
     closeMenuItem.addActionListener((event) -> dispose());
     fileMenu.add (closeMenuItem);
-    JMenuItem exitMenuItem = new JMenuItem ("Exit");
+    JMenuItem exitMenuItem = new JMenuItem (Strings.EXIT);
     exitMenuItem.setMnemonic (KeyEvent.VK_X);
     exitMenuItem.addActionListener((event) -> System.exit(0));
     fileMenu.add (exitMenuItem);
 
-    JMenu editMenu = new JMenu("Edit");
+    JMenu editMenu = new JMenu (Strings.EDIT);
     editMenu.setMnemonic (KeyEvent.VK_E);
-    JMenuItem selectAllMenuItem = new JMenuItem ("Select all");
+    JMenuItem selectAllMenuItem = new JMenuItem (Strings.SELECT_ALL);
     selectAllMenuItem.setMnemonic (KeyEvent.VK_A);
     selectAllMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_A, ActionEvent.CTRL_MASK));
     selectAllMenuItem.addActionListener((event) -> jEditorPane.selectAll());
     editMenu.add (selectAllMenuItem);
-    JMenuItem copyMenuItem = new JMenuItem ("Copy");
+    JMenuItem copyMenuItem = new JMenuItem (Strings.COPY);
     copyMenuItem.setMnemonic (KeyEvent.VK_C);
     copyMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_C, ActionEvent.CTRL_MASK));
     copyMenuItem.addActionListener((event) -> jEditorPane.copy());
     editMenu.add (copyMenuItem);
-    JMenuItem findMenuItem = new JMenuItem ("Find in page...");
+    JMenuItem findMenuItem = new JMenuItem (Strings.FIND_IN_PAGE);
     findMenuItem.setMnemonic (KeyEvent.VK_F);
     findMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_F, ActionEvent.CTRL_MASK));
     findMenuItem.addActionListener((event) -> find());
     editMenu.add (findMenuItem);
-    JMenuItem findNextMenuItem = new JMenuItem ("Find next");
+    JMenuItem findNextMenuItem = new JMenuItem (Strings.FIND_NEXT);
     findNextMenuItem.setMnemonic (KeyEvent.VK_N);
     findNextMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_G, ActionEvent.CTRL_MASK));
     findNextMenuItem.addActionListener((event) -> findNext());
     editMenu.add (findNextMenuItem);
 
-    JMenu viewMenu = new JMenu("View");
+    JMenu viewMenu = new JMenu (Strings.VIEW);
     viewMenu.setMnemonic (KeyEvent.VK_V);
-    JMenuItem refreshMenuItem = new JMenuItem ("Refresh");
+    JMenuItem refreshMenuItem = new JMenuItem (Strings.REFRESH);
     refreshMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_R, ActionEvent.CTRL_MASK));
     refreshMenuItem.addActionListener((event) -> refresh());
     viewMenu.add (refreshMenuItem);
 
-    JMenu goMenu = new JMenu("Go");
+    JMenu goMenu = new JMenu (Strings.GO);
     goMenu.setMnemonic (KeyEvent.VK_G);
-    JMenuItem backMenuItem = new JMenuItem ("Back");
+    JMenuItem backMenuItem = new JMenuItem (Strings.BACK);
     backMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_BACK_SPACE, 0));
     backMenuItem.addActionListener((event) -> goBack());
     goMenu.add (backMenuItem);
-    JMenuItem homeMenuItem = new JMenuItem ("Home");
+    JMenuItem homeMenuItem = new JMenuItem (Strings.HOME);
     homeMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_H, ActionEvent.CTRL_MASK));
     homeMenuItem.addActionListener((event) -> goHome());
     goMenu.add (homeMenuItem);
-    JMenuItem rootMenuItem = new JMenuItem ("Root");
+    JMenuItem rootMenuItem = new JMenuItem (Strings.ROOT);
     //rootMenuItem.setAccelerator (KeyStroke.getKeyStroke
     //  (KeyEvent.VK_T, ActionEvent.CTRL_MASK));
     rootMenuItem.addActionListener((event) -> goRoot());
     goMenu.add (rootMenuItem);
 
-    JMenu helpMenu = new JMenu("Help");
+    JMenu helpMenu = new JMenu (Strings.HELP);
     helpMenu.setMnemonic (KeyEvent.VK_H);
-    JMenuItem aboutMenuItem = new JMenuItem ("About " 
-      + Config.APP_NAME + "...");
+    JMenuItem aboutMenuItem = new JMenuItem (Strings.ABOUT 
+      + " " + Strings.APP_NAME + "...");
     aboutMenuItem.setMnemonic (KeyEvent.VK_A);
     aboutMenuItem.addActionListener((event) -> about());
     helpMenu.add (aboutMenuItem);

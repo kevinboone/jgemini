@@ -16,7 +16,6 @@ import me.kevinboone.jgemini.base.*;
 
 public class Config extends Properties
   {
-  public final static String APP_NAME = "JGemini";
   public final static String VERSION = "1.0";
   private boolean debug = false;
   private boolean gemtextInlineImages = false;
@@ -25,6 +24,9 @@ public class Config extends Properties
   public final static String URL_HOME = "url.home";
   public final static String DEFLT_URL_HOME = 
       "gemini://geminiprotocol.net/";
+  public final static String STYLE_P = "style.p";
+  public final static String DEFLT_STYLE_P = 
+      "color:black; font: 16px Serif; ";
   public final static String STYLE_BODY = "style.body";
   public final static String DEFLT_STYLE_BODY = 
       "color:black; font: 16px Serif; margin-left: 20px; margin-right: 20px; margin-bottom: 10px";

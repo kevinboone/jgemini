@@ -60,7 +60,7 @@ there's white-space in the filename.
 You can also specify a fall-back certificate, which JGemini will use if no other
 hostnames match:
 
-    clientcert.org.geminispace.bbs=/path/to/all.jks changeit
+    clientcert.*=/path/to/all.jks changeit
 
 ## Issues
 

@@ -25,6 +25,7 @@ public class GeminiConnection extends URLConnection
   private InputStream is = null;
   private byte[] content = null;
   private String meta = null;
+  private static StatusHandler statusHandler = StatusHandler.getInstance();
 
   public GeminiConnection (URL url) 
     {
@@ -170,38 +171,44 @@ public class GeminiConnection extends URLConnection
       {
       connect();
 
-        contentType = meta;
-	ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
+      int totalRead = 0;
 
-	int nRead;
-	byte[] data = new byte[16384];
+      contentType = meta;
+      ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
 
-        try
-          {
-	  while (s.isConnected() && 
-               (nRead = is.read (data, 0, data.length)) != -1) 
-	    {
-	    content_buffer.write (data, 0, nRead);
-	    }
-          }
-        catch (java.net.SocketException e)
-          {
-          }
-        catch (javax.net.ssl.SSLException e)
-          {
-          // I think that sometimes the server closes its end of the
-          //  socket so abrubptly that isConnected() can say that the
-          //  connection is still open, but the following read() can
-          //  fail. We don't even get to a position where the read()
-          //  returns -1 to indicate EOT. But do we need to distinguish
-          //  this from "real" SSL errors? I really don't know. 
-          }
+      int nRead;
+      byte[] data = new byte[16384];
 
-	content = content_buffer.toByteArray();
+      try
+	{
+	while (s.isConnected() && 
+	     (nRead = is.read (data, 0, data.length)) != -1) 
+	  {
+	  content_buffer.write (data, 0, nRead);
+          totalRead += nRead;
+          if (totalRead > 1024)
+            statusHandler.writeMessage (Strings.LOADED + " " 
+              + (totalRead / 1024) + " kb");
+	  }
+	}
+      catch (java.net.SocketException e)
+	{
+	}
+      catch (javax.net.ssl.SSLException e)
+	{
+	// I think that sometimes the server closes its end of the
+	//  socket so abrubptly that isConnected() can say that the
+	//  connection is still open, but the following read() can
+	//  fail. We don't even get to a position where the read()
+	//  returns -1 to indicate EOT. But do we need to distinguish
+	//  this from "real" SSL errors? I really don't know. 
+	}
 
-        content_buffer.close();
-        s.close();
-        s = null;
+      content = content_buffer.toByteArray();
+
+      content_buffer.close();
+      s.close();
+      s = null;
 
       return content;
       }

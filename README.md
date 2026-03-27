@@ -1,6 +1,6 @@
 # JGemini
 
-A Java-based graphical browser for the Gemini protocol.
+A Java-based graphical browser for Gemini and similar protocols
 
 Version 1.0f, Kevin Boone, March 2026
 
@@ -16,9 +16,10 @@ clients that it natively supports Markdown documents as well as Gemtext.
 ## What is JGemini?
 
 JGemini is a very rudimentary, barely-functional graphical client for the
-Gemini protocol. It looks and feels rather like the very first graphical Web
-browsers from the 90s. It supports all the features it is required to support
-by the Gemini specification, and little else.  It is, however, useable. 
+Gemini and "Nightfall Express" (nex) protocols.  It looks and behaves rather
+like the very first graphical Web browsers from the 90s. It supports all the
+features it is required to support by the Gemini specification, and little
+else.  It is, however, useable. 
 
 ## Pre-requisites
 
@@ -29,14 +30,15 @@ source, you'll probably need Maven.
 
 ## Features
 
+- Supports Gemini and `nex` protocols, including user input and redirection
 - Handles Gemtext and plain (usually UTF-8) text
 - Native support for CommonMark Markdown
-- Can render local Gemtext files as well as server content
+- Can render local files as well as server content
 - Per-server client certificate selection, for authentication
 - Text styling can be configured to suit the display and user preference
 - Uses anti-aliased font rendering for a smoother text appearance
-- Fetches documents in the background to improve user interface responsiveness
-- Supports text selection with cut-and-paste
+- Fetches files in the background to improve user interface responsiveness
+- Text selection with cut-and-paste
 - Search in document
 - Downloaded documents can be saved
 - Allows multiple windows
@@ -92,12 +94,13 @@ if it takes a bit of trial and error.
 
 Here are a few notes on the individual settings.
 
-JGemini only uses seven text styles for the document display, denoted "body"
-(normal text), "h1...h3" (headings) "pre" (for preformatted text), "code" (for
-technical terms), "blockquote", and "a" (for links). The fonts that can be
-applied to these styles are JVM fonts, which may be named differently to
-platform fonts (and, in some cases, are more extensive). To get a list all JVM
-fonts, run JGemini with the Java command-line switch 
+JGemini only uses eight text styles for the document display, denoted "body"
+(background and layout), "p" (ordinary text), "h1...h3" (headings), "pre" (for
+pre-formatted text), "code" (for technical terms), "blockquote", and "a" (for
+links). The fonts that can be applied to these styles are JVM fonts, which may
+be named differently to platform fonts (and, in some cases, are more
+extensive). To get a list all JVM fonts, run JGemini with the Java command-line
+switch 
 
     -Djgemini.dumpfonts 
 
@@ -110,6 +113,44 @@ styles are CSS-like ("size name"). In addition, while the document font sizes
 allow qualifiers ("px", "em") the control fonts do not -- they are generic Java
 sizes. This all probably sounds more complicated than it really is: the sample
 configuration file should make it clear. 
+
+## Image support
+
+JGemini supports JPEG, PNG, and GIF images internally. Other types can still be
+downloaded, but will be handed off to the platform for viewing.  Images of
+supported types that are linked by a document will be displayed in-line in the
+document by default. Links to other types will just be displayed as a link to a
+new document. 
+
+For compatibility with other Gemini browsers, JGemini can be configured _not_
+to in-line images from a Gemtext document into the text if preferred.  The
+configuration property is `gemtext.inline.images=1|0`. If images are not
+in-lined, they will be rendered as links, just as for unsupported image types.
+
+Images are all displayed with the same (configurable) size. This is because
+none of the document formats which JGemini supports allow an image size to be
+specified, and it looks odd if they're all different sizes.
+
+Images are fetched asynchronously. It's not always easy to tell when this is
+happening, except that images areas will be blank. If you select to open an
+image in a new window, you'll see a blank screen until the image is fully
+downloaded. Please be patient -- Gemini does not provide a way to know in 
+advance how large the image is, so JGemini can't report progress. 
+
+Although image widths will all be the same, heights might be different, to keep
+the correct aspect ratio.  Because JGemini does not know the total size of an
+image until it's been retrieved, the page might redraw after downloading an
+in-line image.
+
+Please note that the File|Save menu only saves text. You'll get an error message
+if you open an image in a new window, and then try to save it. If you want to
+save an image as a file, right-click its link and select 'Download'.
+
+The ability to open an image in its own window is only available for images
+whose paths end in a conventional extension, like `.jpg`. This is because
+JGemini can't tell, just from a link URI, what kind of data the link provides.
+An image file that can't be recognized from its filename will be downloaded and
+handed off to the platform to handle.
 
 ## Key bindings
 
@@ -132,26 +173,10 @@ Naturally, these formatting marks are respected in Markdown.
 JGemini is based on Java features that have not changed since about 2005.
 Frankly, I'm surprised some of them still exist in the JDK.  The user interface
 is based on that old warhorse, Java Swing. Internally, Gemtext is converted to
-HTML, and displayed using Swing's built-in HTML viewer. That viewer has not
-been updated since HTML 3 was a new thing but, to be honest, that's more than
-enough to show Gemtext and Markdown content. In any event, it's possible that
-these features will be removed from Java at some point, or relegated to
-optional downloads.
-
-For compatibility with other Gemini browsers, JGemini can be configured _not_
-to in-line images from a Gemtext document into the text if preferred.  The
-default is to insert images into the document. The configuration property is
-`gemtext.inline.images=1|0`.
-
-Images are all displayed the same (configurable) size. This is because none of
-the docuent formats JGemini supports allow a size to be specified, and it looks
-odd if they're all different sizes.
-
-Images are fetched asynchronously. It's not always easy to tell when this is
-happening, except that images areas will be blank.  Although image widths will
-all be the same, heights might be differnt, to keep the correct aspect ratio.
-Because JGemini does not know the total size of an image until it's been
-retrieved, the page might redraw after downloading an image.
+HTML, and displayed using Swing's built-in HTML viewer. This viewer has not
+been updated for decades, but it's more than adequate to show Gemtext and
+Markdown content. In any event, it's possible that these features will be
+removed from Java at some point, or relegated to optional downloads.
 
 ## Caveats and limitations
 
@@ -168,11 +193,9 @@ simply carries out no certificate checks. Is this a security problem?  Sure. If
 you're planning world domination, or think governments are monitoring your
 communication, this isn't the software to use. 
 
-There is no bookmark support yet.
-
-In fact, JGemini saves no state at all, not even the window size.  If you
-don't like the default window size, modify `window.w` and `window.h` in the
-configuration file.
+There is no bookmark support yet.  In fact, JGemini saves no state at all, not
+even the window size.  If you don't like the default window size, modify
+`window.w` and `window.h` in the configuration file.
 
 In order to keep the user interface responsive, all the content-fetching is
 done asynchronously, in background threads. It's not always easy to see if a
@@ -192,6 +215,13 @@ other form of content, JGemini stores the downloaded data in a temporary file,
 and uses Java's desktop integration to launch it.  What happens (if anything)
 if you click a link to an image, for example, depends entirely on how the
 desktop is configured.
+
+As a slight exception to the above, files received using `nex` where the path
+ends in `.txt`, or where this is no filename, are treated as "nex-flavoured
+text". This format is just like plain text, except that lines beginning with
+"=>" are treated as links, as with Gemtext. The `nex` protocol does not supply
+a content type in the response, so we only have the filename to guess the
+contents. 
 
 Note that, because Gemini servers often don't report the MIME type of Markdown
 correctly, JGemini treats any file it retrieves whose name ends in `.md` as
@@ -269,7 +299,6 @@ There's a lot that could be done to JGemini to make it a more useful, more
 aesthetically pleasing application. If there's interest, I can probably do more
 work on it. Right now, however, it's good enough for my purposes.
 
-
 ## Change log
 
 Version 0.1 -- March 2021 -- first release
@@ -298,4 +327,8 @@ Version 0.1e -- March 2026
 Version 1.0f -- March 2026
 - Added inline image support in Gemtext
 - Added configuration for image size
+- Added internal image handling for certain types of file
+- Added dark configuration sample
+- Added an indicaton of amount transferred in Gemini connection
+- Added preliminary nex support
 

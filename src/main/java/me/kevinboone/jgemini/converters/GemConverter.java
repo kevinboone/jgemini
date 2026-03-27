@@ -16,10 +16,9 @@ import java.util.regex.Pattern;
 import me.kevinboone.jgemini.base.*;
 import com.vdurmont.emoji.EmojiManager;
 
-public class GemConverter
+public class GemConverter extends TextLikeConverter
   {
   private boolean verbatim;
-  private URL baseUrl;
   private static Pattern italicPattern = Pattern.compile ("\\s_(\\w+?)_\\s");
   private static Pattern boldPattern = Pattern.compile ("\\*(\\w+?)\\*");
 
@@ -27,39 +26,8 @@ public class GemConverter
       we can construct proper links. */
   public GemConverter (URL baseUrl)
     {
+    super (baseUrl);
     verbatim = false;
-    this.baseUrl = baseUrl;
-    }
-
-  /** Given a link target, rewrite it to a complete link that can
-      be parsed to a java.net.URL. This involves resolving it against the
-      baseURL to allow for relative links, etc. */
-  private String rewriteLink (String link)
-    {
-    Logger.log (getClass(), "rewriteLink() link is " + link);
-    try
-      {
-      // I'm still not 100% sure about this
-      URI newUri =  new URI (baseUrl.toString());
-      newUri =  newUri.resolve(link); 
-      Logger.log (getClass(), "rewriteLink() newlink is " + newUri);
-      return newUri.toString();
-      }
-    catch (Exception e)
-      {
-      e.printStackTrace();
-      return link;
-      }
-    }
-
-  /** Convert common punctuation like & into HTML-friendly forms. */
-  public static String escapeHtml (String gem)
-    {
-    String s = gem.replace (">", "£££gt;");
-    s = s.replace ("<", "£££lt;");
-    s = s.replace ("&", "&amp;");
-    s = s.replace ("£££", "&");
-    return s;
     }
 
   /** Foo. */
@@ -67,58 +35,6 @@ public class GemConverter
     {
     String s = italicPattern.matcher(line).replaceAll(" <em>$1</em> ");
     return boldPattern.matcher(s).replaceAll("<b>$1</b>");
-    }
-
-  private boolean isImageUri (String uri)
-    {
-    if (uri.endsWith(".gif") || uri.endsWith (".jpg") || 
-        uri.endsWith (".png") || uri.endsWith (".jpeg"))
-      return true;
-    return false;
-    }
-
-  private String getLinkIcon (String link, String text)
-    {
-    if (text == null) return "";
-    if (text.length() < 2) return "";
-    if (EmojiManager.isEmoji(text.substring(0,2))) 
-      return ""; // Don't decorate an emoji
-    if (isImageUri (link))
-      return "📷";
-    return "→";
-    }
-
-  private String writeLink (String uri, String title)
-    {
-    Config config = Config.getConfig();
-    if (isImageUri (uri) && config.gemtextInlineImages())
-      {
-      return "<img width=\"" + config.inlineImageWidth() + "\" src=\"" 
-        + rewriteLink (uri) + "\">" + "<br/>" + "<a href=\"" 
-           + rewriteLink (uri) + "\">" + getLinkIcon (uri, title) + " " 
-             + escapeHtml (title) + "</a><br/>\n"; 
-      }
-    return "<a href=\"" + rewriteLink (uri) + "\">" + 
-      getLinkIcon (uri, title) + " " + escapeHtml (title) + "</a><br/>\n"; 
-    } 
-
-  /** Parse and convert a Gemtext link line. */
-  private String parseLink (String gem)
-    {
-    String[] args = gem.split ("\\s+", 2);
-    if (args.length >= 2)
-      {
-      return writeLink (args[0], args[1]);
-      }
-    else if (args.length == 1)
-      {
-      return writeLink (args[0], args[0]);
-      }
-    else
-      {
-      // Can not happen
-      return "";
-      }
     }
 
   /** Convert a single (maybe long) Gemtext line to HTML. */

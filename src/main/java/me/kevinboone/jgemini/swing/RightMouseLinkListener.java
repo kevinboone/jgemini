@@ -25,7 +25,7 @@ abstract class RightMouseLinkListener extends MouseAdapter
         if (attribute instanceof AttributeSet) 
           {
           AttributeSet set = (AttributeSet) attribute;
-          String href = (String) set.getAttribute(HTML.Attribute.HREF);
+          String href = (String) set.getAttribute (HTML.Attribute.HREF);
           if (href != null) 
             {
             clicked (href, e.getX(), e.getY());
@@ -42,8 +42,8 @@ abstract class RightMouseLinkListener extends MouseAdapter
     if (pos >= 0 && editor.getDocument() instanceof HTMLDocument) 
       {
       HTMLDocument hdoc = (HTMLDocument) editor.getDocument();
-      Element elem = hdoc.getCharacterElement(pos);
-      if (elem.getAttributes().getAttribute(HTML.Tag.A) != null) 
+      Element elem = hdoc.getCharacterElement (pos);
+      if (elem.getAttributes().getAttribute (HTML.Tag.A) != null) 
         {
         return elem;
         }

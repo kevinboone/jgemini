@@ -16,7 +16,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import me.kevinboone.jgemini.base.*;
 
-public class StatusBar extends JPanel
+public class StatusBar extends JPanel implements StatusListener
   {
   private JLabel label;
   private  ActionListener resetListener = new ActionListener() 
@@ -46,6 +46,12 @@ public class StatusBar extends JPanel
     Timer timer = new Timer (5000, resetListener);
     timer.setRepeats (false);
     timer.start();
+    }
+
+  @Override
+  public void writeStatus (String status)
+    {
+    setStatus (status);
     }
 
   public void clearStatus ()
