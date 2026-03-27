@@ -174,7 +174,11 @@ _How do I go to the top-level directory of a Gemini capsule?_
 The Lagrange client displays a caption bar which you can click to navigate to
 the root level of a Gemini capsule. This is convenient, but the bar takes up a
 lot of screen space. JGemini provides a menu command Go|Root which has the same
-effect. 
+effect. JGemini tries to do as Lagrange does, and offer a reasonable guess at
+what the "root" path amounts to. For example, in many cases it will just be
+`/`. However, in a URI that contains a username (`~fred`), then it's more
+useful to interpret the top level of the user's directory as the root, rather
+than that of the server as a whole. 
 
 _Why don't the Home/End keys work?_
 

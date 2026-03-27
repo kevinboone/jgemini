@@ -358,15 +358,29 @@ public class MainWindow extends JFrame
   
    goRoot
 
-   Go the site root 
+   Go the site root. What that means depends on the URI. In particular,
+   URIs containing a username (host:port/~fred) have their root at the
+   user's top-level directory, not the server's top-level directory. 
 
 =========================================================================*/
   protected void goRoot()
     {
     try
       {
-      java.net.URL newUrl = new URL (baseUrl, "/"); 
-      loadURL (newUrl);
+      String path = baseUrl.getPath();
+      if (path.startsWith ("/~"))
+        {
+        String temp = path.substring (2);
+        int i = temp.indexOf ("/"); 
+        temp = temp.substring (0, i >= 0 ? i : 0);
+        java.net.URL newUrl = new URL (baseUrl, "/~" + temp + "/");
+        loadURL (newUrl);
+        }
+      else
+        {
+        java.net.URL newUrl = new URL (baseUrl, "/"); 
+        loadURL (newUrl);
+        }
       }
     catch (Exception e)
       {
@@ -976,6 +990,11 @@ public class MainWindow extends JFrame
     else
       { 
       if (url.getProtocol().equals ("gemini"))
+	{
+	loadGemini (url, null);
+	baseUrl = url;
+	}
+      else if (url.getProtocol().equals ("spartan"))
 	{
 	loadGemini (url, null);
 	baseUrl = url;

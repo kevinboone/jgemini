@@ -1,3 +1,7 @@
+Fix Go|Root for ~name URIs.
+
+Bookmarks.
+
 Add image open/download link on Markdown pages. This is surprisingly fiddly,
 because the image is in-lined without a specific link, so there's no link to
 click, as there is with links in Gemtext documents.

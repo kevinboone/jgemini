@@ -4,6 +4,10 @@
 
   Strings 
 
+  All the text strings the application uses, apart from for logging.
+  They are grouped here to make it easier to provide translations,
+    should the need ever arise.
+
   Copyright (c)2026 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -12,10 +16,10 @@ package me.kevinboone.jgemini.base;
 public class Strings 
   {
   public final static String ABOUT = "About";
-  public final static String ABOUT_MESSAGE = "A browser for Project Gemini servers and "
-    + "content. <br/> Maintained by Kevin Boone, and distributed under the terms "
-    + "of the GNU PUblic Licence, v3.0. <br/>"
-    + "For more information, see "
+  public final static String ABOUT_MESSAGE = "<p></p><p>A browser for 'Small Net' protocols."
+    + "</p><p></p><p>Maintained by Kevin Boone, and distributed under the terms "
+    + "of the GNU PUblic Licence, v3.0.</p>"
+    + "<p></p><p>For more information, see "
     +  "<b>https://kevinboone.me/jgemini.html</b>";
   public final static String APP_NAME = "JGemini";
   public final static String BACK = "Back";

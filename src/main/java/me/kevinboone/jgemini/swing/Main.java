@@ -4,7 +4,7 @@
 
   Main 
 
-  Program execution starts here. All we do is create an MainWindow
+  Program execution starts here. All we do is create a MainWindow
   object and have it load a page.
 
   Copyright (c)2021 Kevin Boone, GPLv3.0 
@@ -47,6 +47,8 @@ public class Main
     String controlFont = Config.getConfig().getControlFont();
     System.setProperty ("swing.plaf.metal.userFont", userFont.trim());
     System.setProperty ("swing.plaf.metal.controlFont", controlFont.trim());
+
+    // Tell the JVM about all the new URLs we support in this application
     URL.setURLStreamHandlerFactory (new GeminiURLStreamHandlerFactory());
 
     // Boilerplate "invokeLater" to separate the main thread from the

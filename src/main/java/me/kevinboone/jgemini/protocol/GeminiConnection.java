@@ -172,7 +172,6 @@ public class GeminiConnection extends URLConnection
       connect();
 
       int totalRead = 0;
-
       contentType = meta;
       ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
 
