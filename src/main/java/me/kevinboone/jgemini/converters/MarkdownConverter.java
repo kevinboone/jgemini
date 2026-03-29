@@ -72,7 +72,7 @@ class LinkAttributeProvider implements AttributeProvider
     }
   }
 
-public class MarkdownConverter
+public class MarkdownConverter implements Converter
   {
   private boolean verbatim;
   private URL baseUrl;
@@ -96,43 +96,11 @@ public class MarkdownConverter
     }
 
   /** Convert the Markdown file to HTML. */ 
-  public String markdownToHtml (String md, String encoding)
+  public String toHtml (String md)
     {
     Node document = parser.parse(md);
     String s = renderer.render(document);
-    //System.out.println (s);
     return s;
-    }
-
-  public static void main (String[] args)
-       throws Exception
-    {
-    if (args.length == 1)
-      {
-      FileInputStream fis = new FileInputStream (new File (args[0]));
-      ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
-
-      int nRead;
-      byte[] data = new byte[16384];
-
-      while ((nRead = fis.read (data, 0, data.length)) != -1) 
-       content_buffer.write (data, 0, nRead);
-
-      byte[] md = content_buffer.toByteArray();
-
-      content_buffer.close();
-
-      MarkdownConverter gc = new MarkdownConverter (null);
-
-      System.out.println (gc.markdownToHtml (new String(md), null));
-
-      fis.close();
-      }
-    else
-      {
-      System.out.println 
-        ("Usage: java MarkdownConverter {markdown_file}");
-      }
     }
   }
 

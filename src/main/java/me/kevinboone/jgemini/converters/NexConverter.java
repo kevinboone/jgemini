@@ -15,7 +15,7 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 
-public class NexConverter extends TextLikeConverter
+public class NexConverter extends TextLikeConverter implements Converter
   {
   public NexConverter (URL baseURL)
     {
@@ -40,7 +40,8 @@ public class NexConverter extends TextLikeConverter
     }
 
   /** Convert the plain text file to HTML. */ 
-  public String textToHtml (String text, String encoding)
+  @Override
+  public String toHtml (String text)
     {
     StringBuffer sb = new StringBuffer();
     String lines[] = text.split ("\n");

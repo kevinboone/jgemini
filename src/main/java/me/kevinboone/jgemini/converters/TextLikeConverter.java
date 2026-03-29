@@ -53,6 +53,8 @@ public class TextLikeConverter
       return ""; // Don't decorate an emoji
     if (isImageUri (link))
       return "📷";
+    if (link.startsWith ("http"))
+      return "🌍";
     return "→";
     }
 

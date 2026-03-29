@@ -32,6 +32,14 @@ public class GeminiURLStreamHandlerFactory implements URLStreamHandlerFactory
       {
       return new SpartanURLStreamHandler();
       }
+    else if ("gopher".equals(protocol)) 
+      {
+      return new GopherURLStreamHandler();
+      }
+    else if ("about".equals(protocol)) 
+      {
+      return new AboutURLStreamHandler();
+      }
     return null;
     }
   }

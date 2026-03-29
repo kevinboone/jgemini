@@ -36,11 +36,11 @@ Most non-Java applications store certificates and keys in `.pem` format. These a
 and you should concatenate the public key(s) and private keys into a single file.
 Then convert this combined `.pem` into a PKCS12 certificate using `openssl`:
 
-   openssl pkcs12 -export -inkey private_key.pem -in public_cert.pem -name foo -out foo.p12
+    openssl pkcs12 -export -inkey private_key.pem -in public_cert.pem -name foo -out foo.p12
 
 Finally, convert this new certificate to Java JKS format:
 
-  keytool -importkeystore -srckeystore foo.p12 -srcstoretype pkcs12 -destkeystore foo.jks
+    keytool -importkeystore -srckeystore foo.p12 -srcstoretype pkcs12 -destkeystore foo.jks
 
 During keystore conversion, you'll be prompted to set a password, which you should 
 remember for later. `foo.jks` is the JKS keystore that JGemini needs to know about. You
@@ -69,4 +69,7 @@ A further problem is that it requires specifying the keystore password in
 plaintext in the configuration file. To be fair, other Gemini clients have the
 same problem.  In any event, it's best not to use a client certificate that
 provides access to anything sensitive.
+
+[Documentation index](index.md)
+
 

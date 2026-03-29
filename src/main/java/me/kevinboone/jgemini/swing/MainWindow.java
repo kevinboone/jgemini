@@ -21,6 +21,7 @@ import javax.swing.filechooser.*;
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.protocol.*;
 import me.kevinboone.jgemini.converters.*;
@@ -30,6 +31,7 @@ public class MainWindow extends JFrame
   private final static String DIALOG_CAPTION = Strings.APP_NAME;
   private final static String WINDOW_CAPTION = Strings.APP_NAME;
   private final static String EMPTY_WINDOW_TEXT = Strings.EMPTY_WINDOW_TEXT;
+
   private JEditorPane jEditorPane;
   private URL baseUrl = null;
   private TopBar topBar;
@@ -41,6 +43,7 @@ public class MainWindow extends JFrame
   private int searchPos = 0;
   private ResponseContent lastContent = null; // Last successful download
   private javax.swing.Timer loadTimer = null;
+  private Config config = Config.getConfig();
 
 
 /*=========================================================================
@@ -53,7 +56,9 @@ public class MainWindow extends JFrame
     super();
     Logger.log (getClass(), "MainWindow constructor");
     jEditorPane = new JEditorPane();
-       jEditorPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); 
+    // Suppress the tiny border around the editor, which is visible
+    //   in dark more
+    jEditorPane.setBorder (BorderFactory.createEmptyBorder (0, 0, 0, 0)); 
     HTMLEditorKit kit = new HTMLEditorKit();
     jEditorPane.setEditorKit (kit);
     jEditorPane.setEditable (false);
@@ -64,8 +69,8 @@ public class MainWindow extends JFrame
     fiddleWithKeyMap (kit);
   
     // Add a listener for "hyperlink" events. These amount to left-clicks
-    //   on links in the editor. We need a separate, customer class
-    //   (sigh) for right-clicks
+    //   on links in the editor. We need a separate, custom class
+    //   (sigh) for right-clicks. Don'cha just love Swing?
     jEditorPane.addHyperlinkListener (new HyperlinkListener()
           {
           public void hyperlinkUpdate(HyperlinkEvent e) 
@@ -80,7 +85,7 @@ public class MainWindow extends JFrame
               }
             else if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED)
               {
-              handleLink (e.getURL());
+              handleLinkClick (e.getURL());
               }
             } 
           });
@@ -90,7 +95,8 @@ public class MainWindow extends JFrame
       {
       public void clicked (String href, int x, int y)
         {
-        rightClick (href, x, y);
+        Logger.log (getClass(), "Right click");
+        handleRightClick (href, x, y);
         }
       });
 
@@ -100,25 +106,31 @@ public class MainWindow extends JFrame
       {
       public void windowOpened(WindowEvent e) 
         {
+        Logger.log (getClass(), "Request focus on editor");
         jEditorPane.requestFocus();
         }
       });
 
-    applyStylesFromConfig ();
+    applyInitialStyles ();
 
     // Create the frame components and layout.
     topBar = new TopBar(this);
     statusBar = new StatusBar();
     StatusHandler.getInstance().addListener (statusBar);
     JScrollPane scrollPane = new JScrollPane (jEditorPane);
+
     getContentPane().add(topBar, BorderLayout.NORTH);
     getContentPane().add(scrollPane, BorderLayout.CENTER);
     getContentPane().add(statusBar, BorderLayout.SOUTH);
+
     Document doc = kit.createDefaultDocument();
     jEditorPane.setDocument(doc);
     jEditorPane.setText ("<p align=\"center\">" + EMPTY_WINDOW_TEXT + "</p>");
-    setSize (Config.getConfig().getWindowWidth(), 
-       Config.getConfig().getWindowHeight());
+
+    setSize (config.getWindowWidth(), 
+       config.getWindowHeight());
+    setLocationByPlatform (true); // Let desktop position me
+
     setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
     createMenuBar();
@@ -129,6 +141,198 @@ public class MainWindow extends JFrame
     URL iconURL = getClass().getResource ("/images/jgemini.png");
     ImageIcon icon = new ImageIcon (iconURL);
     setIconImage (icon.getImage());
+
+    topBar.loadHistoryFile();
+    }
+
+
+/*=========================================================================
+  
+  about 
+
+=========================================================================*/
+  public void about ()
+    {
+    String s = "<html><head></head><body style='margin: 20'>";
+    s += "<h1>" + Strings.APP_NAME + "</h1>";
+    s += "<h3>" + Strings.VERSION + " " + Config.VERSION + "</h3>";
+    s += "<p>" + Strings.ABOUT_MESSAGE + "</p>\n";
+    s += "<p>&nbsp;</p></body>\n";
+    JOptionPane.showMessageDialog (this, s, 
+         DIALOG_CAPTION, JOptionPane.INFORMATION_MESSAGE); 
+    }
+
+
+/*=========================================================================
+  
+  cancelLoad
+
+=========================================================================*/
+  private void cancelLoad ()
+    {
+    Logger.log (getClass(), "cancelLoad())");
+    if (loadWorker != null)
+      {
+      Logger.log (getClass(), "Cancelling loadWorker");
+      loadWorker.cancel (true);
+      if (loadTimer != null) loadTimer.stop();
+      loadTimer = null;
+      }
+    else
+      {
+      Logger.log (getClass(), "No load to cancel");
+      }
+    }
+
+/*=========================================================================
+  
+  getEncodingFromMime
+
+  Extract an encoding name from a MIME type
+
+=========================================================================*/
+  private String getEncodingFromMime (String mime)
+    {
+    String[] args = mime.split (";");
+    for (int i = 0; i < args.length; i++)
+      {
+      String arg = args[i].trim();
+      if (arg.startsWith ("charset="))
+        return arg.substring (8);
+      }
+    return null;
+    }
+
+/*=========================================================================
+  
+  createMenuBar
+
+=========================================================================*/
+  private void createMenuBar ()
+    {
+    menuBar = new JMenuBar();
+
+    // TODO: we need to change the accelerator keys if the menu
+    //   text changes.
+
+    JMenu fileMenu = new JMenu(Strings.FILE);
+    fileMenu.setMnemonic (KeyEvent.VK_F);
+    JMenuItem newMenuItem = new JMenuItem (Strings.NEW);
+    newMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_N, ActionEvent.CTRL_MASK));
+    newMenuItem.setMnemonic (KeyEvent.VK_N);
+    newMenuItem.addActionListener((event) -> newWindow());
+    fileMenu.add (newMenuItem);
+    JMenuItem openMenuItem = new JMenuItem (Strings.OPEN_LINK);
+    openMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_O, ActionEvent.CTRL_MASK));
+    openMenuItem.setMnemonic (KeyEvent.VK_O);
+    openMenuItem.addActionListener((event) -> openLink());
+    fileMenu.add (openMenuItem);
+    JMenuItem saveMenuItem = new JMenuItem (Strings.SAVE);
+    saveMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+    saveMenuItem.setMnemonic (KeyEvent.VK_S);
+    saveMenuItem.addActionListener((event) -> save());
+    fileMenu.add (saveMenuItem);
+    JMenuItem closeMenuItem = new JMenuItem (Strings.CLOSE);
+    closeMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_W, ActionEvent.CTRL_MASK));
+    closeMenuItem.setMnemonic (KeyEvent.VK_C);
+    closeMenuItem.addActionListener((event) -> dispose());
+    fileMenu.add (closeMenuItem);
+    JMenuItem exitMenuItem = new JMenuItem (Strings.EXIT);
+    exitMenuItem.setMnemonic (KeyEvent.VK_X);
+    exitMenuItem.addActionListener((event) -> System.exit(0));
+    fileMenu.add (exitMenuItem);
+
+    JMenu editMenu = new JMenu (Strings.EDIT);
+    editMenu.setMnemonic (KeyEvent.VK_E);
+    JMenuItem selectAllMenuItem = new JMenuItem (Strings.SELECT_ALL);
+    selectAllMenuItem.setMnemonic (KeyEvent.VK_A);
+    selectAllMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_A, ActionEvent.CTRL_MASK));
+    selectAllMenuItem.addActionListener((event) -> jEditorPane.selectAll());
+    editMenu.add (selectAllMenuItem);
+    JMenuItem copyMenuItem = new JMenuItem (Strings.COPY);
+    copyMenuItem.setMnemonic (KeyEvent.VK_C);
+    copyMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+    copyMenuItem.addActionListener((event) -> jEditorPane.copy());
+    editMenu.add (copyMenuItem);
+    JMenuItem findMenuItem = new JMenuItem (Strings.FIND_IN_PAGE);
+    findMenuItem.setMnemonic (KeyEvent.VK_F);
+    findMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_F, ActionEvent.CTRL_MASK));
+    findMenuItem.addActionListener((event) -> find());
+    editMenu.add (findMenuItem);
+    JMenuItem findNextMenuItem = new JMenuItem (Strings.FIND_NEXT);
+    findNextMenuItem.setMnemonic (KeyEvent.VK_N);
+    findNextMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_G, ActionEvent.CTRL_MASK));
+    findNextMenuItem.addActionListener((event) -> findNext());
+    editMenu.add (findNextMenuItem);
+
+    JMenu viewMenu = new JMenu (Strings.VIEW);
+    viewMenu.setMnemonic (KeyEvent.VK_V);
+    JMenuItem zoomInMenuItem = new JMenuItem (Strings.ZOOM_IN);
+    zoomInMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_OPEN_BRACKET, ActionEvent.CTRL_MASK));
+    zoomInMenuItem.setMnemonic (KeyEvent.VK_I);
+    zoomInMenuItem.addActionListener((event) -> zoomIn());
+    viewMenu.add (zoomInMenuItem);
+    JMenuItem zoomOutMenuItem = new JMenuItem (Strings.ZOOM_OUT);
+    zoomOutMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_CLOSE_BRACKET, ActionEvent.CTRL_MASK));
+    zoomOutMenuItem.setMnemonic (KeyEvent.VK_O);
+    zoomOutMenuItem.addActionListener((event) -> zoomOut());
+    viewMenu.add (zoomOutMenuItem);
+    JMenuItem refreshMenuItem = new JMenuItem (Strings.REFRESH);
+    refreshMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_R, ActionEvent.CTRL_MASK));
+    refreshMenuItem.addActionListener((event) -> refresh());
+    viewMenu.add (refreshMenuItem);
+
+    JMenu goMenu = new JMenu (Strings.GO);
+    goMenu.setMnemonic (KeyEvent.VK_G);
+    JMenuItem backMenuItem = new JMenuItem (Strings.BACK);
+    backMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_BACK_SPACE, 0));
+    backMenuItem.addActionListener((event) -> goBack());
+    goMenu.add (backMenuItem);
+    JMenuItem homeMenuItem = new JMenuItem (Strings.HOME);
+    homeMenuItem.setAccelerator (KeyStroke.getKeyStroke
+      (KeyEvent.VK_H, ActionEvent.CTRL_MASK));
+    homeMenuItem.addActionListener((event) -> goHome());
+    goMenu.add (homeMenuItem);
+    JMenuItem rootMenuItem = new JMenuItem (Strings.ROOT);
+    rootMenuItem.setMnemonic (KeyEvent.VK_R);
+    rootMenuItem.addActionListener((event) -> goRoot());
+    goMenu.add (rootMenuItem);
+    goMenu.add (new JSeparator());
+    JMenuItem stopMenuItem = new JMenuItem (Strings.STOP);
+    stopMenuItem.setMnemonic (KeyEvent.VK_S);
+    stopMenuItem.addActionListener((event) -> goStop());
+    goMenu.add (stopMenuItem);
+
+    JMenu helpMenu = new JMenu (Strings.HELP);
+    helpMenu.setMnemonic (KeyEvent.VK_H);
+    JMenuItem helpMenuItem = new JMenuItem (Strings.DOCUMENTATION);
+    helpMenuItem.setMnemonic (KeyEvent.VK_D);
+    helpMenuItem.addActionListener ((event) -> help());
+    helpMenu.add (helpMenuItem);
+    helpMenu.add (new JSeparator());
+    JMenuItem aboutMenuItem = new JMenuItem (Strings.ABOUT 
+      + " " + Strings.APP_NAME + "...");
+    aboutMenuItem.setMnemonic (KeyEvent.VK_A);
+    aboutMenuItem.addActionListener((event) -> about());
+    helpMenu.add (aboutMenuItem);
+
+    menuBar.add (fileMenu);
+    menuBar.add (editMenu);
+    menuBar.add (viewMenu);
+    menuBar.add (goMenu);
+    menuBar.add (helpMenu);
     }
 
 
@@ -144,173 +348,17 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
-  renderMarkdown
+  enableTopBar
 
-  Convert the markdown text to HTML and display it
-
-=========================================================================*/
-  private void renderMarkdown (byte[] content, String encoding)
-    {
-    if (content.length > 0)
-      {
-      try
-        {
-        Logger.log (getClass(), "Converting markdown text to HTML");
-        String stringForm;
-        Logger.log (getClass(), "Encoding is " + encoding);
-        if (encoding != null && encoding.length() > 0)
-          stringForm = new String (content, encoding);
-        else
-          stringForm = new String (content);
-        String html = new MarkdownConverter(baseUrl).markdownToHtml 
-           (stringForm, null); // Some work to do here
-        setHtml (html);
-        }
-      catch (UnsupportedEncodingException e)
-        {
-        setHtml ("[Server returned a response with an unsupported encoding: " 
-          + encoding + "]");
-        }
-      }
-    else
-      {
-      setHtml ("[Server returned a valid, but empty, response]");
-      }
-    }
-
-/*=========================================================================
-  
-  renderPlain
-
-  Convert the plain text to HTML and display it
+  Call once initial set-up is done. Otherwise the act of populating
+  the history combobox makes it fire an event, which makes it load
+  the first thing in the history. Sigh. Bloody Swing.
 
 =========================================================================*/
-  private void renderPlain (byte[] content, String encoding)
+  public void enableTopBar ()
     {
-    if (content.length > 0)
-      {
-      try
-        {
-        Logger.log (getClass(), "Converting plain text to HTML");
-        String stringForm;
-        Logger.log (getClass(), "Encoding is " + encoding);
-        if (encoding != null && encoding.length() > 0)
-          stringForm = new String (content, encoding);
-        else
-          stringForm = new String (content);
-        String html = new TextConverter().textToHtml 
-           (stringForm, null); // Some work to do here
-        setHtml (html);
-        }
-      catch (UnsupportedEncodingException e)
-        {
-        setHtml ("[Server returned a response with an unsupported encoding: " 
-          + encoding + "]");
-        }
-      }
-    else
-      {
-      setHtml ("[Server returned a valid, but empty, response]");
-      }
-    }
-
-/*=========================================================================
-  
-  renderNex
-
-  Convert the Nex-flavoured plain text to HTML and display it
-
-=========================================================================*/
-  private void renderNex (byte[] content, String encoding)
-    {
-    if (content.length > 0)
-      {
-      try
-        {
-        Logger.log (getClass(), "Converting ex plain text to HTML");
-        String stringForm;
-        Logger.log (getClass(), "Encoding is " + encoding);
-        if (encoding != null && encoding.length() > 0)
-          stringForm = new String (content, encoding);
-        else
-          stringForm = new String (content);
-        String html = new NexConverter(baseUrl).textToHtml 
-           (stringForm, null); // Some work to do here
-        setHtml (html);
-        }
-      catch (UnsupportedEncodingException e)
-        {
-        setHtml ("[Server returned a response with an unsupported encoding: " 
-          + encoding + "]");
-        }
-      }
-    else
-      {
-      setHtml ("[Server returned a valid, but empty, response]");
-      }
-    }
-
-/*=========================================================================
-  
-  renderGemtext  
-
-  Convert the text returned from the server in a text/gemini response
-  to HTML, and display it. Assume the specified encoding, unless encoding
-  is null, in which case assume platform encoding.
-
-=========================================================================*/
-  private void renderGemtext (byte[] content, String encoding)
-    {
-    if (content.length > 0)
-      {
-      try
-        {
-        Logger.log (getClass(), "Converting GemText to HTML");
-        String stringForm;
-        Logger.log (getClass(), "Encoding is " + encoding);
-        if (encoding != null && encoding.length() > 0)
-          stringForm = new String (content, encoding);
-        else
-          stringForm = new String (content);
-        String html = new GemConverter (baseUrl).gemToHtml 
-           (stringForm, null); // Some work to do here
-        setHtml (html);
-        }
-      catch (UnsupportedEncodingException e)
-        {
-        setHtml ("[Server returned a response with an unsupported encoding: " 
-          + encoding + "]");
-        }
-      }
-    else
-      {
-      setHtml ("[Server returned a valid, but empty, response]");
-      }
-    }
-
-/*=========================================================================
-  
-   openLink 
-
-   Prompt the user for a URL, and try to open it
-
-=========================================================================*/
-  private void openLink ()
-    {
-    Logger.log (getClass(), "Prompt for link");
-    String url = JOptionPane.showInputDialog (this, Strings.ENTER_GEMINI_URL, 
-      DIALOG_CAPTION, 1);
-    if (url != null)
-      {
-      try
-        {
-        loadURL (new URL(url));
-        }
-      catch (Exception e)
-        {
-        reportException (url, e);
-        }
-      }
+    Logger.log (getClass(), "Enabling the top bar");
+    topBar.enable();
     }
 
 /*=========================================================================
@@ -322,7 +370,8 @@ public class MainWindow extends JFrame
 =========================================================================*/
   protected void goHome ()
     {
-    loadURL (Config.getConfig().getHomePage());
+    Logger.log (getClass(), "goHome()");
+    loadURL (config.getHomePage());
     }
 
 /*=========================================================================
@@ -356,36 +405,57 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
-   goRoot
+   getRootUri 
 
-   Go the site root. What that means depends on the URI. In particular,
+   Get the site root. What that means depends on the URI. In particular,
    URIs containing a username (host:port/~fred) have their root at the
    user's top-level directory, not the server's top-level directory. 
+=========================================================================*/
+URL getRootUri (URL baseUrl) throws MalformedURLException
+  {
+  String path = baseUrl.getPath();
+  if (path.startsWith ("/~"))
+    {
+    String temp = path.substring (2);
+    int i = temp.indexOf ("/"); 
+    temp = temp.substring (0, i >= 0 ? i : 0);
+    java.net.URL newUrl = new URL (baseUrl, "/~" + temp + "/");
+    return newUrl;
+    }
+  else
+    {
+    java.net.URL newUrl = new URL (baseUrl, "/"); 
+    return newUrl;
+    }
+  }
+
+/*=========================================================================
+  
+   goRoot
 
 =========================================================================*/
   protected void goRoot()
     {
+    Logger.log (getClass(), "goRoot()");
     try
       {
-      String path = baseUrl.getPath();
-      if (path.startsWith ("/~"))
-        {
-        String temp = path.substring (2);
-        int i = temp.indexOf ("/"); 
-        temp = temp.substring (0, i >= 0 ? i : 0);
-        java.net.URL newUrl = new URL (baseUrl, "/~" + temp + "/");
-        loadURL (newUrl);
-        }
-      else
-        {
-        java.net.URL newUrl = new URL (baseUrl, "/"); 
-        loadURL (newUrl);
-        }
+      loadURL (getRootUri (baseUrl));
       }
     catch (Exception e)
       {
       e.printStackTrace();
       }
+    }
+
+/*=========================================================================
+  
+   goStop
+
+=========================================================================*/
+  protected void goStop()
+    {
+    Logger.log (getClass(), "goStop()");
+    cancelLoad();
     }
 
 /*=========================================================================
@@ -410,7 +480,7 @@ public class MainWindow extends JFrame
     if(str != null)
       {
       Logger.log (getClass(), "handleStatus10(): Retrying URL " + retryUrl);
-      loadGemini (retryUrl, str); 
+      loadFromUri (retryUrl, str); 
       }
     }
 
@@ -427,7 +497,8 @@ public class MainWindow extends JFrame
 =========================================================================*/
   private void handleRedirect (URL url)
     {
-    Logger.log (getClass(), "handleRedirect(): Redirect to " + url);
+    if (Logger.isDebug())
+      Logger.log (getClass(), "handleRedirect(): Redirect to " + url);
     loadURL (url);
     }
 
@@ -443,11 +514,15 @@ public class MainWindow extends JFrame
 =========================================================================*/
   private void handleUnsupportedMime (URL url, String mime, byte[] content)
     {
+    if (Logger.isDebug())
+      Logger.log (getClass(), "handleUnsupportedMime(), " + mime);
     try
       {
       String ext = FileUtil.getDefaultExtension (mime);
       File tempFile = File.createTempFile ("gemini-", "." + ext);
       tempFile.deleteOnExit();
+      if (Logger.isDebug())
+        Logger.log (getClass(), "tempFile is " + tempFile);
       FileUtil.byteArrayToFile (tempFile, content);
       Desktop.getDesktop().browse (java.net.URI.create ("file://" + tempFile));
       }
@@ -456,6 +531,45 @@ public class MainWindow extends JFrame
       reportException (url.toString(), e);
       }
     }
+
+
+/*=========================================================================
+  
+   help 
+
+=========================================================================*/
+  private void help()
+    {
+    newWindow ("about:/index.md");
+    }
+
+/*=========================================================================
+  
+   openLink 
+
+   Prompt the user for a URL, and try to open it
+
+=========================================================================*/
+  private void openLink ()
+    {
+    Logger.log (getClass(), "Prompt for link");
+    String url = JOptionPane.showInputDialog (this, Strings.ENTER_GEMINI_URL, 
+      DIALOG_CAPTION, 1);
+    if (url != null)
+      {
+      try
+        {
+        if (Logger.isDebug())
+          Logger.log (getClass(), "User selected " + url);
+        loadURL (new URL(url));
+        }
+      catch (Exception e)
+        {
+        reportException (url, e);
+        }
+      }
+    }
+
 
 /*=========================================================================
   
@@ -468,6 +582,8 @@ public class MainWindow extends JFrame
 =========================================================================*/
   private ResponseContent loadResponseContent (URL url)
     {
+    if (Logger.isDebug())
+      Logger.log (getClass(), "loadResponseContent(), " + url);
     ResponseContent gc = new ResponseContent (url);
     try
       {
@@ -479,48 +595,11 @@ public class MainWindow extends JFrame
       }
     catch (Exception e)
       {
+      // Note that not all exceptions relate to errors. For example,
+      //   redirection responses are treated as exceptions.
       gc.setException (e);
       }
     return gc;
-    }
-
-/*=========================================================================
-  
-  cancelLoad
-
-=========================================================================*/
-  private void cancelLoad ()
-    {
-    Logger.log (getClass(), "cancelLoad())");
-    if (loadWorker != null)
-      {
-      Logger.log (getClass(), "Cancelling load");
-      loadWorker.cancel (true);
-      if (loadTimer != null) loadTimer.stop();
-      loadTimer = null;
-      }
-    else
-      {
-      Logger.log (getClass(), "No load to cancel");
-      }
-    }
-
-/*=========================================================================
-  
-  getEncodingFromMime
-
-=========================================================================*/
-  private String getEncodingFromMime (String mime)
-    {
-    String[] args = mime.split (";");
-    for (int i = 0; i < args.length; i++)
-      {
-      String arg = args[i].trim();
-      if (arg.startsWith ("charset="))
-        return arg.substring (8);
-      }
-
-    return null;
     }
 
 /*=========================================================================
@@ -547,9 +626,15 @@ public class MainWindow extends JFrame
   
   handleResponseContent 
 
+  We call this when a request has been completed successfully, and we
+    have a ResponseContent instance that reflects the response from
+    the server. We'll use the MIME type and/or filename to decide what
+    to do with the response.
+
 =========================================================================*/
   private void handleResponseContent (URL fullUrl, ResponseContent gc)
     {
+    Logger.log (getClass(), "handleResponseContent()");
     String mime = gc.getMime();
     URL url = gc.getURL(); 
     String urlStr = url.toString();
@@ -574,10 +659,10 @@ public class MainWindow extends JFrame
       String encoding = getEncodingFromMime (mime);
       renderPlain (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
-      setLastContent (gc);
       backlinks.push (fullUrl);
+      setLastContent (gc);
       }
-    else if (mime.startsWith ("text/nex")) 
+    else if (mime.startsWith ("text/nex")) // Not a real MIME
       {
       baseUrl = fullUrl; 
       // We have to set this here, because renderGemtext
@@ -585,6 +670,18 @@ public class MainWindow extends JFrame
       Logger.log (getClass(), "Content is text/nex");
       String encoding = getEncodingFromMime (mime);
       renderNex (gc.getContent(), encoding);
+      topBar.showUrl (fullUrl.toString());
+      setLastContent (gc);
+      backlinks.push (fullUrl);
+      }
+    else if (mime.startsWith ("text/gophermap")) // Not a real MIME
+      {
+      baseUrl = fullUrl; 
+      // We have to set this here, because renderGemtext
+      //  needs it, for forming links in the HTML
+      Logger.log (getClass(), "Content is text/gophermap");
+      String encoding = getEncodingFromMime (mime);
+      renderGophermap (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       setLastContent (gc);
       backlinks.push (fullUrl);
@@ -601,6 +698,10 @@ public class MainWindow extends JFrame
       setLastContent (gc);
       backlinks.push (fullUrl);
       }
+    else if (mime.startsWith ("image/"))
+      {
+      loadURLEmbedImage (fullUrl);
+      }
     else
       {
       Logger.log (getClass(), "Content is " + mime);
@@ -610,31 +711,34 @@ public class MainWindow extends JFrame
   
 /*=========================================================================
   
-  loadGemini
+  loadFromUri
   
-  We have a gemini:// URL. Load it through its content handler.
+  We have a gemini:// or spartan:// URL. Load it through its 
+    content handler.
 
   If the qparam arg is non-null, it is appended as a query parameter 
   _as is_.  
 
 =========================================================================*/
-  private void loadGemini (URL url, String qparam)
+  private void loadFromUri (URL url, String qparam)
     {
+    if (Logger.isDebug())
+      Logger.log (getClass(), "loadFromUri(), " + url);
+
     ActionListener loadTimerListener = new ActionListener() 
       {
       public void actionPerformed (ActionEvent evt) 
         {
+        //System.out.println ("loadtimer action performed" + loadTimer);
 	setStatus (Strings.LOADING);
         }
       };
 
     cancelLoad(); // Kill any existing background load
     removeLastContent(); // Delete any data associated with the last request
+
     try
       {
-      Logger.log (getClass(), "loadGemini(), url=" 
-        + url.toString() + ", qparam=" + qparam);
-
       if (qparam != null)
         {
         // URLEncoder does seem on its own to generate encodings that Gemini 
@@ -654,12 +758,14 @@ public class MainWindow extends JFrame
       }
     catch (Exception e)
       {
-      // Fallen at that first hurdle.
+      // Fallen at the first hurdle.
       reportException (url.toString(), e);
       return;
       }
 
     final URL fullUrl = url;
+
+    // Now set up a SwingWorker to do the load in the background
 
     loadWorker = new SwingWorker()  
       { 
@@ -668,9 +774,11 @@ public class MainWindow extends JFrame
       @Override
       protected String doInBackground() throws Exception  
         { 
+        Logger.log (getClass(), "Load worker thread doInBackground()");
         loadTimer = new javax.swing.Timer (1000, loadTimerListener);
         loadTimer.setRepeats (true);
-        loadTimer.start();
+        loadTimer.start(); // TODO
+        //System.out.println ("loadtimer start" + loadTimer);
         setStatus (Strings.LOADING + fullUrl);
         gc = loadResponseContent (fullUrl); 
         return "foo"; // Meaningless return
@@ -679,21 +787,27 @@ public class MainWindow extends JFrame
       @Override
       protected void process (java.util.List chunks) 
         { 
-        //statusLabel.setText(String.valueOf(val)); 
+        // Do nothing here (but must be implemented)
         } 
 
       @Override
       protected void done()  
         { 
-	loadTimer.stop();
+        Logger.log (getClass(), "Load worker thread done()");
+	if (loadTimer != null) 
+          {
+          loadTimer.stop();
+          //System.out.println ("loadtimer stop" + loadTimer);
+          }
 	loadTimer = null;
+        clearStatus ();
         if (!isCancelled())
           {
-          clearStatus ();
           Exception e = gc.getException();
           if (e == null)
             {
             handleResponseContent (fullUrl, gc);
+            setCaptionFromResponse (fullUrl, gc);
             }
          else
             {
@@ -733,10 +847,10 @@ public class MainWindow extends JFrame
   
   We have a nex:// URL. Load it through its content handler.
 
-  If the qparam arg is non-null, it is appended as a query parameter
-  after encoding.
+  // *** Merged with loadFromUri() ***
 
 =========================================================================*/
+/*
   private void loadNex (URL url, String qparam)
     {
     ActionListener loadTimerListener = new ActionListener() 
@@ -832,6 +946,7 @@ public class MainWindow extends JFrame
 
     loadWorker.execute();  
     }
+*/
 
 /*=========================================================================
   
@@ -840,6 +955,9 @@ public class MainWindow extends JFrame
 =========================================================================*/
   public void loadLocalFile (URL url)
     {
+    if (Logger.isDebug())
+      Logger.log (getClass(), "loadLocalFile(), " + url);
+
     try
       {
       byte[] content = FileUtil.urlToByteArray (url);
@@ -938,9 +1056,9 @@ public class MainWindow extends JFrame
   
    loadForeignURI 
 
-   Any attempt to load a URI that does not start "gemini://" ends up here.
-   At present, we just use the Java desktop support to try to invoke
-   a handler for it.
+   Any attempt to load a URI that does not start with a supported protocol
+   ends up here.  At present, we just use the Java desktop support to try to 
+   invoke a handler for it.
 
 =========================================================================*/
   private void loadForeignURL (URL url)
@@ -965,10 +1083,14 @@ public class MainWindow extends JFrame
 =========================================================================*/
   public void loadURLEmbedImage (URL url)
     {
+    if (Logger.isDebug())
+      Logger.log (getClass(), "Embedding image URL into HTML: " + url);
+
     removeLastContent();
     setHtml ("<img src=\"" + url + "\"/>");
     topBar.showUrl (url.toString());
     backlinks.push (url);
+    setCaptionFromResponse (url, null);
     }
 
 /*=========================================================================
@@ -991,17 +1113,45 @@ public class MainWindow extends JFrame
       { 
       if (url.getProtocol().equals ("gemini"))
 	{
-	loadGemini (url, null);
+	loadFromUri (url, null);
 	baseUrl = url;
 	}
       else if (url.getProtocol().equals ("spartan"))
 	{
-	loadGemini (url, null);
+	loadFromUri (url, null);
 	baseUrl = url;
+	}
+      else if (url.getProtocol().equals ("gopher"))
+	{
+        String path = url.getPath();
+        if (path.startsWith ("/7/"))
+          {
+          TextEntryDialog d = new TextEntryDialog (this, 1024);
+          d.setVisible (true);
+          String str = d.getInput();
+	  if (str != null)
+	    {
+            try
+              {
+	      loadFromUri (url, str); 
+              } catch (Exception e){}
+	    baseUrl = url;
+	    }
+          }
+        else
+          {
+	  loadFromUri (url, null);
+	  baseUrl = url;
+          }
 	}
       else if (url.getProtocol().equals ("nex"))
 	{
-	loadNex (url, null);
+	loadFromUri (url, null);
+	baseUrl = url;
+	}
+      else if (url.getProtocol().equals ("about"))
+	{
+	loadFromUri (url, null);
 	baseUrl = url;
 	}
       else if (url.getProtocol().equals ("file"))
@@ -1017,6 +1167,79 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
+   loadURL (String)
+
+   Load any kind of URL. If it doesn't start with gemini://, treat it
+   as external, which means invoking the desktop on it.
+
+   Mostly delegates to loadURL (URL)
+
+=========================================================================*/
+  public void loadURL (String url)
+    {
+    // We need to do something if what the user enters doesn't seem
+    //   to be a full URL. The following is a pretty crude approach.
+    if (!url.contains (":/"))
+       {
+       if ((url.contains (" ") || !url.contains (".")) 
+            && Config.getConfig().urlbarSearchEnabled())
+         {
+         String qparam = URLEncoder.encode (url);
+         qparam = qparam.replace("+","%20");
+         url = Config.getConfig().getUrlbarSearchUrl() + "?" +
+           qparam; 
+         }
+       else
+         url = "gemini://" + url;
+       }
+    try
+      {
+      loadURL (new URL(url));
+      }
+    catch (Exception e)
+      {
+      reportException (url, e);
+      }
+    }
+
+
+/*=========================================================================
+  
+   zoomIn 
+
+=========================================================================*/
+  public void zoomIn()
+    {
+    Logger.log (getClass(), "Zoom in");
+    int n = config.getDocumentBaseFontSize();
+    config.setDocumentBaseFontSize (n + 1); 
+    applyInitialStyles();
+    String s = jEditorPane.getText ();
+    jEditorPane.setText (s);
+    }
+
+/*=========================================================================
+  
+   zoomOut
+
+=========================================================================*/
+  public void zoomOut()
+    {
+    Logger.log (getClass(), "Zoom out");
+    int n = config.getDocumentBaseFontSize();
+    if (n > 6)
+      {
+      config.setDocumentBaseFontSize (n - 1); 
+      applyInitialStyles();
+      String s = jEditorPane.getText ();
+      jEditorPane.setText (s);
+      }
+    else
+      Logger.log (getClass(), "Too small to zoom out");
+    }
+
+/*=========================================================================
+  
    refresh 
 
    Reload the current URL
@@ -1025,6 +1248,7 @@ public class MainWindow extends JFrame
   public void refresh()
     {
     Logger.log (getClass(), "Refresh");
+    applyInitialStyles ();
     if (baseUrl != null)
       {
       // This is potentially nasty. We have to pop the back-link at TOS
@@ -1042,38 +1266,14 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
-   loadURL
-
-   Load any kind of URL. If it doesn't start with gemini://, treat it
-   as external, which means invoking the desktop on it.
-
-=========================================================================*/
-  public void loadURL (String url)
-    {
-    // We need to do something if what the user enters doesn't seem
-    //   to be a full URL. The following is a pretty crude approach.
-    if (!url.contains ("://"))
-       url = "gemini://" + url;
-    try
-      {
-      loadURL (new URL(url));
-      }
-    catch (Exception e)
-      {
-      reportException (url, e);
-      }
-    }
-
-/*=========================================================================
-  
-   handleLink 
+   handleLinkClick 
 
    Easy -- just load the URL
 
 =========================================================================*/
-  public void handleLink (URL url)
+  public void handleLinkClick (URL url)
     {
-    Logger.log (getClass(), "handleLink(), link is " + url);
+    Logger.log (getClass(), "handleLinkClick(), link is " + url);
     if (url != null)
       loadURL (url);
     else
@@ -1105,58 +1305,90 @@ public class MainWindow extends JFrame
 =========================================================================*/
   private void handleLinkUnhover (URL linkUrl)
     {
-    Logger.log (getClass(), "handleLinkUnhover(), link is " + linkUrl);
+    if (Logger.isDebug())
+      Logger.log (getClass(), "handleLinkUnhover(), link is " + linkUrl);
     if (linkUrl != null)
       clearStatus();
     }
 
 /*=========================================================================
   
-  applyStylesFromConfig 
+  applyStylesFromStream
+
+=========================================================================*/
+  private void applyStylesFromStream (InputStream is)
+    {
+    HTMLEditorKit kit = (HTMLEditorKit)jEditorPane.getEditorKit();
+    StyleSheet styleSheet = kit.getStyleSheet();
+
+    String s = new BufferedReader (new InputStreamReader (is))
+        .lines().collect (Collectors.joining("\n"));
+
+    // Generate the various font sizes from the base size, and 
+    //   substitute them into the CSS
+    int base_font_size = config.getDocumentBaseFontSize();
+    s = s.replaceAll ("%%base_font_size%%", "" + base_font_size);
+    s = s.replaceAll ("%%h1_font_size%%", "" + (base_font_size * 2));
+    s = s.replaceAll ("%%h2_font_size%%", "" + (base_font_size * 5 / 3));
+    s = s.replaceAll ("%%h3_font_size%%", "" + (base_font_size * 5 / 4));
+
+    styleSheet.addRule (s); // addRule() can add many rules
+    }
+
+
+/*=========================================================================
+  
+  applyInitialStyles 
 
   Read the CSS styles from the Config class, and apply them to
   the HTML editor
 
 =========================================================================*/
-  private void applyStylesFromConfig ()
+  private void applyInitialStyles ()
     {
-    HTMLEditorKit kit = (HTMLEditorKit)jEditorPane.getEditorKit();
+    if (Logger.isDebug())
+      Logger.log (getClass(), "applyInitialStyles()");
+    try
+      {
+      InputStream is = null; 
+      String theme = config.getTheme();
+      if (Logger.isDebug())
+	Logger.log (getClass(), "Theme is " + theme);
+      if ("dark".equals (theme))
+	is = getClass().getClassLoader().getResourceAsStream ("css/dark.css");
+      else if ("custom".equals (theme))
+	{ 
+	String cssFile = config.getCustomCSSFile();
+	if (Logger.isDebug())
+	  Logger.log (getClass(), "Using custom theme" + cssFile);
+	if (cssFile != null)
+	  is = new FileInputStream (new File (cssFile));
+	else
+          {
+	  Logger.log (getClass(), Logger.WARNING, 
+             "Config file set custom theme, but no CSS file in configuration"); 
+	  throw new IOException ("No CSS file specified for custom theme");
+          }
+	} 
+      else
+	is = getClass().getClassLoader().getResourceAsStream ("css/light.css");
 
-    StyleSheet styleSheet = kit.getStyleSheet();
-    styleSheet.addRule ("body {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_BODY, Config.DEFLT_STYLE_BODY)  + "}");
-    styleSheet.addRule ("p {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_P, Config.DEFLT_STYLE_P)  + "}");
-    styleSheet.addRule ("h1 {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_H1, Config.DEFLT_STYLE_H1)  + "}");
-    styleSheet.addRule ("h2 {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_H2, Config.DEFLT_STYLE_H2)  + "}");
-    styleSheet.addRule ("h3 {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_H3, Config.DEFLT_STYLE_H3)  + "}");
-    styleSheet.addRule ("pre {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_PRE, Config.DEFLT_STYLE_PRE)  + "}");
-    styleSheet.addRule ("code {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_CODE, Config.DEFLT_STYLE_CODE)  + "}");
-    styleSheet.addRule ("a {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_A, Config.DEFLT_STYLE_A)  + "}");
-    styleSheet.addRule ("a:hover {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_A_HOVER, Config.DEFLT_STYLE_A_HOVER)  + "}");
+      if (is != null)
+	{
+	applyStylesFromStream (is);
+	try {is.close(); } catch (Exception e){};
+	}
+      else
+	{
+	throw new IOException ("Can't open stream for CSS stylesheet"); 
+	}
+      }
+    catch (Exception e)
+      {
+      JOptionPane.showMessageDialog (this, e.toString(), 
+         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+      }
 
-    styleSheet.addRule ("blockquote {" 
-        + Config.getConfig().getProperty 
-            (Config.STYLE_BLOCKQUOTE, Config.DEFLT_STYLE_BLOCKQUOTE)  + "}");
-
-    // These aren't in the config file yet
-    styleSheet.addRule ("ul {margin: 0.5em}");
     }
 
 /*=========================================================================
@@ -1172,6 +1404,8 @@ public class MainWindow extends JFrame
 =========================================================================*/
   void fiddleWithKeyMap (HTMLEditorKit kit)
     {
+    Logger.log (getClass(), "Adjusting editor key map)");
+
     InputMap inputMap = jEditorPane.getInputMap();
     inputMap.put (KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0),
       "none");
@@ -1202,6 +1436,9 @@ public class MainWindow extends JFrame
 =========================================================================*/
   void downloadURL (String href, File file)
     {
+    if (Logger.isDebug())
+      Logger.log (getClass(), "Downloading " + href + " to " + file);
+
     SwingWorker dlWorker = new SwingWorker()  
       { 
       byte[] b = null;
@@ -1209,6 +1446,7 @@ public class MainWindow extends JFrame
       @Override
       protected String doInBackground() 
         { 
+        Logger.log (getClass(), "Download worker doInBackground()");
         try
           {
           e = null;
@@ -1227,6 +1465,7 @@ public class MainWindow extends JFrame
       @Override
       protected void done()  
         { 
+        Logger.log (getClass(), "Download worker done()");
         if (b != null)
           {
           try
@@ -1277,12 +1516,12 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
-  rightClick 
+  handleRightClick 
 
   Handle right-clicks on links by popping up the link menu.
 
 =========================================================================*/
-  void rightClick (String href, int x, int y)
+  void handleRightClick (String href, int x, int y)
     {
     JPopupMenu linkMenu = new JPopupMenu ("Link action"); 
 
@@ -1316,7 +1555,8 @@ public class MainWindow extends JFrame
 =========================================================================*/
   public void setHtml (String s)
     {
-    Logger.log (getClass(), "Setting HTML");
+    if (Logger.isDebug())
+      Logger.log (getClass(), "setHTML(), length is " + s.length());
     jEditorPane.setText (s);
     jEditorPane.setCaretPosition (0);
     }
@@ -1383,7 +1623,6 @@ public class MainWindow extends JFrame
          {
          e.printStackTrace();
          }
-
     }
   }
 
@@ -1391,6 +1630,8 @@ public class MainWindow extends JFrame
 /*=========================================================================
   
   newWindow 
+
+  Open a new window with the specified URL
 
 =========================================================================*/
   public static void newWindow (String url)
@@ -1404,6 +1645,8 @@ public class MainWindow extends JFrame
 /*=========================================================================
   
   newWindow 
+
+  Open a new window home page window 
 
 =========================================================================*/
   public static void newWindow ()
@@ -1453,130 +1696,164 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
-  about 
+  renderToHtml
+
+  Invoke a converter to render the response to HTML 
 
 =========================================================================*/
-  public void about ()
+  private String renderToHtml (Converter converter, 
+        byte[] content, String encoding)
     {
-    String s = "<html><head></head><body style='margin: 20'>";
-    s += "<h1>" + Strings.APP_NAME + "</h1>";
-    s += "<h3>" + Strings.VERSION + " " + Config.VERSION + "</h3>";
-    s += "<p>" + Strings.ABOUT_MESSAGE + "</p>\n";
-    s += "<p>&nbsp;</p></body>\n";
-    JOptionPane.showMessageDialog (this, s, 
-         DIALOG_CAPTION, JOptionPane.INFORMATION_MESSAGE); 
+    if (content.length > 0)
+      {
+      try
+        {
+	String stringForm;
+	Logger.log (getClass(), "renderToHtml(), Encoding is " + encoding);
+	if (encoding != null && encoding.length() > 0)
+	  stringForm = new String (content, encoding);
+	else
+	  stringForm = new String (content);
+        return converter.toHtml (stringForm); 
+        }
+      catch (UnsupportedEncodingException e)
+        {
+	Logger.log (getClass(), Logger.WARNING, 
+          "renderToHtml(), Encoding is " + encoding);
+        return Strings.UNSUP_ENCODING_RESP + ": " + encoding;
+        }
+      }
+    else
+      {
+      return Strings.EMPTY_RESP;
+      }
     }
 
 /*=========================================================================
   
-  createMenuBar
+  renderPlain
+
+  Convert the plain text to HTML and display it
 
 =========================================================================*/
-  private void createMenuBar ()
+  private void renderPlain (byte[] content, String encoding)
     {
-    menuBar = new JMenuBar();
-
-    // TODO: we need to change the accelerator keys if the menu
-    //   text changes.
-
-    JMenu fileMenu = new JMenu(Strings.FILE);
-    fileMenu.setMnemonic (KeyEvent.VK_F);
-    JMenuItem newMenuItem = new JMenuItem (Strings.NEW);
-    newMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_N, ActionEvent.CTRL_MASK));
-    newMenuItem.setMnemonic (KeyEvent.VK_N);
-    newMenuItem.addActionListener((event) -> newWindow());
-    fileMenu.add (newMenuItem);
-    JMenuItem openMenuItem = new JMenuItem (Strings.OPEN_LINK);
-    openMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_O, ActionEvent.CTRL_MASK));
-    openMenuItem.setMnemonic (KeyEvent.VK_O);
-    openMenuItem.addActionListener((event) -> openLink());
-    fileMenu.add (openMenuItem);
-    JMenuItem saveMenuItem = new JMenuItem (Strings.SAVE);
-    saveMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_S, ActionEvent.CTRL_MASK));
-    saveMenuItem.setMnemonic (KeyEvent.VK_S);
-    saveMenuItem.addActionListener((event) -> save());
-    fileMenu.add (saveMenuItem);
-    JMenuItem closeMenuItem = new JMenuItem (Strings.CLOSE);
-    closeMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_W, ActionEvent.CTRL_MASK));
-    closeMenuItem.setMnemonic (KeyEvent.VK_C);
-    closeMenuItem.addActionListener((event) -> dispose());
-    fileMenu.add (closeMenuItem);
-    JMenuItem exitMenuItem = new JMenuItem (Strings.EXIT);
-    exitMenuItem.setMnemonic (KeyEvent.VK_X);
-    exitMenuItem.addActionListener((event) -> System.exit(0));
-    fileMenu.add (exitMenuItem);
-
-    JMenu editMenu = new JMenu (Strings.EDIT);
-    editMenu.setMnemonic (KeyEvent.VK_E);
-    JMenuItem selectAllMenuItem = new JMenuItem (Strings.SELECT_ALL);
-    selectAllMenuItem.setMnemonic (KeyEvent.VK_A);
-    selectAllMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_A, ActionEvent.CTRL_MASK));
-    selectAllMenuItem.addActionListener((event) -> jEditorPane.selectAll());
-    editMenu.add (selectAllMenuItem);
-    JMenuItem copyMenuItem = new JMenuItem (Strings.COPY);
-    copyMenuItem.setMnemonic (KeyEvent.VK_C);
-    copyMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_C, ActionEvent.CTRL_MASK));
-    copyMenuItem.addActionListener((event) -> jEditorPane.copy());
-    editMenu.add (copyMenuItem);
-    JMenuItem findMenuItem = new JMenuItem (Strings.FIND_IN_PAGE);
-    findMenuItem.setMnemonic (KeyEvent.VK_F);
-    findMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_F, ActionEvent.CTRL_MASK));
-    findMenuItem.addActionListener((event) -> find());
-    editMenu.add (findMenuItem);
-    JMenuItem findNextMenuItem = new JMenuItem (Strings.FIND_NEXT);
-    findNextMenuItem.setMnemonic (KeyEvent.VK_N);
-    findNextMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_G, ActionEvent.CTRL_MASK));
-    findNextMenuItem.addActionListener((event) -> findNext());
-    editMenu.add (findNextMenuItem);
-
-    JMenu viewMenu = new JMenu (Strings.VIEW);
-    viewMenu.setMnemonic (KeyEvent.VK_V);
-    JMenuItem refreshMenuItem = new JMenuItem (Strings.REFRESH);
-    refreshMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_R, ActionEvent.CTRL_MASK));
-    refreshMenuItem.addActionListener((event) -> refresh());
-    viewMenu.add (refreshMenuItem);
-
-    JMenu goMenu = new JMenu (Strings.GO);
-    goMenu.setMnemonic (KeyEvent.VK_G);
-    JMenuItem backMenuItem = new JMenuItem (Strings.BACK);
-    backMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_BACK_SPACE, 0));
-    backMenuItem.addActionListener((event) -> goBack());
-    goMenu.add (backMenuItem);
-    JMenuItem homeMenuItem = new JMenuItem (Strings.HOME);
-    homeMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_H, ActionEvent.CTRL_MASK));
-    homeMenuItem.addActionListener((event) -> goHome());
-    goMenu.add (homeMenuItem);
-    JMenuItem rootMenuItem = new JMenuItem (Strings.ROOT);
-    //rootMenuItem.setAccelerator (KeyStroke.getKeyStroke
-    //  (KeyEvent.VK_T, ActionEvent.CTRL_MASK));
-    rootMenuItem.addActionListener((event) -> goRoot());
-    goMenu.add (rootMenuItem);
-
-    JMenu helpMenu = new JMenu (Strings.HELP);
-    helpMenu.setMnemonic (KeyEvent.VK_H);
-    JMenuItem aboutMenuItem = new JMenuItem (Strings.ABOUT 
-      + " " + Strings.APP_NAME + "...");
-    aboutMenuItem.setMnemonic (KeyEvent.VK_A);
-    aboutMenuItem.addActionListener((event) -> about());
-    helpMenu.add (aboutMenuItem);
-
-    menuBar.add (fileMenu);
-    menuBar.add (editMenu);
-    menuBar.add (viewMenu);
-    menuBar.add (goMenu);
-    menuBar.add (helpMenu);
+    setHtml (renderToHtml (new TextConverter(), content, encoding));
     }
+
+/*=========================================================================
+  
+  renderNex
+
+  Convert the Nex-flavoured plain text to HTML and display it
+
+=========================================================================*/
+  private void renderNex (byte[] content, String encoding)
+    {
+    setHtml (renderToHtml (new NexConverter (baseUrl), content, encoding));
+    }
+
+/*=========================================================================
+  
+  renderGemtext  
+
+  Convert the text returned from the server in a text/gemini response
+  to HTML, and display it. Assume the specified encoding, unless encoding
+  is null, in which case assume platform encoding.
+
+=========================================================================*/
+  private void renderGemtext (byte[] content, String encoding)
+    {
+    setHtml (renderToHtml (new GemConverter (baseUrl), content, encoding));
+    }
+
+/*=========================================================================
+  
+  renderGophermap
+
+=========================================================================*/
+  private void renderGophermap (byte[] content, String encoding)
+    {
+    setHtml (renderToHtml (new GophermapConverter (baseUrl), content, encoding));
+    }
+
+/*=========================================================================
+  
+  renderMarkdown
+
+  Convert the markdown text to HTML and display it
+
+=========================================================================*/
+  private void renderMarkdown (byte[] content, String encoding)
+    {
+    setHtml (renderToHtml (new MarkdownConverter (baseUrl), content, encoding));
+    }
+
+/*=========================================================================
+  
+  getDisplayName 
+
+=========================================================================*/
+public String getDisplayName (URL uri)
+  {
+  String displayName = null;
+  String path = uri.getPath();
+  if (path.startsWith ("/~"))
+    {
+    String temp = path.substring (2);
+    int i = temp.indexOf ("/"); 
+    if (i >= 0)
+      temp = temp.substring (0, i);
+    displayName = temp;
+    }
+  else
+    {
+    displayName = uri.getHost();
+    if (displayName.length() == 0) displayName = null;
+    }
+
+  int i = path.lastIndexOf ("/"); 
+  if (i >= 0)
+    {
+    String temp = path.substring (i);
+    if (temp.startsWith("/")) temp = temp.substring(1);
+    if (displayName == null)
+      displayName = temp;
+    else if (!temp.equals ("/") && temp.length() > 0)
+      displayName = displayName + ": " + temp; 
+    }
+
+  return displayName;
+  }
+
+/*=========================================================================
+  
+  setCaptionFromHostname
+
+=========================================================================*/
+void setCaptionFromResponse (URL uri, ResponseContent gc)
+  {
+  String caption = null;
+
+  if (gc != null)
+    {
+    // TODO: extract a caption from the response data
+    }
+
+  if (caption == null)
+    {
+    String displayName = getDisplayName (uri);
+    if (displayName != null)
+      caption = WINDOW_CAPTION + ": " + displayName;
+    }  
+
+  if (caption == null)
+    {
+    caption = WINDOW_CAPTION; 
+    }  
+
+  setTitle (caption);
+  }
 
 /*=========================================================================
   
@@ -1587,6 +1864,5 @@ public class MainWindow extends JFrame
     {
     statusBar.setStatus (s);
     }
-
   }
 

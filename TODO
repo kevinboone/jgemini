@@ -1,6 +1,6 @@
-Fix Go|Root for ~name URIs.
+Extract window caption from the response, rather than just the URL.
 
-Bookmarks.
+Bookmark support.
 
 Add image open/download link on Markdown pages. This is surprisingly fiddly,
 because the image is in-lined without a specific link, so there's no link to
@@ -8,23 +8,12 @@ click, as there is with links in Gemtext documents.
 
 Improve accuracy of emoji detection. 
 
-Implement caching (but how, given the lack of timestamp?)
-
 Find a way to indicate when page rendering is ongoing, and when it is complete.
 It's not usually a problem for text pages, but images sometimes take a while to
 transfer.
 
-Do something with un-actionable links like "about:xxx" and "gopher:xxx" -- may
-be impossible without re-implementing the viewer completely.
-
 Catch redirect loops.
-
-Add support for Spartan, Nex, maybe Gopher.
 
 Implement a download manager. At least, find a way to prevent the program exiting whilst a 
 download is in progress.
-
-Zoom/Scale (very difficult, without reimplementing HTMLEditorKit).
-
-Add bookmark support.
 

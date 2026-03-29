@@ -2,7 +2,7 @@
 
   JGemini
 
-  NexConnection
+  GopherConnection
 
   Copyright (c)2021-2026 Kevin Boone, GPLv3.0
 
@@ -15,7 +15,7 @@ import java.util.Collections;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.utils.file.ContentGuesser;
 
-public class NexConnection extends URLConnection
+public class GopherConnection extends URLConnection
   {
   private Socket s = null;
   private String contentType = null;
@@ -23,8 +23,9 @@ public class NexConnection extends URLConnection
   private byte[] content = null;
   private String meta = null;
   private static StatusHandler statusHandler = StatusHandler.getInstance();
+  private char gopherType = '0';
 
-  public NexConnection (URL url) 
+  public GopherConnection (URL url) 
     {
     super (url);
     }
@@ -36,15 +37,31 @@ public class NexConnection extends URLConnection
     if (s != null && s.isConnected()) return;
     String host = getURL().getHost();
     String path = getURL().getPath();
+    String query = getURL().getQuery();
     int port = getURL().getPort();
-    if (port == -1) port = 1900;
+    if (port == -1) port = 70;
 
     s = new Socket (host, port);
     is = s.getInputStream();
     OutputStream os = s.getOutputStream();
     PrintStream pos = new PrintStream (os);
 
-    pos.print (getURL().getPath().toString());
+    String request = path; 
+    if (path.length() >= 3)
+      {
+      if (path.charAt(2) == '/')
+        {
+        gopherType = path.charAt(1);
+        request = path.substring(2);
+        }
+      }
+
+    if (query != null && query.length() > 0)
+      request = request + "\t" + query;
+
+    //System.out.println ("req=" + request);
+    pos.print (request);
+
     pos.print ("\r\n"); 
     pos.flush();
     }
@@ -66,15 +83,28 @@ public class NexConnection extends URLConnection
 
       int totalRead = 0;
 
-      contentType = ContentGuesser.guessMimeTypeFromFilename (url.getPath()); 
-      if (contentType == null) contentType = "text/nex";
-      else if ("application/octet-stream".equals (contentType)) contentType = "text/nex";
-      else if ("text/plain".equals (contentType)) contentType = "text/nex";
+      String path = url.getPath();
+      if (path.length() == 0 || path.equals ("/"))
+        contentType = "text/gophermap";
+      else
+        {
+        contentType = ContentGuesser.guessMimeTypeFromFilename (url.getPath()); 
+        //System.out.println ("ct = " + contentType + " gt=" + gopherType);
+	if (contentType == null) 
+	  {
+	  if (gopherType == '0')
+	    contentType = "text/plain"; 
+	  else if (gopherType == 'g')
+	    contentType = "image/gif"; 
+	  else
+	    contentType = "text/gophermap"; // TODO
+	  }
+        }
+
       ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
 
       int nRead;
       byte[] data = new byte[16384];
-
       try
 	{
 	while (s.isConnected() && 
@@ -93,7 +123,6 @@ public class NexConnection extends URLConnection
 	}
 
       content = content_buffer.toByteArray();
-
       content_buffer.close();
       s.close();
       s = null;
@@ -118,4 +147,5 @@ public class NexConnection extends URLConnection
     return is;
     }
   }
+
 

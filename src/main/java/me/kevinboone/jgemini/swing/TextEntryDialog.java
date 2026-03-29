@@ -18,6 +18,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
 import java.net.URLEncoder;
+import me.kevinboone.jgemini.base.*;
 
 public class TextEntryDialog extends JDialog
 {
@@ -28,14 +29,14 @@ private int maxInputBytes;
 
 public TextEntryDialog (JFrame parent, int maxInputBytes)
   {
-  super (parent, "Enter text", Dialog.ModalityType.DOCUMENT_MODAL);
+  super (parent, Strings.APP_NAME, Dialog.ModalityType.DOCUMENT_MODAL);
 
   input = null;	
   this.maxInputBytes = maxInputBytes;
   setLayout(new BorderLayout());
  
   textArea = new JTextArea (8, 40);
-  textArea.setBorder(BorderFactory.createTitledBorder("Text"));
+  textArea.setBorder(BorderFactory.createTitledBorder(Strings.ENTER_TEXT));
   textArea.setLineWrap (true); 
   textArea.setWrapStyleWord (true); 
   textArea.addKeyListener(new KeyAdapter() 

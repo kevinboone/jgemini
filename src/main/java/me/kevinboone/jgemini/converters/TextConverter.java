@@ -14,7 +14,7 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 
-public class TextConverter
+public class TextConverter implements Converter
   {
   /** Convert common punctuation like & into HTML-friendly forms. */
   public static String escapeHtml (String gem)
@@ -40,7 +40,8 @@ public class TextConverter
     }
 
   /** Convert the plain text file to HTML. */ 
-  public String textToHtml (String text, String encoding)
+  @Override
+  public String toHtml (String text)
     {
     StringBuffer sb = new StringBuffer();
     String lines[] = text.split ("\n");
@@ -56,39 +57,6 @@ public class TextConverter
     sb.append ("</pre></body></html>\n");
     return new String (sb);
     }
-
-/*
-  public static void main (String[] args)
-       throws Exception
-    {
-    if (args.length == 1)
-      {
-      FileInputStream fis = new FileInputStream (new File (args[0]));
-      ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
-
-      int nRead;
-      byte[] data = new byte[16384];
-
-      while ((nRead = fis.read (data, 0, data.length)) != -1) 
-       content_buffer.write (data, 0, nRead);
-
-      byte[] gmi = content_buffer.toByteArray();
-
-      content_buffer.close();
-
-      Converter gc = new GemConverter (null);
-
-      System.out.println (gc.gemToHtml (new String(gmi), null));
-
-      fis.close();
-      }
-    else
-      {
-      System.out.println 
-        ("Usage: java GemConverter {gemtext_file}");
-      }
-    }
-*/
   }
 
 

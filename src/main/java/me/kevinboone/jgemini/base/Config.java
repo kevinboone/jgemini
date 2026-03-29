@@ -14,48 +14,20 @@ import java.util.*;
 import java.io.*;
 import me.kevinboone.jgemini.base.*;
 
+
 public class Config extends Properties
   {
-  public final static String VERSION = "1.0";
-  private boolean debug = false;
+  public final static String VERSION = "2.0";
+  private int logLevel = Logger.ERROR;
   private boolean gemtextInlineImages = false;
+  private boolean urlbarSearchEnabled = false;
   private final static String SYS_PREFS_FILE = "jgemini.properties"; 
   private final static String PREFS_FILE = ".jgemini.properties"; 
   public final static String URL_HOME = "url.home";
   public final static String DEFLT_URL_HOME = 
       "gemini://geminiprotocol.net/";
-  public final static String STYLE_P = "style.p";
-  public final static String DEFLT_STYLE_P = 
-      "color:black; font: 16px Serif; ";
-  public final static String STYLE_BODY = "style.body";
-  public final static String DEFLT_STYLE_BODY = 
-      "color:black; font: 16px Serif; margin-left: 20px; margin-right: 20px; margin-bottom: 10px";
-  public final static String STYLE_H1 = "style.h1";
-  public final static String DEFLT_STYLE_H1 = 
-      "color: black; font: 22px Sans";
-  public final static String STYLE_H2 = "style.h2";
-  public final static String DEFLT_STYLE_H2 = 
-      "color: black; font: 20px Sans";
-  public final static String STYLE_H3 = "style.h3";
-  public final static String DEFLT_STYLE_H3 = 
-      "color: black; font: 18px Sans";
-  public final static String STYLE_PRE = "style.pre";
-  public final static String DEFLT_STYLE_PRE = 
-      "color:black; font: 16px monospace";
-  public final static String STYLE_CODE = "style.code";
-  public final static String DEFLT_STYLE_CODE = 
-      "color:black; font: 16px monospace";
-  public final static String STYLE_A = "style.a";
-  public final static String DEFLT_STYLE_A = 
-      "text-decoration: none; color: red";
-  public final static String STYLE_A_HOVER = "style.a_hover";
-  public final static String DEFLT_STYLE_A_HOVER = 
-      "text-decoration: none; color: red; font-weight: bold";
-  public final static String STYLE_BLOCKQUOTE = "style.blockquote";
-  public final static String DEFLT_STYLE_BLOCKQUOTE = 
-      "background: #E0E0E0";
-  public final static String DEBUG = "debug";
-  public final static String DEFLT_DEBUG = "1";
+  public final static String LOG_LEVEL = "log.level";
+  public final static int DEFLT_LOG_LEVEL = Logger.ERROR;
   public final static String WINDOW_W = "window.w";
   public final static String DEFLT_WINDOW_W = "800";
   public final static String WINDOW_H = "window.h";
@@ -64,12 +36,26 @@ public class Config extends Properties
   public final static String DEFLT_UI_USER_FONT = "Sans 20";
   public final static String UI_CONTROL_FONT = "ui.control_font"; 
   public final static String DEFLT_UI_CONTROL_FONT = "Sans 20";
+  public final static String UI_DOCUMENT_FONT_SIZE = "ui.document.font.size";
+  public final static String DEFLT_UI_DOCUMENT_FONT_SIZE = "16";
   public final static String UI_NEW_WINDOW_MODE = "ui,new_window";
   public final static String DEFLT_UI_NEW_WINDOW_MODE = "0";
   public final static String GEMTEXT_INLINE_IMAGES = "gemtext.inline.images";
   public final static String DEFLT_GEMTEXT_INLINE_IMAGES = "1";
   public final static String INLINE_IMAGE_WIDTH = "inline.image.width";
   public final static String DEFLT_INLINE_IMAGE_WIDTH = "600";
+  public final static String UI_DOCUMENT_THEME = "ui.document.theme";
+  public final static String DEFLT_UI_DOCUMENT_THEME = "light";
+  public final static String UI_DOCUMENT_CUSTOM_CSS = "ui.document.custom.css";
+  public final static String DEFLT_UI_DOCUMENT_CUSTOM_CSS = null;
+  public final static String HISTORY_SIZE = "history.size";
+  public final static String DEFLT_HISTORY_SIZE = "30";
+  public final static String HISTORY_FILE = "history.file";
+  public final static String DEFLT_HISTORY_FILE = null;
+  public final static String URLBAR_SEARCH_ENABLED = "urlbar.search.enabled";
+  public final static String DEFLT_URLBAR_SEARCH_ENABLED = "1";
+  public final static String URLBAR_SEARCH_URL = "urlbar.search.url";
+  public final static String DEFLT_URLBAR_SEARCH_URL = "gemini://tlgs.one/search";
 
   private static Config instance = null;
 
@@ -90,9 +76,16 @@ public class Config extends Properties
     return homePage;
     }
 
-  public boolean debug()
+  public String getHistoryFile()
     {
-    return debug;
+    String historyFile = getProperty (HISTORY_FILE, DEFLT_HISTORY_FILE);
+    Logger.log (Logger.class, "getHistoryFile() return " + historyFile);
+    return historyFile;
+    }
+
+  public int logLevel()
+    {
+    return logLevel;
     }
 
   public boolean gemtextInlineImages()
@@ -132,6 +125,38 @@ public class Config extends Properties
     return getProperty (UI_USER_FONT, DEFLT_UI_USER_FONT);
     }
 
+  public String getCustomCSSFile()
+    {
+    return getProperty (UI_DOCUMENT_CUSTOM_CSS, DEFLT_UI_DOCUMENT_CUSTOM_CSS);
+    }
+
+  public String getTheme()
+    {
+    return getProperty (UI_DOCUMENT_THEME, DEFLT_UI_DOCUMENT_THEME);
+    }
+
+  public String getUrlbarSearchUrl()
+    {
+    return getProperty (URLBAR_SEARCH_URL, DEFLT_URLBAR_SEARCH_URL);
+    }
+
+  public int getDocumentBaseFontSize()
+    {
+    String s = getProperty (UI_DOCUMENT_FONT_SIZE, DEFLT_UI_DOCUMENT_FONT_SIZE);
+    return Integer.parseInt (s);
+    }
+
+  public void setDocumentBaseFontSize (int px)
+    {
+    setProperty (UI_DOCUMENT_FONT_SIZE, "" + px);
+    }
+
+  public int getHistorySize()
+    {
+    String s = getProperty (HISTORY_SIZE, DEFLT_HISTORY_SIZE);
+    return Integer.parseInt (s);
+    }
+
   /** The method returns null if there is no entry in the configuration 
         file for the specific host. */
   public String getClientCertSpecForHost (String hostname)
@@ -141,6 +166,11 @@ public class Config extends Properties
     if (result == null)
       result = getProperty ("clientcert.*");
     return result;
+    }
+
+  public boolean urlbarSearchEnabled()
+    {
+    return urlbarSearchEnabled;
     }
 
   public void load()
@@ -170,14 +200,20 @@ public class Config extends Properties
       // This may not be an error
       Logger.log (this.getClass(), e.toString());
       }
-    if (getProperty (DEBUG, DEFLT_DEBUG).equals ("1")) 
-      debug = true;
-    else
-      debug = false;
+    logLevel = Integer.parseInt (getProperty (LOG_LEVEL, ""+DEFLT_LOG_LEVEL));
     if (getProperty (GEMTEXT_INLINE_IMAGES, DEFLT_GEMTEXT_INLINE_IMAGES).equals ("1")) 
       gemtextInlineImages = true;
     else
       gemtextInlineImages = false;
+    if (getProperty (URLBAR_SEARCH_ENABLED, DEFLT_URLBAR_SEARCH_ENABLED).equals ("1")) 
+      urlbarSearchEnabled = true;
+    else
+      urlbarSearchEnabled = false;
+
+    Logger.log (Config.class, "URLBar search is " 
+      + (urlbarSearchEnabled ? "enabled" : "disabled"));
+    Logger.log (Config.class, "Inline images are " 
+      + (gemtextInlineImages ? "enabled" : "disabled"));
     }
 
   }

@@ -10,7 +10,7 @@
 SHAREDIR=/usr/share
 BINDIR=/usr/bin
 ETCDIR=/etc
-VERSION=1.0
+VERSION=2.0
 ICONDIR=${SHAREDIR}/icons/hicolor
 
 APPDIR=$SHAREDIR/applications

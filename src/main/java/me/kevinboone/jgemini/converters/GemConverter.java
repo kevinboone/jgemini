@@ -16,11 +16,9 @@ import java.util.regex.Pattern;
 import me.kevinboone.jgemini.base.*;
 import com.vdurmont.emoji.EmojiManager;
 
-public class GemConverter extends TextLikeConverter
+public class GemConverter extends TextLikeConverter implements Converter
   {
   private boolean verbatim;
-  private static Pattern italicPattern = Pattern.compile ("\\s_(\\w+?)_\\s");
-  private static Pattern boldPattern = Pattern.compile ("\\*(\\w+?)\\*");
 
   /** Construct a GemConverter, supplying a base URL. We need the URL so
       we can construct proper links. */
@@ -30,11 +28,10 @@ public class GemConverter extends TextLikeConverter
     verbatim = false;
     }
 
-  /** Foo. */
+  /** Foo. Nowt to do.*/
   private String formatLineAsHtml (String line)
     {
-    String s = italicPattern.matcher(line).replaceAll(" <em>$1</em> ");
-    return boldPattern.matcher(s).replaceAll("<b>$1</b>");
+    return line; 
     }
 
   /** Convert a single (maybe long) Gemtext line to HTML. */
@@ -63,7 +60,7 @@ public class GemConverter extends TextLikeConverter
       return "<h2>" + escapeHtml(gem.substring(2)) + "</h2>\n";
     if (gem.startsWith ("#"))
       return "<h1>" + escapeHtml(gem.substring(1)) + "</h1>\n";
-    if (gem.startsWith ("*"))
+    if (gem.startsWith ("-"))
       return "<ul><li>&nbsp;" + escapeHtml(gem.substring(2)) + "</li></ul>\n";
     if (gem.startsWith ("=>"))
       return parseLink (gem.substring(2).trim());
@@ -72,16 +69,9 @@ public class GemConverter extends TextLikeConverter
     return formatLineAsHtml (escapeHtml(gem)) + "<br/>\n";
     }
 
-  // TODO -- write a META with the supplied encoding
-  //  RIght now, I have no way to test this works, so you'll get
-  //  whatever the built-in HTML browser default is. With luck, it will
-  //  be platform encoding, because the method that calls this in
-  //  HtmlViewer converts server text to platform encoding. So with luck
-  //  it will all work out. The fly in the wossname is that I don't know
-  //  what the browser uses, if you don't specify an encoding. Or, frankly,
-  //  even if you do.
   /** Convert the Gemtext file to HTML. */ 
-  public String gemToHtml (String gem, String encoding)
+  @Override
+  public String toHtml (String gem)
     {
     //System.out.println ("gem=" + gem);
     StringBuffer sb = new StringBuffer();
@@ -98,37 +88,6 @@ public class GemConverter extends TextLikeConverter
 
     sb.append ("</body></html>\n");
     return new String (sb);
-    }
-
-  public static void main (String[] args)
-       throws Exception
-    {
-    if (args.length == 1)
-      {
-      FileInputStream fis = new FileInputStream (new File (args[0]));
-      ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
-
-      int nRead;
-      byte[] data = new byte[16384];
-
-      while ((nRead = fis.read (data, 0, data.length)) != -1) 
-       content_buffer.write (data, 0, nRead);
-
-      byte[] gmi = content_buffer.toByteArray();
-
-      content_buffer.close();
-
-      GemConverter gc = new GemConverter (null);
-
-      System.out.println (gc.gemToHtml (new String(gmi), null));
-
-      fis.close();
-      }
-    else
-      {
-      System.out.println 
-        ("Usage: java GemConverter {gemtext_file}");
-      }
     }
   }
 

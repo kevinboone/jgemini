@@ -183,6 +183,7 @@ public class GeminiConnection extends URLConnection
 	while (s.isConnected() && 
 	     (nRead = is.read (data, 0, data.length)) != -1) 
 	  {
+          Thread.sleep(1); // We need to get an InterruptedException if canceled
 	  content_buffer.write (data, 0, nRead);
           totalRead += nRead;
           if (totalRead > 1024)

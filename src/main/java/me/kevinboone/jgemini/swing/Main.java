@@ -40,6 +40,8 @@ public class Main
       System.exit(0);
       }
 
+    Logger.log (Main.class, Logger.INFO, "Starting up");
+
     System.setProperty ("swing.aatext", "true");
     //System.setProperty ("swing.plaf.metal.controlFont", 
     //      Config.getConfig().getControlFont());
@@ -51,34 +53,29 @@ public class Main
     // Tell the JVM about all the new URLs we support in this application
     URL.setURLStreamHandlerFactory (new GeminiURLStreamHandlerFactory());
 
-    // Boilerplate "invokeLater" to separate the main thread from the
-    //  event dispatcher thread. Probably not necessary here.
-    SwingUtilities.invokeLater (new Runnable()
+    viewer = new MainWindow();
+    viewer.setVisible (true);
+    Logger.log (Main.class, Logger.INFO, "Show first page on startup");
+    if (args.length >= 1)
       {
-      public void run()
-        {
-        viewer = new MainWindow();
-        viewer.setVisible (true);
-        Logger.log (Main.class, "Show first page on startup");
-        if (args.length >= 1)
-	  {
-	  // Just for ease of use, let's see if it's a local file
-	  File file = new File (args[0]);
-	  if (file.isFile())
-	    {
-	    // It don't know if this will work on Windows. But who
-	    //   uses the command line on Windows?
-            viewer.loadURL ("file://" + file.getAbsolutePath());
-	    }
-	  else
-	    {
-            viewer.loadURL (args[0]);
-	    }
-	  }
-        else
-          viewer.loadURL (Config.getConfig().getHomePage());
-        }
-      });
+      // Just for ease of use, let's see if it's a local file
+      File file = new File (args[0]);
+      if (file.isFile())
+	{
+	// It don't know if this will work on Windows. But who
+	//   uses the command line on Windows?
+	viewer.loadURL ("file://" + file.getAbsolutePath());
+	}
+      else
+	{
+	viewer.loadURL (args[0]);
+	}
+      }
+    else
+      viewer.loadURL (Config.getConfig().getHomePage());
+    viewer.enableTopBar();
+
+    Logger.log (Main.class, Logger.INFO, "Initial set-up done");
     }
   }
 

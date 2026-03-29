@@ -2,33 +2,40 @@
 
 A Java-based graphical browser for Gemini and similar protocols 
 
-Version 1.0f, Kevin Boone, March 2026 
+Version 2.0a, Kevin Boone, March 2026 
 
 ## Why another Gemini client? 
 
-There's no good reason. I wrote JGemini a long time ago, before there were any reasonable graphical clients for Linux. Times have changed, and there are a number of clients for Linux that are superior to JGemini: Lagrange and Alhena, for example.  I maintain JGemini for my own experiments -- I doubt it would be much use to anybody else. It has the small, putative advantage over other clients that it natively supports Markdown documents as well as Gemtext. 
+There's no good reason. I wrote JGemini a long time ago, before there were any reasonable graphical clients for the Gemini protocol for Linux. Times have changed, and there are a number of clients for Linux that are superior to JGemini: Lagrange and Alhena, for example.  I maintain JGemini for my own experiments -- I doubt it would be much use to anybody else. It has the small, putative advantage over other clients that it natively supports Markdown documents as well as Gemtext. 
 
 ## What is JGemini? 
 
-JGemini is a very rudimentary, barely-functional graphical client for the Gemini, Spartan, and "Nightfall Express" (nex) protocols.  It looks and behaves rather like the very first graphical Web browsers from the 90s. It supports all the features it is required to support by the various specification, and little else.  It is, however, useable.  
+JGemini is a very rudimentary, barely-functional graphical client for the Gemini, Spartan, Gopher, and "Nightfall Express" (`nex`) protocols.  It looks and behaves rather like the very first graphical Web browsers from the 90s. It supports all the features it is required to support by the various specifications, and little else.  It is, however, useable.  
 
 ## Pre-requisites 
 
 To run JGemini you'll need a computer with some kind of graphical desktop, and a Java JVM. JGemini should work with any Java JVM of version 11.0 or later. I've tested it with OpenJDK versions 11-21. If you want to build JGemini from source, you'll probably need Maven.  
 
+JGemini is intended for Linux. It _should_ work on any platform with a relatively modern JVM, but I don't care about, or test, anything except Linux.  
+
+
+
 ## Features 
 
-* Supports Gemini, Spartan, and `nex` protocols, including user input and redirection
+* Supports Gemini, Spartan, Gopher, and `nex` protocols, including user input and redirection
 * Handles Gemtext, CommonMark Markdown, and plain (usually UTF-8) text
 * Renders local files as well as server content
 * Authentication using per-server client certificates
 * Text styling can be configured to suit the display and user preference
 * Uses anti-aliased font rendering for a smoother text appearance
-* Fetches files in the background to improve user interface responsiveness
+* Fetches documents in the background to improve user interface responsiveness
 * Text selection with cut-and-paste
 * Search in document
 * Downloaded documents can be saved
 * Supports multiple windows
+* Search directly from the URL bar
+* Saves no state by default, for privacy
+* Built-in documentation viewer
 
 
 ## Running JGemini 
@@ -36,11 +43,11 @@ To run JGemini you'll need a computer with some kind of graphical desktop, and a
 So long as you have a Java JVM installed, you can run JGemini from a prompt like this: 
 
 ```
-    java -jar /path/to/jgemini-1.0.jar
+    java -jar /path/to/jgemini-x.y.jar
 ```
 
 
-where x.y is the version number (currently 1.0). 
+where x.y is the version number (currently 2.0). 
 
 If your system associates Java JAR files with the `.jar` extension, you might be able to launch JGemini from a file manager or program manager or whatever. If you're running from a command line, you can specify a URL or file to load: 
 
@@ -62,88 +69,141 @@ If you want to install "properly" on Linux, there's a sample installation script
 
 ## Configuration 
 
-The only method of configuration (at present) is by hacking on configuration files.  JGemini will read a system-level properties file, if it exists, at `/etc/jgemini/jgemini.properties`, and then a user properties file at $HOME/.jgemini.properties if it exists.  The interpretation of "$HOME" on systems other than Linux is variable.  On Windows, it might be "C:\users\username". There is a sample configuration file in the source code bundle, in the `samples` directory. I hope the settings in that file are pretty self-explanatory. 
+The only method of configuration (at present) is by hacking on configuration files.  JGemini will read a system-level properties file, if it exists, at `/etc/jgemini/jgemini.properties`, and then a user properties file at $HOME/.jgemini.properties if it exists.  The interpretation of "$HOME" on systems other than Linux is variable.  On Windows, it might be "C:\users\username". There is a sample configuration file in the source code bundle, in the `samples` directory. I hope the settings in that file are pretty self-explanatory but, if they are not, there is a full listing in  `docs/config_file.md`. 
 
 If you want to change the default home page, add an entry `url.home` to either of the configuration files. 
 
-Run-time configuration of JGemini's appearance is not possible at present. There's not even a way to zoom in or out. However, as Gemini provides no way for an author to control the text appearance (that's one of its strengths), text size and font, etc., should be a one-time setting, even if it takes a bit of trial and error. Once you have the settings that suit you, there should be no need to change again. 
+Run-time configuration of JGemini's appearance is not possible at present, other than zoom in/out. However, as Gemini provides no way for an author to control the text appearance (that's one of its strengths), text size and font, etc., should be a one-time setting, even if it takes a bit of trial and error. Once you have the settings that suit you, there should be no need to change again. 
 
-Here are a few notes on the individual settings in the configuration file. 
-
-JGemini only uses eight text styles for the document display, denoted "body" (background and layout), "p" (ordinary text), "h1...h3" (headings), "pre" (for pre-formatted text), "code" (for technical terms), "blockquote", and "a" (for links). The fonts that can be applied to these styles are JVM fonts, which may be named differently to platform fonts (and, in some cases, are more extensive). To get a list all JVM fonts, run JGemini with the Java command-line switch  
-
-```
-    -Djgemini.dumpfonts 
-```
-
-
-The settings `ui.control_font` and `ui.user_font` control the appearance of the user interface elements other than the document display. Broadly, the "user" font applies to text entry controls, while the "control" font applies to everything else (menus, buttons...). I'm sorry about this, but the font configuration here is Java-like ("name size"), while the document display styles are CSS-like ("size name"). In addition, while the document font sizes allow qualifiers ("px", "em") the control fonts do not -- they are generic Java sizes. This all probably sounds more complicated than it really is: the sample configuration file should make it clear.  
+For more information on configuring the appearance of the document window, please see `README.styling`. 
 
 ## Image support 
 
-JGemini supports JPEG, PNG, and GIF images internally. Other types can still be downloaded, but will be handed off to the platform for viewing. Supported images will be displayed in-line in the document by default. Links to other types will just be displayed as a link to a new document.  
+JGemini supports JPEG, PNG, and GIF images internally. Other types can still be downloaded, but will be handed off to the platform for viewing. For Gemini and Spartan, supported images will be displayed in-line in the document by default. Links to other types will just be displayed as a link to a new document.  
 
-For compatibility with other Gemini browsers, JGemini can be configured _not_ to in-line images from a Gemtext document into the text if preferred.  The configuration property is `gemtext.inline.images=1|0`. If images are not in-lined, they will be rendered as links, just as for unsupported image types. 
+For compatibility with other Gemini browsers, JGemini can be configured _not_ to in-line images from a document into the text if preferred.  The configuration property is `gemtext.inline.images=1|0`. If images are not in-lined, they will be rendered as links, just as for unsupported image types. 
 
-Images are all displayed with the same (configurable) size. This is because none of the document formats which JGemini supports allow an image size to be specified, and it looks odd if they're all different sizes. 
+Images referenced from gophermaps (directories) will never be in-lined. It's common to find gophermaps with huge numbers of huge images, because Gopher authors don't expect images to be in-lined. 
+
+Images in-lined into a document are all displayed with the same (configurable) size. This is because none of the document formats which JGemini supports allow an image size to be specified, and it looks odd if they're all different sizes. 
+
+If you choose to open a document explicitly, it will be displayed at its full size. 
 
 Images are fetched asynchronously. It's not always easy to tell when this is happening, except that images areas on the screen will be blank. If you select to open an image in a new window, you'll see a blank screen until the image is fully downloaded. Please be patient -- Gemini does not provide a way to know in advance how large the image is, so JGemini can't report progress.  
 
-Although image widths will all be the same, heights might be different, to keep the correct aspect ratio.  Because JGemini does not know the total size of an image until it's been retrieved, the page might redraw after downloading an in-line image. 
+Although the widths of in-line images will all be the same, heights might be different, to keep the correct aspect ratio.  Because JGemini does not know the total size of an image until it's been retrieved, the page might redraw after downloading an in-line image. 
 
 Please note that the File|Save menu only saves text. You'll get an error message if you open an image in a new window, and then try to save it. If you want to save an image as a file, right-click its link and select 'Download'. 
 
 The ability to open an image in its own window is only available for images whose paths end in a conventional extension, like `.jpg`. This is because JGemini can't tell, just from a link URI, what kind of data the link provides. An image file that can't be recognized from its filename will be downloaded and handed off to the platform to handle. 
 
+## URL history 
+
+JGemini remembers URLs you visit, either by entering them in the URL bar, or by following links. By default the history is _not_ saved anywhere, because it's potentially a privacy risk. If you want to save the history, give the full path to a file in the `history.file` setting. 
+
+## URL bar search 
+
+By default, you can enter a search term in the URL bar, rather than a URL, as with most modern web browsers. You can disable this feature, or change the search provider, in the configuration file. 
+
+There's no perfectly reliable way for JGemini to know whether you've entered a search term or a URL. Since URLs usually contain periods ('.'), and don't usually contain spaces, this is used as a guide. However, just as web browsers do, JGemini will sometimes guess wrongly. 
+
 ## Key bindings 
 
-The usual arrow keys and page up/down should work. You can highlight text using shift+arrow combinations. To go to the top/bottom of the page, using ctrl+PgUp/PgDn. 
+The usual arrow keys and page up/down should work. You can highlight text using shift+arrow combinations. To go to the top/bottom of the page, using ctrl+Home/End. Zoom in/out with ctrlr+[ and ctrl+]. 
+
+## Text input 
+
+When a server prompts for input, JGemini raises a text-entry dialog box. Since it's legitimate -- and commonplace -- for input to contain newline characters, the 'Enter' key does not submit the input, but enters a new line. To submit, hit ctrl+S. 
+
+Since a Gemini URL is limited to a total of 1024 bytes, and that has to include the `gemini://host/port/path` part, the text input dialog box shows the number of bytes remaining for user input. As you type, this number will decrease by an amount which might not clearly be linked to the amount of input. This is a consequence of the way non-alphanumeric characters have to be encoded, and the fact that UTF-8 -- which Gemini expects -- is a multi-byte encoding.  
+
+JGemini uses the same text input box for Gemini and Gopher. Some Gopher servers may behave properly with non-ASCII input, I suspect that many will not.  
+
+## Protocol notes 
+
+### Gopher 
+
+JGemini takes any Gopher URI that ends in '/' to be a reference to a gophermap (directory), and it parses the returned document accordingly.  Except when following a link from a gophermap, JGemini has no reliable way to know what kind of data it is retrieving, except to guess it from the filename. Consequently, filenames are more important with Gopher than with Gemini. Broadly, JGemini will use file extensions to determine what to do with a file it gets from a Gopher server, more than is the case with Gemini. 
+
+Things are slightly more predictable when reading a gophermap, because this does give some indication of the file type. So JGemini will try to use icons to show the type of file the link references -- image, movie, text, etc.   
+
+JGemini can interpret Gopher URIs with or without a type character. That is, we might have: 
+
+```
+    gopher://foo.bar/file.txt
+```
+
+
+or 
+
+```
+    gopher://foo.bar/0/file.txt
+```
+
+
+Here the '0', which signifies a text file, is a guide to the _browser_, not the server. The server never sees the '/0' part of the URI, so it always sends the same thing. This odd convention came about because we needed a way to incorporate the type information from a gophermap into a URI. 
+
+JGemini always display text files from Gopher as pre-formatted lines.  Gopher dates from a time when everybody used 80-column screens, and documents are generally formatted on that basis. 
+
+JGemini supports Gopher queries, typically used with search engines like Veronica. 
+
+The Gopher specification calls for a text file to end with a period (.) on a line on its own. Not all authors or servers follow this rule. If this line does exist, JGemini displays it. It would be a hassle for it to have to use different logic to display text files from Gopher differently to all other text files. 
+
+### nex 
+
+Nightfall express is a very rudimentary protocol. Like Gopher, the browser has to rely on the filename, for deciding how to handle a file. However, there is no equivalent of a gophermap, so JGemini can't decorate links to indicate the type of file they reference, except by filename. 
+
+In practice, I've not see nex used for anything except plain text. 
+
+Like Gopher, text documents used with nex are generally pre-formatted for an 80-column screen, and JGemini displays them as such. 
+
+### Gemini 
+
+JGemini supports Gemini user input and redirections, as well as ordinary document retrieval. At present it doesn't support the Titan upload protocol. Gemini responses include a MIME type so, in principle, JGemini should be able to work out unambiguously how to handle the document it receives. However, when running JGemini with a local file, it still has to use the filename to guess the contents, so filenames are still important. 
+
+JGemini tries to annotate links to indicate the type of document they link to. However, it's common for Gemini authors to use emojis or unicode symbols to highlight particular functions or contents. So JGemini doesn't annotate links that appear to start with such characters.  However, this is at best a guess.  
+
+### Spartan 
+
+Spartan is a simplified form of Gemini, without the TLS encryption. JGemini won't do user input with with Spartan, because the specification doesn't provide any way to do input or upload.  
 
 ## Implementation oddities 
 
-Although the Gemtext format specification makes no provision for formatting other than links and headers, I often see people using markdown-style emphasis markup, such as the asterisk and underscore, in Gemtext documents. Consequently, JGemini respects those marks, and shows the text in bold and italic respectively. In principle, this could cause problems if these characters were used and _weren't_ intend to emphasise text.  I could make this behaviour user-configurable, if there was a need. 
-
-Naturally, these kinds of formatting marks are respected in Markdown. 
-
-JGemini relies heavily on Java features that have not changed since about 2005. Frankly, I'm surprised some of them still exist in the JDK.  The user interface is based on that old warhorse, Java Swing. Internally, Gemtext is converted to HTML, and displayed using Swing's built-in HTML viewer. This viewer has not been updated for decades, but it's more than adequate to show Gemtext and Markdown content. In any event, it's possible that these features will be removed from Java at some point, or relegated to optional downloads. I'll find a way to deal with that, if the situation arises. 
+JGemini relies heavily on Java features that haven't changed since about 2005. Frankly, I'm surprised some of them still exist in the JDK.  The user interface is based on that old warhorse, Java Swing. Internally, all document files are converted to HTML, and displayed using Swing's built-in HTML viewer. This viewer has not been updated for decades, but it's more than adequate to show Gemtext and Markdown content. In any event, it's possible that these features will be removed from Java at some point, or relegated to optional downloads. I'll find a way to deal with that, if the situation arises. 
 
 ## Caveats and limitations 
 
 Oh, where to start... 
 
-JGemini is intended for Linux. It _should_ work on any platform with a relatively modern JVM, but I don't care about, or test, anything except Linux.  
+There is no TLS certificate check, not even trust-on-first-use.  JGemini uses encrypted TLS communication because Gemini demands it. However, my experience is that most Gemini servers do not issue certificates validated by external authorities.  So, rather than prompting the user to confirm every site, JGemini simply assumes every server certificate is fine. Is this a security problem? Sure. If you're planning world domination, or think governments are monitoring your communication, this isn't the software to use.  
 
-There is no TLS certificate check, not even trust-on-first-use.  JGemini uses encrypted TLS communication because Gemini demands this. However, my experience is that most Gemini servers do not issue certificates validated by external authorities.  So, rather than prompting the user to confirm every site, JGemini simply carries out no certificate checks. Is this a security problem?  Sure. If you're planning world domination, or think governments are monitoring your communication, this isn't the software to use.  
+I don't know how JGemini will behave on platforms that don't use UTF-8 character encoding.  
 
-There is no bookmark support yet.  In fact, JGemini saves no state at all, not even the window size.  If you don't like the default window size, modify `window.w` and `window.h` in the configuration file. 
+There is no bookmark support yet.  In fact, JGemini saves no runtime state at all, not even the window size.  If you don't like the default window size, modify `window.w` and `window.h` in the configuration file. The URL history _can_ be saved between sessions, but this feature is not enabled by default. 
 
 In order to keep the user interface responsive, all the content-fetching is done asynchronously, in background threads. It's not always easy to see if a download is still in progress. If you try to download something else while an existing download is ongoing, JGemini will try to cancel the previous transfer. It probably won't succeed, Java being what it is, and the old transfer will likely continue to run in the background until it completes, and then do nothing. This doesn't affect how JGemini looks to the user -- it just means that a bunch of moribund network operations can be going on invisibly. 
 
-JGemini only displays images and text formats: Gemtext, plain text, and Markdown. When content is fetched from a server, Gemtext is signalled by a content type of `text/gemini`, plain text is `text/plain`, and Markdown is `text/markdown`.  For local files, Gemtext is signalled by a filename ending in `.gmi` and Markdown as `.md`; any other local file is treated as plain text. For every other form of content, JGemini stores the downloaded data in a temporary file, and uses Java's desktop integration to launch it.  What happens (if anything) if you click a link to an image, for example, depends entirely on how the desktop is configured. 
+JGemini only displays text in Gemtext, plain text, and Markdown formats, and popular image types.  When content is fetched from a server, Gemtext is signalled by a content type of `text/gemini`, plain text is `text/plain`, and Markdown is `text/markdown`.  For local files, Gemtext is signalled by a filename ending in `.gmi` and Markdown as `.md`; any other local file is treated as plain text.  For every other form of content, JGemini stores the downloaded data in a temporary file, and uses Java's desktop integration to launch it.  What happens (if anything) if you click a link to an audio file , for example, depends entirely on how the desktop is configured. 
 
 As a slight exception to the above, files received using `nex`, with a filename ending in `.txt`, or where there is no filename, are treated as "nex-flavoured text". This format is just like plain text, except that lines beginning with "=>" are treated as links, as with Gemtext. The `nex` protocol does not supply a content type in the response, so we only have the filename to guess the contents.  
 
 Note that, because Gemini servers often don't report the MIME type of Markdown correctly, JGemini treats any file it retrieves whose name ends in `.md` as Markdown, regardless of the MIME type the server reports. This behaviour could be made configurable if it turns out to be a nuisance. 
 
-JGemini only supports the Gemini, Spartan, and nex protocols, using URLs that begin `gemini://`, `spartan://`, or `nex://`.  If a Gemtext document contains links to other kind of protocol that Java understands (`file:`, `http:...`) then JGemini delegates to the desktop. If you follow an `http` link, for example, that should invoke a Web browser; but, again, this is not under the control of JGemini. If the URL is not one that Java understands (e.g., gopher:) then JGemini will not even attempt to follow the link, not even by invoking the desktop. The reason is somewhat technical but, in essence, Java can't even construct an instance of `java.net.URL` containing the URI to pass to the desktop. 
+JGemini only supports the Gemini, Spartan, Gopher, and nex protocols, using URLs that begin `gemini://`, `spartan://`, `gopher://`, or `nex://`.  If a Gemtext document contains links to other kind of protocol that Java understands (`file:`, `http:...`) then JGemini delegates to the desktop. If you follow an `http` link, for example, that should invoke a Web browser; but, again, this is not under the control of JGemini. If the URL is not one that Java understands (e.g., `gophers:`) then JGemini will not even attempt to follow the link, not even by invoking the desktop. The reason is somewhat technical but, in essence, Java can't even construct an instance of `java.net.URL` containing the URI to pass to the desktop. 
 
 JGemini follows redirections. Although the "best practices" guide for Gemini warns against redirections they are, in fact, commonplace.  JGemini does not do very well at avoiding redirection loops -- it will just try to follow them indefinitely. Apart from in the "torture test" I haven't actually encountered any redirection loops, so I'm not unduly concerned about this yet. 
 
-The Gemini protocol only supports one (very simple) method for supplying user input. Those sites that handle user input expects a single line of user input appended to the request URL after a '?' character. If the expected input is missing, the Gemini server is supposed to respond with status 10 or 11, and the client should prompt the user and retry the request. JGemini does exactly that, and no more.  
-
-Since a Gemini URL is limited to a total of 1024 bytes, and that has to include the `gemini://host/port/path` part, the text input dialog box shows the number of bytes remaining for user input. As you type, this number will decrease by an amount which might not clearly be linked to the amount of input. This is a consequence of the way non-alphanumeric characters have to be encoded, and the fact that UTF-8 is a multi-byte encoding.  
-
-There is no caching of any kind, either on disk or in memory. This is a feature, not a bug. The Gemini protocol does not allow content to be timestamped, so there is no robust way to implement a cache. The client would have absolutely no way to know whether the data in the cache is up to date. Even the "back" button causes the previous page to be re-requested. In future, I might implement some form of optimistic caching, but I'm not sure it would be safe.  
+There is no caching of any kind, either on disk or in memory. This is a feature, not a bug. The Gemini protocol does not allow content to be timestamped, so there is no robust way to implement a cache. The client would have absolutely no way to know whether the data in the cache is up to date. Even the "back" button causes the previous page to be re-requested. In future, I might implement some form of optimistic caching, but I'm not sure it would be robust.  
 
 Text search is only case-insensitive, and forward. 
 
 JGemini supports multiple windows, but not tabs. I hate tabs, and have no plan to implement them. Using multiple windows looks the same, from the user perspective, as opening multiple instances of JGemini. However, since all windows share a JVM, the multi-window approach uses much less memory. 
 
-JGemini should handle the whole of the CommonMark specification, including the escaping and precedence rules, and also GitHub-style table markup.  Rendering is crude, however, and not configurable in any way. However, embedded links and images should work, including links that are images. There is a Markdown test page `samples/test.md` that demonstrates some of the supported features. 
+JGemini should handle the whole of the CommonMark Markdown specification, including the escaping and precedence rules, and also GitHub-style table markup.  Rendering is crude, however, and not configurable in any way. However, embedded links and images should work, including links that are images. There is a Markdown test page `samples/test.md` that demonstrates some of the supported features. 
 
-JGemini does not support feeds of any kind. If you select a feed, you'll probably get a page of XML. 
+JGemini does not support feeds of any kind. If you select a feed, you'll probably get a page of XML sent to the platform's default web browser. 
 
-When displaying Gemtext, JGemini uses an arrow symbol to indicate a link that can be followed, as well as displaying the link text in a highlighted colour. If the first character of the link text is an emoji, then the link doesn't get the arrow -- I assume that the author is using emojis to highlight links, and the extra arrow looks odd.  However, it's not as easy to detect emojis in Java as it ought to be (before Java 21), and sometimes this test doesn't work properly. 
+When displaying Gemtext, JGemini uses an arrow symbol to indicate a link that can be followed, as well as displaying the link text in a highlighted colour. If the first character of the link text is an emoji, then the link doesn't get the arrow -- I assume that the author is using emojis to highlight links, and the extra arrow would look odd.  However, it's not as easy to detect emojis in Java as it ought to be (before Java 21), and sometimes this test doesn't work properly. 
 
 ## Building JGemini  
 
@@ -155,12 +215,6 @@ To build JGemini from source, you'll need Maven, configured for the usual reposi
 
 
 This will generate the compiled JARs in `target/`. 
-
-
-
-## Closing remarks 
-
-There's a lot that could be done to JGemini to make it a more useful, more aesthetically pleasing application. If there's interest, I can probably do more work on it. Right now, however, it's good enough for my purposes. 
 
 ## Change log 
 
@@ -191,7 +245,16 @@ Version 0.1 -- March 2021 -- first release
 * Added configuration for image size
 * Added internal image handling for certain types of file
 * Added dark configuration sample
-* Added an indicaton of amount transferred in Gemini connection
-* Added preliminary Spartan and nex support
+* Added an indication of amount transferred in Gemini connection
+
+
+* Added preliminary Spartan, Gopher, and nex support
+* Made Go|Root work better with URIs with usernames
+* Added zoom in/out
+* Completely changed the way styling works
+* Took out handling of _ and * in Gemtext, because too many capsules used
+* Implemented search from URL bar (which can be disabled)
+* Let the desktop set the main window position, so JGemini windows don't
+* Added documentation viewer
 
 

@@ -28,11 +28,13 @@ public class Strings
   public final static String COPY_LINK = "Copy link";
   public final static String COULD_NOT_PARSE_URI = "Could not parse URI";
   public final static String DOWNLOAD = "Download";
+  public final static String DOCUMENTATION = "Documentation";
   public final static String EDIT = "Edit";
   public final static String EMPTY_WINDOW_TEXT = 
-    Strings.APP_NAME + ": a browser for the Gemini protocol";
+    Strings.APP_NAME + ": a browser for small net protocols";
   public final static String ENTER_GEMINI_URL = "Enter a Gemini URL:";
   public final static String ENTER_SEARCH_TEXT = "Enter search text:";
+  public final static String ENTER_TEXT = "Enter text";
   public final static String EXIT = "Exit";
   public final static String FILE = "File";
   public final static String FIND_IN_PAGE = "Find in page...";
@@ -55,9 +57,16 @@ public class Strings
   public final static String SAVED_FILE = "Saved file"; 
   public final static String SELECT_ALL = "Select all"; 
   public final static String SEARCH_WRAPPED_AROUND = "Search wrapped around to top";
+  public final static String STOP = "Stop"; 
   public final static String UNKNOWN = "unknown";
   public final static String UNKNOWN_HOST = "Unknown host: ";
+  public final static String UNSUP_ENCODING_RESP = 
+    "Server returned a response with an unsupported encoding"; 
+  public final static String EMPTY_RESP = 
+    "Server returned an empty response";
   public final static String VERSION = "Version"; 
   public final static String VIEW = "View"; 
+  public final static String ZOOM_IN = "Zoom in"; 
+  public final static String ZOOM_OUT = "Zoom out"; 
   }
 

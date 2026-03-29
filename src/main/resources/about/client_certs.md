@@ -1,0 +1,75 @@
+# JGemini -- using client certificates
+
+Some Gemini-based services identify the user by a client certificate. They have
+to, since the Gemini doesn't provide any specific method of authentication.
+
+As with everything else in JGemini, the selection of which certificate to send
+is controlled by the configuration file -- usually `.jgemini.properties`.
+
+Certificates must be placed in a Java keystore, along with the associated
+private key. You can use the same keystore file with multiple services, or with
+all services if you wish. It doesn't hurt to send a client certificate to a
+Gemini server that doesn't need one -- it will simply be ignored. 
+
+JGemini supports per-host assignment of client certificates, but not per-page 
+or per-protocol selection.
+
+## Generating a client certificate keystore
+
+You can generate a new Java keystore as follows:
+
+    keytool -alg rsa -keystore {keystore_file.jks}
+
+You'll be prompted for the identity information to include. The resulting file will
+include both the certificate and the matching private key. It doesn't matter
+what the certificates are named within the keystore, because JGemini assumes that
+there is one certificate in each keystore file.
+
+During keystore creation, you'll be prompted to set a password, which you should 
+remember for later.
+
+## Importing a certificate from another application
+
+You can use this method to important an identity from Lagrange, for example.
+
+Most non-Java applications store certificates and keys in `.pem` format. These are text files,
+and you should concatenate the public key(s) and private keys into a single file.
+Then convert this combined `.pem` into a PKCS12 certificate using `openssl`:
+
+    openssl pkcs12 -export -inkey private_key.pem -in public_cert.pem -name foo -out foo.p12
+
+Finally, convert this new certificate to Java JKS format:
+
+    keytool -importkeystore -srckeystore foo.p12 -srcstoretype pkcs12 -destkeystore foo.jks
+
+During keystore conversion, you'll be prompted to set a password, which you should 
+remember for later. `foo.jks` is the JKS keystore that JGemini needs to know about. You
+can put this in any convenient directory. 
+
+## Editing the configuration file
+
+An entry in the configuration file looks like this:
+
+    clientcert.org.geminispace.bbs=/path/to/bbs.jks changeit
+
+That is, the left-hand side of the line is the hostname, preceded by `clientcert`, while
+the right-hand side is the full pathname of the Java keystore file and the keystore
+password, separated by white-space. Naturally, this configuration scheme will fail if
+there's white-space in the filename. 
+
+You can also specify a fall-back certificate, which JGemini will use if no other
+hostnames match:
+
+    clientcert.*=/path/to/all.jks changeit
+
+## Issues
+
+The main problem with this method of using client certificates is that it's ugly.
+A further problem is that it requires specifying the keystore password in
+plaintext in the configuration file. To be fair, other Gemini clients have the
+same problem.  In any event, it's best not to use a client certificate that
+provides access to anything sensitive.
+
+[Documentation index](index.md)
+
+
