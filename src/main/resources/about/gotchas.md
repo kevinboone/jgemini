@@ -15,7 +15,7 @@ communication, this isn't the software to use.
 Most "small net" servers run on low-cost cloud hosts or in people's homes; they
 are often not very responsive.
 
-In order to keep the user interface responsive, all the content-fetching is
+In order to keep the user interface moving, all the content-fetching is
 done asynchronously, in background threads. It's not always easy to see if a
 download is still in progress, and this can cause problems with slow servers.
 
@@ -98,14 +98,14 @@ but that doesn't mean the server will understand them -- particularly Gopher.
 
 ## Missing features
 
-There is no bookmark support yet.  In fact, JGemini saves no runtime state at
-all, not even the window size.  
-
 JGemini does not support feeds of any kind. If you select a feed, you'll
 probably get a page of XML sent to the platform's default web browser.
 
-It would be useful if at least some configuration changes could be made
-using JGemini's user interface, rather than by editing the configuration file.
+There is no download manager. JGemini will download multiple files concurrently,
+but there's no way to see which transfers are active and which completed.
+
+Management of client certificates is manual, and clunky.
+
 
 [Documentation index](index.md)
 

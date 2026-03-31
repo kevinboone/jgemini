@@ -25,15 +25,16 @@ import java.util.stream.Collectors;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.protocol.*;
 import me.kevinboone.jgemini.converters.*;
+import me.kevinboone.utils.mime.MimeUtil;
 
-public class MainWindow extends JFrame
+public class MainWindow extends JFrame implements ConfigChangeListener
   {
   private final static String DIALOG_CAPTION = Strings.APP_NAME;
   private final static String WINDOW_CAPTION = Strings.APP_NAME;
   private final static String EMPTY_WINDOW_TEXT = Strings.EMPTY_WINDOW_TEXT;
 
   private JEditorPane jEditorPane;
-  private URL baseUrl = null;
+  private URL baseUri = null;
   private TopBar topBar;
   private StatusBar statusBar;
   private JMenuBar menuBar;
@@ -44,6 +45,9 @@ public class MainWindow extends JFrame
   private ResponseContent lastContent = null; // Last successful download
   private javax.swing.Timer loadTimer = null;
   private Config config = Config.getConfig();
+  private String displayName = null; // Derived from URI or loaded content
+  private BookmarkHandler bookmarkHandler 
+    = new DefaultBookmarkHandler(this);
 
 
 /*=========================================================================
@@ -100,6 +104,8 @@ public class MainWindow extends JFrame
         }
       });
 
+    MainWindow mainWindow = this;
+
     // Get focus to the editor whenever this frame gets focus. We
     //   need this to happen, so that the navigation keys work
     addWindowListener (new WindowAdapter() 
@@ -108,6 +114,11 @@ public class MainWindow extends JFrame
         {
         Logger.log (getClass(), "Request focus on editor");
         jEditorPane.requestFocus();
+        }
+      public void windowClosing (WindowEvent e) 
+        {
+        Config.getConfig().removeConfigChangeListener (mainWindow); 
+        dispose();
         }
       });
 
@@ -131,7 +142,8 @@ public class MainWindow extends JFrame
        config.getWindowHeight());
     setLocationByPlatform (true); // Let desktop position me
 
-    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    //setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
     createMenuBar();
     setJMenuBar (menuBar);
@@ -143,6 +155,7 @@ public class MainWindow extends JFrame
     setIconImage (icon.getImage());
 
     topBar.loadHistoryFile();
+    config.addConfigChangeListener (this); 
     }
 
 
@@ -151,7 +164,7 @@ public class MainWindow extends JFrame
   about 
 
 =========================================================================*/
-  public void about ()
+  public void about()
     {
     String s = "<html><head></head><body style='margin: 20'>";
     s += "<h1>" + Strings.APP_NAME + "</h1>";
@@ -160,6 +173,35 @@ public class MainWindow extends JFrame
     s += "<p>&nbsp;</p></body>\n";
     JOptionPane.showMessageDialog (this, s, 
          DIALOG_CAPTION, JOptionPane.INFORMATION_MESSAGE); 
+    }
+
+
+/*=========================================================================
+  
+  bookmarkPage
+
+=========================================================================*/
+  public void bookmarkPage() 
+    {
+    if (displayName == null)
+      {
+      // TODO : prompt for name
+      }
+    if (displayName != null)
+      {
+      try
+        {
+        if (bookmarkHandler.addBookmark (displayName, baseUri))
+          setStatus (Strings.BOOKMARK_ADDED);
+        else
+          setStatus (Strings.ALREADY_BOOKMARKED);
+        }
+      catch (IOException e)
+        {
+        JOptionPane.showMessageDialog (this, e.getMessage(), 
+           DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+        }
+      }
     }
 
 
@@ -186,21 +228,15 @@ public class MainWindow extends JFrame
 
 /*=========================================================================
   
-  getEncodingFromMime
-
-  Extract an encoding name from a MIME type
+  configChanged 
 
 =========================================================================*/
-  private String getEncodingFromMime (String mime)
+  public void configChanged() 
     {
-    String[] args = mime.split (";");
-    for (int i = 0; i < args.length; i++)
-      {
-      String arg = args[i].trim();
-      if (arg.startsWith ("charset="))
-        return arg.substring (8);
-      }
-    return null;
+    Logger.log (getClass(), "configChanged())");
+    applyInitialStyles();
+    String s = jEditorPane.getText ();
+    jEditorPane.setText (s);
     }
 
 /*=========================================================================
@@ -215,6 +251,19 @@ public class MainWindow extends JFrame
     // TODO: we need to change the accelerator keys if the menu
     //   text changes.
 
+    // File|Settings submenu
+    JMenu settingsSubMenu = new JMenu (Strings.SETTINGS); 
+    settingsSubMenu.setMnemonic (KeyEvent.VK_E);
+    JMenuItem editMenuItem = new JMenuItem (Strings.EDIT + "..."); 
+    editMenuItem.addActionListener((event) -> editSettings());
+    editMenuItem.setMnemonic (KeyEvent.VK_E);
+    JMenuItem reloadMenuItem = new JMenuItem (Strings.RELOAD); 
+    reloadMenuItem.addActionListener((event) -> reloadSettings());
+    reloadMenuItem.setMnemonic (KeyEvent.VK_R);
+    settingsSubMenu.add (editMenuItem);
+    settingsSubMenu.add (reloadMenuItem);
+
+    // File menu
     JMenu fileMenu = new JMenu(Strings.FILE);
     fileMenu.setMnemonic (KeyEvent.VK_F);
     JMenuItem newMenuItem = new JMenuItem (Strings.NEW);
@@ -235,17 +284,27 @@ public class MainWindow extends JFrame
     saveMenuItem.setMnemonic (KeyEvent.VK_S);
     saveMenuItem.addActionListener((event) -> save());
     fileMenu.add (saveMenuItem);
+    fileMenu.add (new JSeparator());
+    JMenuItem setAsHomeMenuItem = new JMenuItem (Strings.SET_AS_HOME);
+    setAsHomeMenuItem.setMnemonic (KeyEvent.VK_H);
+    setAsHomeMenuItem.addActionListener((event) -> setAsHome());
+    fileMenu.add (setAsHomeMenuItem);
+    fileMenu.add (new JSeparator());
+    fileMenu.add (settingsSubMenu);
+    fileMenu.add (new JSeparator());
     JMenuItem closeMenuItem = new JMenuItem (Strings.CLOSE);
     closeMenuItem.setAccelerator (KeyStroke.getKeyStroke
       (KeyEvent.VK_W, ActionEvent.CTRL_MASK));
     closeMenuItem.setMnemonic (KeyEvent.VK_C);
-    closeMenuItem.addActionListener((event) -> dispose());
+    closeMenuItem.addActionListener((event) -> 
+      dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
     fileMenu.add (closeMenuItem);
     JMenuItem exitMenuItem = new JMenuItem (Strings.EXIT);
     exitMenuItem.setMnemonic (KeyEvent.VK_X);
     exitMenuItem.addActionListener((event) -> System.exit(0));
     fileMenu.add (exitMenuItem);
 
+    // Edit menu
     JMenu editMenu = new JMenu (Strings.EDIT);
     editMenu.setMnemonic (KeyEvent.VK_E);
     JMenuItem selectAllMenuItem = new JMenuItem (Strings.SELECT_ALL);
@@ -273,6 +332,7 @@ public class MainWindow extends JFrame
     findNextMenuItem.addActionListener((event) -> findNext());
     editMenu.add (findNextMenuItem);
 
+    // View menu
     JMenu viewMenu = new JMenu (Strings.VIEW);
     viewMenu.setMnemonic (KeyEvent.VK_V);
     JMenuItem zoomInMenuItem = new JMenuItem (Strings.ZOOM_IN);
@@ -293,6 +353,24 @@ public class MainWindow extends JFrame
     refreshMenuItem.addActionListener((event) -> refresh());
     viewMenu.add (refreshMenuItem);
 
+    // Bookmark menu
+    JMenu bookmarksMenu = new JMenu (Strings.BOOKMARKS);
+    bookmarksMenu.setMnemonic (KeyEvent.VK_B);
+    JMenuItem showBookmarksMenuItem = new JMenuItem (Strings.SHOW);
+    showBookmarksMenuItem.setMnemonic (KeyEvent.VK_S);
+    showBookmarksMenuItem.addActionListener((event) -> showBookmarks());
+    bookmarksMenu.add (showBookmarksMenuItem);
+    JMenuItem editBookmarksMenuItem = new JMenuItem (Strings.EDIT + "...");
+    editBookmarksMenuItem.setMnemonic (KeyEvent.VK_E);
+    editBookmarksMenuItem.addActionListener((event) -> editBookmarks());
+    bookmarksMenu.add (editBookmarksMenuItem);
+    bookmarksMenu.add (new JSeparator());
+    JMenuItem bookmarkPageMenuItem = new JMenuItem (Strings.BOOKMARK_THIS_PAGE);
+    bookmarkPageMenuItem.setMnemonic (KeyEvent.VK_B);
+    bookmarkPageMenuItem.addActionListener((event) -> bookmarkPage());
+    bookmarksMenu.add (bookmarkPageMenuItem);
+
+    // Go menu
     JMenu goMenu = new JMenu (Strings.GO);
     goMenu.setMnemonic (KeyEvent.VK_G);
     JMenuItem backMenuItem = new JMenuItem (Strings.BACK);
@@ -315,6 +393,7 @@ public class MainWindow extends JFrame
     stopMenuItem.addActionListener((event) -> goStop());
     goMenu.add (stopMenuItem);
 
+    // Help menu
     JMenu helpMenu = new JMenu (Strings.HELP);
     helpMenu.setMnemonic (KeyEvent.VK_H);
     JMenuItem helpMenuItem = new JMenuItem (Strings.DOCUMENTATION);
@@ -331,6 +410,7 @@ public class MainWindow extends JFrame
     menuBar.add (fileMenu);
     menuBar.add (editMenu);
     menuBar.add (viewMenu);
+    menuBar.add (bookmarksMenu);
     menuBar.add (goMenu);
     menuBar.add (helpMenu);
     }
@@ -344,6 +424,25 @@ public class MainWindow extends JFrame
   private void clearStatus ()
     {
     statusBar.clearStatus ();
+    }
+
+
+/*=========================================================================
+  
+  editBookmarks 
+
+=========================================================================*/
+  private void editBookmarks()
+    {
+    try
+      {
+      bookmarkHandler.editBookmarks();
+      }
+    catch (Exception e)
+      {
+      JOptionPane.showMessageDialog (this, e.getMessage(), 
+         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+      }
     }
 
 /*=========================================================================
@@ -361,6 +460,34 @@ public class MainWindow extends JFrame
     topBar.enable();
     }
 
+
+/*=========================================================================
+  
+   editSettings 
+
+=========================================================================*/
+  protected void editSettings()
+    {
+    Logger.log (getClass(), "editSettings()");
+
+    try
+      {
+      Config.getConfig().ensureUserConfigFileExists();
+      EditFileDialog d = new EditFileDialog (this, 
+        Strings.EDIT_CONFIG_FILE,
+        Config.getConfig().getUserConfigFilename());
+      d.setVisible (true);
+      if (d.didSave())
+        Config.getConfig().load();
+      }
+    catch (Exception e) 
+      {
+      JOptionPane.showMessageDialog (this, e.getMessage(), // TODO -- expand
+         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+      }
+
+    }
+
 /*=========================================================================
   
    goHome
@@ -371,8 +498,45 @@ public class MainWindow extends JFrame
   protected void goHome ()
     {
     Logger.log (getClass(), "goHome()");
-    loadURL (config.getHomePage());
+    loadURI (config.getHomePage());
     }
+
+/*=========================================================================
+  
+  getDisplayNameFromURI 
+
+=========================================================================*/
+public String getDisplayNameFromURI (URL uri)
+  {
+  String displayName = null;
+  String path = uri.getPath();
+  if (path.startsWith ("/~"))
+    {
+    String temp = path.substring (2);
+    int i = temp.indexOf ("/"); 
+    if (i >= 0)
+      temp = temp.substring (0, i);
+    displayName = temp;
+    }
+  else
+    {
+    displayName = uri.getHost();
+    if (displayName.length() == 0) displayName = null;
+    }
+
+  int i = path.lastIndexOf ("/"); 
+  if (i >= 0)
+    {
+    String temp = path.substring (i);
+    if (temp.startsWith("/")) temp = temp.substring(1);
+    if (displayName == null)
+      displayName = temp;
+    else if (!temp.equals ("/") && temp.length() > 0)
+      displayName = displayName + ": " + temp; 
+    }
+
+  return displayName;
+  }
 
 /*=========================================================================
   
@@ -394,7 +558,7 @@ public class MainWindow extends JFrame
       {
       URL backUrl = backlinks.pop();
       Logger.log (getClass(), "goBack(): got back URL " + backUrl);
-      loadURL (backUrl);
+      loadURI (backUrl);
       }
     else
       {
@@ -411,20 +575,20 @@ public class MainWindow extends JFrame
    URIs containing a username (host:port/~fred) have their root at the
    user's top-level directory, not the server's top-level directory. 
 =========================================================================*/
-URL getRootUri (URL baseUrl) throws MalformedURLException
+URL getRootUri (URL baseUri) throws MalformedURLException
   {
-  String path = baseUrl.getPath();
+  String path = baseUri.getPath();
   if (path.startsWith ("/~"))
     {
     String temp = path.substring (2);
     int i = temp.indexOf ("/"); 
     temp = temp.substring (0, i >= 0 ? i : 0);
-    java.net.URL newUrl = new URL (baseUrl, "/~" + temp + "/");
+    java.net.URL newUrl = new URL (baseUri, "/~" + temp + "/");
     return newUrl;
     }
   else
     {
-    java.net.URL newUrl = new URL (baseUrl, "/"); 
+    java.net.URL newUrl = new URL (baseUri, "/"); 
     return newUrl;
     }
   }
@@ -439,7 +603,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     Logger.log (getClass(), "goRoot()");
     try
       {
-      loadURL (getRootUri (baseUrl));
+      loadURI (getRootUri (baseUri));
       }
     catch (Exception e)
       {
@@ -499,7 +663,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     {
     if (Logger.isDebug())
       Logger.log (getClass(), "handleRedirect(): Redirect to " + url);
-    loadURL (url);
+    loadURI (url);
     }
 
 /*=========================================================================
@@ -540,7 +704,8 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 =========================================================================*/
   private void help()
     {
-    newWindow ("about:/index.md");
+    newWindow ("about:/index.md", WINDOW_CAPTION + ": " 
+      + Strings.DOCUMENTATION);
     }
 
 /*=========================================================================
@@ -561,7 +726,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
         {
         if (Logger.isDebug())
           Logger.log (getClass(), "User selected " + url);
-        loadURL (new URL(url));
+        loadURI (new URL(url));
         }
       catch (Exception e)
         {
@@ -588,7 +753,15 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     try
       {
       URLConnection conn = url.openConnection();
-      byte[] content = (byte[]) conn.getContent(); 
+      Object o = conn.getContent();
+      byte[] content;
+      if (o instanceof BufferedInputStream)
+        {
+        BufferedInputStream bis = (BufferedInputStream)o;
+        content = bis.readAllBytes(); 
+        }
+      else
+        content = (byte[]) o; 
       String mime = conn.getContentType();
       gc.setMime (mime);
       gc.setContent (content);
@@ -640,11 +813,11 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     String urlStr = url.toString();
     if (mime.startsWith ("text/gemini") || urlStr.endsWith (".gmi"))
       {
-      baseUrl = fullUrl; 
+      baseUri = fullUrl; 
       // We have to set this here, because renderGemtext
       //  needs it, for forming links in the HTML
       Logger.log (getClass(), "Content is text/gemini");
-      String encoding = getEncodingFromMime (mime);
+      String encoding = MimeUtil.getEncodingFromMime (mime);
       renderGemtext (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       backlinks.push (fullUrl);
@@ -652,11 +825,11 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
       }
     else if (mime.startsWith ("text/plain") || urlStr.endsWith (".txt"))
       {
-      baseUrl = fullUrl; 
+      baseUri = fullUrl; 
       // We have to set this here, because renderGemtext
       //  needs it, for forming links in the HTML
       Logger.log (getClass(), "Content is text/plain");
-      String encoding = getEncodingFromMime (mime);
+      String encoding = MimeUtil.getEncodingFromMime (mime);
       renderPlain (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       backlinks.push (fullUrl);
@@ -664,11 +837,11 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
       }
     else if (mime.startsWith ("text/nex")) // Not a real MIME
       {
-      baseUrl = fullUrl; 
+      baseUri = fullUrl; 
       // We have to set this here, because renderGemtext
       //  needs it, for forming links in the HTML
       Logger.log (getClass(), "Content is text/nex");
-      String encoding = getEncodingFromMime (mime);
+      String encoding = MimeUtil.getEncodingFromMime (mime);
       renderNex (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       setLastContent (gc);
@@ -676,11 +849,11 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
       }
     else if (mime.startsWith ("text/gophermap")) // Not a real MIME
       {
-      baseUrl = fullUrl; 
+      baseUri = fullUrl; 
       // We have to set this here, because renderGemtext
       //  needs it, for forming links in the HTML
       Logger.log (getClass(), "Content is text/gophermap");
-      String encoding = getEncodingFromMime (mime);
+      String encoding = MimeUtil.getEncodingFromMime (mime);
       renderGophermap (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       setLastContent (gc);
@@ -688,11 +861,11 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
       }
     else if (mime.startsWith ("text/markdown") || urlStr.endsWith (".md"))
       {
-      baseUrl = fullUrl; 
+      baseUri = fullUrl; 
       // We have to set this here, because renderGemtext
       //  needs it, for forming links in the HTML
       Logger.log (getClass(), "Content is text/markdown");
-      String encoding = getEncodingFromMime (mime);
+      String encoding = MimeUtil.getEncodingFromMime (mime);
       renderMarkdown (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       setLastContent (gc);
@@ -700,7 +873,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
       }
     else if (mime.startsWith ("image/"))
       {
-      loadURLEmbedImage (fullUrl);
+      loadURIEmbedImage (fullUrl);
       }
     else
       {
@@ -950,45 +1123,6 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 
 /*=========================================================================
   
-  loadLocalFile 
-
-=========================================================================*/
-  public void loadLocalFile (URL url)
-    {
-    if (Logger.isDebug())
-      Logger.log (getClass(), "loadLocalFile(), " + url);
-
-    try
-      {
-      byte[] content = FileUtil.urlToByteArray (url);
-
-      // TODO Ugh -- tidy this up
-      if (url.toString().endsWith ("gmi") 
-           || url.toString().endsWith ("md") 
-           || url.toString().endsWith ("txt"))
-        {
-	baseUrl = url; // We must do this before render
-        topBar.showUrl (url.toString());
-        backlinks.push (url);
-	}
-
-      if (url.toString().endsWith ("gmi"))
-        renderGemtext (content, null /* don't know encoding*/);
-      else if (url.toString().endsWith ("md"))
-        renderMarkdown (content, null /* don't know encoding*/);
-      else if (url.toString().endsWith ("txt"))
-        renderPlain (content, null /* don't know encoding*/);
-      else
-       loadForeignURL (url);
-      }
-    catch (Exception e)
-      {
-      reportException (url.toString(), e);
-      }
-    }
-
-/*=========================================================================
-  
   reportException
 
   Do something vaguely useful with exceptions
@@ -1077,11 +1211,11 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 
 /*=========================================================================
   
-   loadURLEmbedImage
+   loadURIEmbedImage
 
 
 =========================================================================*/
-  public void loadURLEmbedImage (URL url)
+  public void loadURIEmbedImage (URL url)
     {
     if (Logger.isDebug())
       Logger.log (getClass(), "Embedding image URL into HTML: " + url);
@@ -1095,31 +1229,31 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 
 /*=========================================================================
   
-   loadURL
+   loadURI
 
    Load any kind of URL. If it doesn't start with gemini://, treat is
    as external, which means invoking the desktop on it.
 
 =========================================================================*/
-  public void loadURL (URL url)
+  public void loadURI (URL url)
     {
-    Logger.log (getClass(), "loadURL(), URL is " + url);
+    Logger.log (getClass(), "loadURI(), URL is " + url);
 
     if (GemConverter.isImageUri (url.toString()))
       {
-      loadURLEmbedImage (url);
+      loadURIEmbedImage (url);
       }
     else
       { 
       if (url.getProtocol().equals ("gemini"))
 	{
 	loadFromUri (url, null);
-	baseUrl = url;
+	baseUri = url;
 	}
       else if (url.getProtocol().equals ("spartan"))
 	{
 	loadFromUri (url, null);
-	baseUrl = url;
+	baseUri = url;
 	}
       else if (url.getProtocol().equals ("gopher"))
 	{
@@ -1135,28 +1269,30 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
               {
 	      loadFromUri (url, str); 
               } catch (Exception e){}
-	    baseUrl = url;
+	    baseUri = url;
 	    }
           }
         else
           {
 	  loadFromUri (url, null);
-	  baseUrl = url;
+	  baseUri = url;
           }
 	}
       else if (url.getProtocol().equals ("nex"))
 	{
 	loadFromUri (url, null);
-	baseUrl = url;
+	baseUri = url;
 	}
       else if (url.getProtocol().equals ("about"))
 	{
 	loadFromUri (url, null);
-	baseUrl = url;
+	baseUri = url;
 	}
       else if (url.getProtocol().equals ("file"))
 	{
-	loadLocalFile (url);
+	//loadLocalFile (url);
+	loadFromUri (url, null);
+	baseUri = url;
 	}
       else
 	{
@@ -1167,15 +1303,15 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 
 /*=========================================================================
   
-   loadURL (String)
+   loadURI (String)
 
    Load any kind of URL. If it doesn't start with gemini://, treat it
    as external, which means invoking the desktop on it.
 
-   Mostly delegates to loadURL (URL)
+   Mostly delegates to loadURI (URL)
 
 =========================================================================*/
-  public void loadURL (String url)
+  public void loadURI (String url)
     {
     // We need to do something if what the user enters doesn't seem
     //   to be a full URL. The following is a pretty crude approach.
@@ -1194,7 +1330,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
        }
     try
       {
-      loadURL (new URL(url));
+      loadURI (new URL(url));
       }
     catch (Exception e)
       {
@@ -1249,18 +1385,18 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     {
     Logger.log (getClass(), "Refresh");
     applyInitialStyles ();
-    if (baseUrl != null)
+    if (baseUri != null)
       {
       // This is potentially nasty. We have to pop the back-link at TOS
-      // because loadURL() will replace it. But loadURL() won't replace
+      // because loadURI() will replace it. But loadURI() won't replace
       // it unless the load succeeds -- we don't want a dead link lurking
-      // on the stack. But loadURL() won't do this itself -- it will 
+      // on the stack. But loadURI() won't do this itself -- it will 
       // schedule it to be done when the load completes (if it completes).
       // So we pop the TOS here, with no guarantee that it will actually
       // get put back. In practice, we're refreshing a link that previously
       // loaded OK; so it should be fine. Still, it's a bit ugly.
       backlinks.pop();
-      loadURL (baseUrl);
+      loadURI (baseUri);
       }
     }
 
@@ -1275,7 +1411,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     {
     Logger.log (getClass(), "handleLinkClick(), link is " + url);
     if (url != null)
-      loadURL (url);
+      loadURI (url);
     else
       reportGenError (Strings.UNKNOWN, Strings.COULD_NOT_PARSE_URI);
     }
@@ -1382,6 +1518,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 	{
 	throw new IOException ("Can't open stream for CSS stylesheet"); 
 	}
+      if (is != null) is.close();
       }
     catch (Exception e)
       {
@@ -1427,14 +1564,14 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 
 /*=========================================================================
   
-  downloadURL 
+  downloadURI 
 
   Download a URL to the specified file. This takes place in a background
   thread and, at present, there's no control over it when it's started
   (except by quitting the program).
 
 =========================================================================*/
-  void downloadURL (String href, File file)
+  void downloadURI (String href, File file)
     {
     if (Logger.isDebug())
       Logger.log (getClass(), "Downloading " + href + " to " + file);
@@ -1490,13 +1627,13 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 
 /*=========================================================================
   
-  promptDownloadURL 
+  promptDownloadURI 
 
   Prompt the user for a filename, then start the download process
   for the specified link. 
 
 =========================================================================*/
-  void promptDownloadURL (String href)
+  void promptDownloadURI (String href)
     {
     JFileChooser fc = new JFileChooser();
     int p = href.lastIndexOf ('/');
@@ -1510,7 +1647,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     // TODO extract filename
     if (fc.showSaveDialog (this) == JFileChooser.APPROVE_OPTION)
       {
-      downloadURL (href, fc.getSelectedFile());
+      downloadURI (href, fc.getSelectedFile());
       }
     }
 
@@ -1526,17 +1663,17 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     JPopupMenu linkMenu = new JPopupMenu ("Link action"); 
 
     JMenuItem openMenuItem = new JMenuItem (Strings.OPEN);
-    openMenuItem.addActionListener ((event) -> loadURL (href));
+    openMenuItem.addActionListener ((event) -> loadURI (href));
 
     JMenuItem openNewMenuItem = new JMenuItem (Strings.OPEN_IN_NEW_WINDOW);
-    openNewMenuItem.addActionListener ((event) -> newWindow (href));
+    openNewMenuItem.addActionListener ((event) -> newWindow (href, null));
     
     JMenuItem copyLinkMenuItem = new JMenuItem (Strings.COPY_LINK);
     copyLinkMenuItem.addActionListener 
       ((event) -> Clipboard.copyTextToClipboard (href));
 
     JMenuItem downloadMenuItem = new JMenuItem (Strings.DOWNLOAD);
-    downloadMenuItem.addActionListener((event) -> promptDownloadURL (href));
+    downloadMenuItem.addActionListener((event) -> promptDownloadURI (href));
 
     linkMenu.add (openMenuItem);
     linkMenu.add (openNewMenuItem);
@@ -1631,15 +1768,34 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
   
   newWindow 
 
-  Open a new window with the specified URL
+  Open a new window with the specified URL in String form
 
 =========================================================================*/
-  public static void newWindow (String url)
+  public static void newWindow (String url, String caption)
     {
-    Logger.log (MainWindow.class, "newWindow() url=" + url);
+    if (Logger.isDebug())
+      Logger.log (MainWindow.class, "newWindow() url=" + url);
     MainWindow viewer = new MainWindow();
     viewer.setVisible (true);
-    viewer.loadURL (url);
+    viewer.loadURI (url);
+    if (caption != null) viewer.setTitle (caption);
+    }
+
+/*=========================================================================
+  
+  newWindow 
+
+  Open a new window with the specified URL in URL form
+
+=========================================================================*/
+  public static void newWindow (URL url, String caption)
+    {
+    if (Logger.isDebug())
+      Logger.log (MainWindow.class, "newWindow() url=" + url.toString());
+    MainWindow viewer = new MainWindow();
+    viewer.setVisible (true);
+    viewer.loadURI (url);
+    if (caption != null) viewer.setTitle (caption);
     }
 
 /*=========================================================================
@@ -1655,6 +1811,17 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
     viewer.setVisible (true);
     if (Config.getConfig().getNewWindowMode() == 0)
       viewer.goHome();
+    }
+
+/*=========================================================================
+  
+  reloadSettings 
+
+=========================================================================*/
+  public void reloadSettings()
+    {
+    Logger.log (getClass(), "reloadSettings()");
+    Config.getConfig().load();
     }
 
 /*=========================================================================
@@ -1750,7 +1917,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 =========================================================================*/
   private void renderNex (byte[] content, String encoding)
     {
-    setHtml (renderToHtml (new NexConverter (baseUrl), content, encoding));
+    setHtml (renderToHtml (new NexConverter (baseUri), content, encoding));
     }
 
 /*=========================================================================
@@ -1764,7 +1931,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 =========================================================================*/
   private void renderGemtext (byte[] content, String encoding)
     {
-    setHtml (renderToHtml (new GemConverter (baseUrl), content, encoding));
+    setHtml (renderToHtml (new GemConverter (baseUri), content, encoding));
     }
 
 /*=========================================================================
@@ -1774,7 +1941,7 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 =========================================================================*/
   private void renderGophermap (byte[] content, String encoding)
     {
-    setHtml (renderToHtml (new GophermapConverter (baseUrl), content, encoding));
+    setHtml (renderToHtml (new GophermapConverter (baseUri), content, encoding));
     }
 
 /*=========================================================================
@@ -1786,49 +1953,29 @@ URL getRootUri (URL baseUrl) throws MalformedURLException
 =========================================================================*/
   private void renderMarkdown (byte[] content, String encoding)
     {
-    setHtml (renderToHtml (new MarkdownConverter (baseUrl), content, encoding));
+    setHtml (renderToHtml (new MarkdownConverter (baseUri), content, encoding));
     }
 
 /*=========================================================================
   
-  getDisplayName 
+  setAsHome
 
 =========================================================================*/
-public String getDisplayName (URL uri)
+void setAsHome ()
   {
-  String displayName = null;
-  String path = uri.getPath();
-  if (path.startsWith ("/~"))
+  if (baseUri != null)
     {
-    String temp = path.substring (2);
-    int i = temp.indexOf ("/"); 
-    if (i >= 0)
-      temp = temp.substring (0, i);
-    displayName = temp;
+    config.setHomePage (baseUri.toString());
+    config.save();
     }
-  else
-    {
-    displayName = uri.getHost();
-    if (displayName.length() == 0) displayName = null;
-    }
-
-  int i = path.lastIndexOf ("/"); 
-  if (i >= 0)
-    {
-    String temp = path.substring (i);
-    if (temp.startsWith("/")) temp = temp.substring(1);
-    if (displayName == null)
-      displayName = temp;
-    else if (!temp.equals ("/") && temp.length() > 0)
-      displayName = displayName + ": " + temp; 
-    }
-
-  return displayName;
   }
 
 /*=========================================================================
   
   setCaptionFromHostname
+
+  Sets the window caption and the value of displayName. Uses the response
+  if there is one, otherwise just bases the result on the URI.
 
 =========================================================================*/
 void setCaptionFromResponse (URL uri, ResponseContent gc)
@@ -1838,11 +1985,31 @@ void setCaptionFromResponse (URL uri, ResponseContent gc)
   if (gc != null)
     {
     // TODO: extract a caption from the response data
+    byte[] content = gc.getContent();
+    if (content != null && content.length > 0)
+      {
+      String mime = gc.getMime();
+      String encoding = MimeUtil.getEncodingFromMime (mime);
+      byte[] start = Arrays.copyOfRange(content, 0, 512);
+      String s = "";
+      try
+        {
+        s = new String (start, encoding);
+        }
+      catch (UnsupportedEncodingException e) 
+        {
+        s = new String (start);
+        }
+      
+      displayName = GemUtil.getFirstHeading (s); 
+      if (displayName != null)
+        caption = WINDOW_CAPTION + ": " + displayName;
+      }
     }
 
   if (caption == null)
     {
-    String displayName = getDisplayName (uri);
+    displayName = getDisplayNameFromURI (uri);
     if (displayName != null)
       caption = WINDOW_CAPTION + ": " + displayName;
     }  
@@ -1863,6 +2030,24 @@ void setCaptionFromResponse (URL uri, ResponseContent gc)
   private void setStatus (String s)
     {
     statusBar.setStatus (s);
+    }
+
+/*=========================================================================
+  
+  showBookmarks 
+
+=========================================================================*/
+  private void showBookmarks()
+    {
+    try
+      {
+      bookmarkHandler.showBookmarks();
+      }
+    catch (Exception e)
+      {
+      JOptionPane.showMessageDialog (this, e.getMessage(), 
+         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+      }
     }
   }
 

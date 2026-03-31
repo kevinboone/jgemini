@@ -2,7 +2,7 @@
 
 A Java-based graphical browser for Gemini and similar protocols 
 
-Version 2.0a, Kevin Boone, March 2026 
+Version 2.0.1, Kevin Boone, March 2026 
 
 ## Why another Gemini client? 
 
@@ -14,11 +14,9 @@ JGemini is a very rudimentary, barely-functional graphical client for the Gemini
 
 ## Pre-requisites 
 
-To run JGemini you'll need a computer with some kind of graphical desktop, and a Java JVM. JGemini should work with any Java JVM of version 11.0 or later. I've tested it with OpenJDK versions 11-21. If you want to build JGemini from source, you'll probably need Maven.  
+To run JGemini you'll need a computer with some kind of graphical desktop, and a Java JVM. JGemini should work with any Java version 11.0 or later. I've tested it with OpenJDK versions 11-27. If you want to build JGemini from source, you'll probably need Maven.  
 
-JGemini is intended for Linux. It _should_ work on any platform with a relatively modern JVM, but I don't care about, or test, anything except Linux.  
-
-
+JGemini is intended for Linux. It appears to work on other platforms with a relatively modern JVM, including Windows 11, but I don't care about, or do much testing on, anything except Linux.  
 
 ## Features 
 
@@ -36,44 +34,26 @@ JGemini is intended for Linux. It _should_ work on any platform with a relativel
 * Search directly from the URL bar
 * Saves no state by default, for privacy
 * Built-in documentation viewer
+* Rudimentary bookmark support, with built-in editor
 
 
-## Running JGemini 
+## Installing and running JGemini 
 
-So long as you have a Java JVM installed, you can run JGemini from a prompt like this: 
-
-```
-    java -jar /path/to/jgemini-x.y.jar
-```
-
-
-where x.y is the version number (currently 2.0). 
-
-If your system associates Java JAR files with the `.jar` extension, you might be able to launch JGemini from a file manager or program manager or whatever. If you're running from a command line, you can specify a URL or file to load: 
-
-```
-    java -jar /path/to/jgemini-1.0.jar file:///path/to/file.gmi
-```
-
-
-or 
-
-```
-    java -jar /path/to/jgemini-1.0.jar gemini://host:port/path.gmi
-```
-
-
-For convenience, local filenames don't need a full URL -- just the filename will do. JGemini will expand it to a URL internally. If the name of a local file ends in `.gmi`, it is treated as Gemtext, otherwise as plain text in platform-default encoding. The filename does not matter with content fetched from a server, as the server will usually indicate the type of the content. 
-
-If you want to install "properly" on Linux, there's a sample installation script and `.desktop` file in the `samples` directory of the source code bundle. 
+JGemini does not need to be installed, beyond copying its JAR file to some convenient place. However, a more formal installation might be more convenient. For more information, please see the separate document `README_installation.md`. In essence, just run the JGemini JAR file using the Java JVM. 
 
 ## Configuration 
 
-The only method of configuration (at present) is by hacking on configuration files.  JGemini will read a system-level properties file, if it exists, at `/etc/jgemini/jgemini.properties`, and then a user properties file at $HOME/.jgemini.properties if it exists.  The interpretation of "$HOME" on systems other than Linux is variable.  On Windows, it might be "C:\users\username". There is a sample configuration file in the source code bundle, in the `samples` directory. I hope the settings in that file are pretty self-explanatory but, if they are not, there is a full listing in  `docs/config_file.md`. 
+The only method of configuration (at present) is by hacking on configuration files.  On Linux, JGemini will read a system-level properties file, if it exists, at `/etc/jgemini/jgemini.properties`, and then a user properties file at $HOME/.jgemini/jgemini.properties. On Windows, JGemini will read a user configuration file with the same name in the JVM's `user.home` directory.   
+
+The interpretation of `user.home` on Windows can be a little variable. It's often `c:\users\{username}`, so the configuration file will be `c:\users\{username}\.jgemini\jgemini.properties`. 
+
+To mitigate the awkwardness of editing the configuration this way, JGemini since 2.0.1 has a built-in settings editor. All it does is open the configuration file -- creating a sample one if necessary -- in a text file editor. Use the File|Settings|Edit menu command to use this feature. 
+
+There is a sample configuration file in the source code bundle, in the `samples` directory. I hope the settings in that file are pretty self-explanatory but, if they are not, there is a full listing in  `docs/config_file.md`. 
 
 If you want to change the default home page, add an entry `url.home` to either of the configuration files. 
 
-Run-time configuration of JGemini's appearance is not possible at present, other than zoom in/out. However, as Gemini provides no way for an author to control the text appearance (that's one of its strengths), text size and font, etc., should be a one-time setting, even if it takes a bit of trial and error. Once you have the settings that suit you, there should be no need to change again. 
+Run-time configuration of JGemini's appearance is not possible at present, other than zoom in/out. However, as Gemini provides no way for an author to control the text appearance (that's one of its strengths), text size and font, etc., should be a one-time setting, even if it takes a bit of trial and error. Once you have the settings that suit you, there should be no need to change them again. 
 
 For more information on configuring the appearance of the document window, please see `README.styling`. 
 
@@ -173,37 +153,7 @@ JGemini relies heavily on Java features that haven't changed since about 2005. F
 
 ## Caveats and limitations 
 
-Oh, where to start... 
-
-There is no TLS certificate check, not even trust-on-first-use.  JGemini uses encrypted TLS communication because Gemini demands it. However, my experience is that most Gemini servers do not issue certificates validated by external authorities.  So, rather than prompting the user to confirm every site, JGemini simply assumes every server certificate is fine. Is this a security problem? Sure. If you're planning world domination, or think governments are monitoring your communication, this isn't the software to use.  
-
-I don't know how JGemini will behave on platforms that don't use UTF-8 character encoding.  
-
-There is no bookmark support yet.  In fact, JGemini saves no runtime state at all, not even the window size.  If you don't like the default window size, modify `window.w` and `window.h` in the configuration file. The URL history _can_ be saved between sessions, but this feature is not enabled by default. 
-
-In order to keep the user interface responsive, all the content-fetching is done asynchronously, in background threads. It's not always easy to see if a download is still in progress. If you try to download something else while an existing download is ongoing, JGemini will try to cancel the previous transfer. It probably won't succeed, Java being what it is, and the old transfer will likely continue to run in the background until it completes, and then do nothing. This doesn't affect how JGemini looks to the user -- it just means that a bunch of moribund network operations can be going on invisibly. 
-
-JGemini only displays text in Gemtext, plain text, and Markdown formats, and popular image types.  When content is fetched from a server, Gemtext is signalled by a content type of `text/gemini`, plain text is `text/plain`, and Markdown is `text/markdown`.  For local files, Gemtext is signalled by a filename ending in `.gmi` and Markdown as `.md`; any other local file is treated as plain text.  For every other form of content, JGemini stores the downloaded data in a temporary file, and uses Java's desktop integration to launch it.  What happens (if anything) if you click a link to an audio file , for example, depends entirely on how the desktop is configured. 
-
-As a slight exception to the above, files received using `nex`, with a filename ending in `.txt`, or where there is no filename, are treated as "nex-flavoured text". This format is just like plain text, except that lines beginning with "=>" are treated as links, as with Gemtext. The `nex` protocol does not supply a content type in the response, so we only have the filename to guess the contents.  
-
-Note that, because Gemini servers often don't report the MIME type of Markdown correctly, JGemini treats any file it retrieves whose name ends in `.md` as Markdown, regardless of the MIME type the server reports. This behaviour could be made configurable if it turns out to be a nuisance. 
-
-JGemini only supports the Gemini, Spartan, Gopher, and nex protocols, using URLs that begin `gemini://`, `spartan://`, `gopher://`, or `nex://`.  If a Gemtext document contains links to other kind of protocol that Java understands (`file:`, `http:...`) then JGemini delegates to the desktop. If you follow an `http` link, for example, that should invoke a Web browser; but, again, this is not under the control of JGemini. If the URL is not one that Java understands (e.g., `gophers:`) then JGemini will not even attempt to follow the link, not even by invoking the desktop. The reason is somewhat technical but, in essence, Java can't even construct an instance of `java.net.URL` containing the URI to pass to the desktop. 
-
-JGemini follows redirections. Although the "best practices" guide for Gemini warns against redirections they are, in fact, commonplace.  JGemini does not do very well at avoiding redirection loops -- it will just try to follow them indefinitely. Apart from in the "torture test" I haven't actually encountered any redirection loops, so I'm not unduly concerned about this yet. 
-
-There is no caching of any kind, either on disk or in memory. This is a feature, not a bug. The Gemini protocol does not allow content to be timestamped, so there is no robust way to implement a cache. The client would have absolutely no way to know whether the data in the cache is up to date. Even the "back" button causes the previous page to be re-requested. In future, I might implement some form of optimistic caching, but I'm not sure it would be robust.  
-
-Text search is only case-insensitive, and forward. 
-
-JGemini supports multiple windows, but not tabs. I hate tabs, and have no plan to implement them. Using multiple windows looks the same, from the user perspective, as opening multiple instances of JGemini. However, since all windows share a JVM, the multi-window approach uses much less memory. 
-
-JGemini should handle the whole of the CommonMark Markdown specification, including the escaping and precedence rules, and also GitHub-style table markup.  Rendering is crude, however, and not configurable in any way. However, embedded links and images should work, including links that are images. There is a Markdown test page `samples/test.md` that demonstrates some of the supported features. 
-
-JGemini does not support feeds of any kind. If you select a feed, you'll probably get a page of XML sent to the platform's default web browser. 
-
-When displaying Gemtext, JGemini uses an arrow symbol to indicate a link that can be followed, as well as displaying the link text in a highlighted colour. If the first character of the link text is an emoji, then the link doesn't get the arrow -- I assume that the author is using emojis to highlight links, and the extra arrow would look odd.  However, it's not as easy to detect emojis in Java as it ought to be (before Java 21), and sometimes this test doesn't work properly. 
+Please see the separate document ISSUES.txt. 
 
 ## Building JGemini  
 
@@ -256,5 +206,16 @@ Version 0.1 -- March 2021 -- first release
 * Implemented search from URL bar (which can be disabled)
 * Let the desktop set the main window position, so JGemini windows don't
 * Added documentation viewer
+
+
+* Added rudimentary settings editor
+* Added "Set as home page" facility
+* Changed location of properties file, in a new directory, which
+  will also store URL history by default 
+
+* Added rudimentary bookmark support
+* Updated documentation
+
+
 
 

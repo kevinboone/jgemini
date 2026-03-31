@@ -21,7 +21,6 @@ public class TopBar extends JPanel
   {
   private JComboBox urlBox;
   private MainWindow mainWindow;
-  private boolean enabled = false;
 
   public TopBar (MainWindow mainWindow)
     {
@@ -38,13 +37,10 @@ public class TopBar extends JPanel
       @Override
       public void actionPerformed (ActionEvent e) 
          {
-         if (enabled)
-           {
-           Logger.log (getClass(), "TopBar actionPerformed");
-	   String url = (String)urlBox.getEditor().getItem();
-	   if (url.length() > 0)
-	     mainWindow.loadURL (url); 
-           }
+         Logger.log (getClass(), "TopBar actionPerformed");
+	 String url = (String)urlBox.getEditor().getItem();
+	 if (url.length() > 0)
+	   mainWindow.loadURI (url); 
          }
       });
 
@@ -77,11 +73,6 @@ public class TopBar extends JPanel
     add (urlBox, c);
     }
 
-  public void enable()
-    {
-    enabled = true;
-    }
-
   /** Loads the URL combo box from the history file, if there is one.
       Not having a history file specified, or failing to load one that is,
       will not be reported to the user as an error. */
@@ -91,7 +82,6 @@ public class TopBar extends JPanel
 
     Config config = Config.getConfig();
     String historyFile = config.getHistoryFile();
-    if (historyFile == null) return; 
 
     Logger.log (getClass(), "Loading history from: " + historyFile);
 
@@ -125,8 +115,9 @@ public class TopBar extends JPanel
 
     Config config = Config.getConfig();
 
+    if (!config.historyEnabled()) return;
+
     String historyFile = config.getHistoryFile();
-    if (historyFile == null) return; 
 
     Logger.log (getClass(), "Saving history to " + historyFile);
 

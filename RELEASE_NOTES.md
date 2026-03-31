@@ -1,4 +1,25 @@
-# Version 2.0.0 release notes
+# JGemini release notes
+
+## Version 2.0.2 release notes
+
+This release has rudimentary bookmark support. See `docs/bookmarks.md`.
+
+## Version 2.0.1 release notes
+
+Please be aware that this version changes the location of the user configuration file.
+It's been moved into a Gemini-specific directory `$HOME/.jgemini`, which is used
+by default for bookmarks and other saved state. I thought grouping the JGemini-specific
+files this way would make them easier to manage.
+
+This release also introduces a built-in settings editor. There's still no way to
+make most configuration changes other than by hacking on the configuration file,
+but at least having a built-in editor makes it a bit less of a nuisance.
+
+Certain things will now automatically overwrite the configuration file with new
+values. For example, setting the current page as the home page overwrite the
+`url.home` setting.
+
+## Version 2.0.0 release notes
 
 - JGemini now supports Gopher, nex, and Spartan, as well as Gemini
 - Debug logging now has finer-grained control

@@ -40,21 +40,24 @@ public class Main
       System.exit(0);
       }
 
+    // Tell the JVM about all the new URLs we support in this application
+    URL.setURLStreamHandlerFactory (new GeminiURLStreamHandlerFactory());
+
     Logger.log (Main.class, Logger.INFO, "Starting up");
 
+    UI ui = new SwingUI();
+    ui.start();
+
+/*
     System.setProperty ("swing.aatext", "true");
-    //System.setProperty ("swing.plaf.metal.controlFont", 
-    //      Config.getConfig().getControlFont());
     String userFont = Config.getConfig().getUserFont();
     String controlFont = Config.getConfig().getControlFont();
     System.setProperty ("swing.plaf.metal.userFont", userFont.trim());
     System.setProperty ("swing.plaf.metal.controlFont", controlFont.trim());
 
-    // Tell the JVM about all the new URLs we support in this application
-    URL.setURLStreamHandlerFactory (new GeminiURLStreamHandlerFactory());
-
     viewer = new MainWindow();
     viewer.setVisible (true);
+*/
     Logger.log (Main.class, Logger.INFO, "Show first page on startup");
     if (args.length >= 1)
       {
@@ -64,16 +67,15 @@ public class Main
 	{
 	// It don't know if this will work on Windows. But who
 	//   uses the command line on Windows?
-	viewer.loadURL ("file://" + file.getAbsolutePath());
+	ui.loadURI ("file://" + file.getAbsolutePath());
 	}
       else
 	{
-	viewer.loadURL (args[0]);
+	ui.loadURI (args[0]);
 	}
       }
     else
-      viewer.loadURL (Config.getConfig().getHomePage());
-    viewer.enableTopBar();
+      ui.loadURI (Config.getConfig().getHomePage());
 
     Logger.log (Main.class, Logger.INFO, "Initial set-up done");
     }

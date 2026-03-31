@@ -8,11 +8,13 @@ This is the built-in documentation for JGemini version 2.0.
 
 [JGemini overview](jgemini_overview.md)
 
-[Installing and running JGemini](installing_and_running.md)
-
 [JGemini's user interface](user_interface.md)
 
+[Bookmark support](bookmarks.md)
+
 [Things to watch out for](gotchas.md)
+
+[Privacy issues](privacy.md)
 
 [JGemini FAQ](faq.md)
 

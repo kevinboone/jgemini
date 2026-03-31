@@ -1,18 +1,19 @@
 # JGemini -- using client certificates
 
 Some Gemini-based services identify the user by a client certificate. They have
-to, since the Gemini doesn't provide any specific method of authentication.
+to, since Gemini doesn't provide any specific method of authentication.
 
 As with everything else in JGemini, the selection of which certificate to send
-is controlled by the configuration file -- usually `.jgemini.properties`.
+is controlled by the [configuration file](config_file.md). 
 
 Certificates must be placed in a Java keystore, along with the associated
 private key. You can use the same keystore file with multiple services, or with
 all services if you wish. It doesn't hurt to send a client certificate to a
-Gemini server that doesn't need one -- it will simply be ignored. 
+Gemini server that doesn't need one -- it will simply be ignored. However, this
+could notionally be a [privacy concern](privacy.md) (but probably isn't).
 
 JGemini supports per-host assignment of client certificates, but not per-page 
-or per-protocol selection.
+or per-protocol assignment.
 
 ## Generating a client certificate keystore
 
@@ -42,9 +43,9 @@ Finally, convert this new certificate to Java JKS format:
 
     keytool -importkeystore -srckeystore foo.p12 -srcstoretype pkcs12 -destkeystore foo.jks
 
-During keystore conversion, you'll be prompted to set a password, which you should 
-remember for later. `foo.jks` is the JKS keystore that JGemini needs to know about. You
-can put this in any convenient directory. 
+During keystore conversion, you'll be prompted to set a password, which you
+should remember for later. In the command above, `foo.jks` is the JKS keystore
+that JGemini needs to know about. You can put this in any convenient directory. 
 
 ## Editing the configuration file
 
@@ -55,7 +56,8 @@ An entry in the configuration file looks like this:
 That is, the left-hand side of the line is the hostname, preceded by `clientcert`, while
 the right-hand side is the full pathname of the Java keystore file and the keystore
 password, separated by white-space. Naturally, this configuration scheme will fail if
-there's white-space in the filename. 
+there's white-space in the filename. The keystore password is the one you gave to
+`keytool` when you created or imported the certificate.
 
 You can also specify a fall-back certificate, which JGemini will use if no other
 hostnames match:

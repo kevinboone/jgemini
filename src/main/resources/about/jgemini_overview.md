@@ -27,6 +27,7 @@ JGemini is distributed as a single Java JAR file, and requires
 - Search directly from the URL bar
 - Saves no state by default, for privacy
 - Built-in documentation viewer
+- Rudimentary bookmark support
 
 
 [Documentation index](index.md)

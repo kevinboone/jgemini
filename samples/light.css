@@ -7,6 +7,7 @@ a
 body
   {
   color:black; 
+  background:white;
   font: %%base_font_size%%px Dialog; 
   margin-left: 40px; 
   margin-right: 40px; 

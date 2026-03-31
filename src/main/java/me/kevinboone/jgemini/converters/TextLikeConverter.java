@@ -63,10 +63,10 @@ public class TextLikeConverter
     Config config = Config.getConfig();
     if (isImageUri (uri) && config.gemtextInlineImages())
       {
-      return "<img width=\"" + config.inlineImageWidth() + "\" src=\"" 
+      return "<p><img width=\"" + config.inlineImageWidth() + "\" src=\"" 
         + rewriteLink (uri) + "\">" + "<br/>" + "<a href=\"" 
            + rewriteLink (uri) + "\">" + getLinkIcon (uri, title) + " " 
-             + escapeHtml (title) + "</a><br/>"; 
+             + escapeHtml (title) + "</a><br/></p>"; 
       }
     return "<a href=\"" + rewriteLink (uri) + "\">" + 
       getLinkIcon (uri, title) + " " + escapeHtml (title) + "</a><br/>"; 

@@ -1,10 +1,4 @@
-Extract window caption from the response, rather than just the URL.
-
-Bookmark support.
-
-Add image open/download link on Markdown pages. This is surprisingly fiddly,
-because the image is in-lined without a specific link, so there's no link to
-click, as there is with links in Gemtext documents.
+Fix the hang-on-exit problem with Gopher.
 
 Improve accuracy of emoji detection. 
 
@@ -12,8 +6,20 @@ Find a way to indicate when page rendering is ongoing, and when it is complete.
 It's not usually a problem for text pages, but images sometimes take a while to
 transfer.
 
+Add links to in-line images with Markdown documents.
+
+Report server certificate information or, at least, indicate when TLS is in use.
+
 Catch redirect loops.
 
 Implement a download manager. At least, find a way to prevent the program exiting whilst a 
 download is in progress.
+
+Improve client certificate management.
+
+Render feeds.
+
+Subscribe to feeds? This would make JGemini a feed reader, and would take a lot of
+work.
+
 
