@@ -28,6 +28,7 @@ JGemini is distributed as a single Java JAR file, and requires
 - Saves no state by default, for privacy
 - Built-in documentation viewer
 - Rudimentary bookmark support
+- Interprets Atom feeds
 
 
 [Documentation index](index.md)

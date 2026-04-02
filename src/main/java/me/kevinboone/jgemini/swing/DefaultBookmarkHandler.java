@@ -11,6 +11,7 @@ package me.kevinboone.jgemini.swing;
 
 import java.net.*;
 import java.io.*;
+import java.util.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.utils.file.FileUtil;
 
@@ -18,6 +19,11 @@ public class DefaultBookmarkHandler implements BookmarkHandler
   {
   private Config config;
   private MainWindow mainWindow;
+  // fileWasUpdated is set whenever a new line is written to the
+  //   bookmark file, and at start-up. When set, it causes calls like
+  //   getBookmarkCount to reload from file.
+  private boolean fileWasUpdated = true;
+  private Vector<GemLink> bookmarks = new Vector<GemLink>();
 
   DefaultBookmarkHandler (MainWindow mainWindow)
     {
@@ -30,32 +36,16 @@ public class DefaultBookmarkHandler implements BookmarkHandler
   @Override
   public boolean isBookmarked (URL uri)
     {
-    String bookmarksFile = config.getBookmarksFile();
     String sUri = uri.toString();
-    boolean found = false;
-    try
+    readFromFile();
+    int l = bookmarks.size();
+    for (int i = 0; i < l; i++)
       {
-      BufferedReader br = new BufferedReader (new InputStreamReader 
-        (new FileInputStream (bookmarksFile)));
-      String line = br.readLine();
-      while (!found && (line != null))
-	{
-        if (line.indexOf ("=>") == 0)
-          {
-          GemLink link = GemLink.parse (line.substring(2).trim());
-          if (link.getUri().equals (sUri))
-            found = true; 
-          }
-	line = br.readLine();
-	}
-      br.close();
+      GemLink link = bookmarks.elementAt(i);
+System.out.println ("suri=" + sUri + " link=" + link);
+      if (link.getUri().equals (sUri)) return true;
       }
-    catch (IOException e)
-      {
-      return false; 
-      }
-
-    return found;
+    return false;
     }
 
   /** addBookmark() returns true if a new bookmark is added. The only
@@ -65,13 +55,14 @@ public class DefaultBookmarkHandler implements BookmarkHandler
   public boolean addBookmark (String displayName, URL uri) throws IOException
     {
     if (Logger.isDebug())
-      Logger.log (this.getClass(), "addBookmark(): " + displayName + " " + uri);
+      Logger.log (getClass().getName(), Logger.DEBUG, "addBookmark(): " + displayName + " " + uri);
 
     if (isBookmarked(uri)) return false;
 
     String bookmarksFile = config.getBookmarksFile();
     String newBookmark = "=> " + uri + " " + displayName + "\n";
     FileUtil.appendStringToFile (bookmarksFile, newBookmark);
+    fileWasUpdated = true;
     return true;
     }
 
@@ -86,8 +77,59 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     d.setVisible (true);
     if (d.didSave())
       {
-      // Not sure we need to do anything here
+      fileWasUpdated = true;
       }
+    }
+
+  public int getBookmarkCount()
+    {
+    Logger.log (getClass().getName(), Logger.DEBUG, "getBookmarkCount()");
+    readFromFile();
+    return bookmarks.size();
+    }
+
+  /** This method will throw an exception if index < 0 or > the size
+      of the bookmark list. It should only called after a call to
+      getBookmarkCount(), which will also reload from file if
+      necessary. */
+  @Override
+  public GemLink getBookmarkLink (int index)
+    {
+    readFromFile();
+    return bookmarks.elementAt (index);
+    }
+
+  public void readFromFile() 
+    {
+    // Just creating a new Vector and leaving the old one for GC is
+    //   probably quicker than clearing the existing one
+    if (fileWasUpdated)
+      {
+      Logger.log (getClass().getName(), Logger.DEBUG, "readFromFile()");
+      bookmarks = new Vector<GemLink>();
+      Logger.log (getClass().getName(), Logger.DEBUG, "Bookmark data stale -- need to read");
+      String bookmarksFile = config.getBookmarksFile();
+      try
+	{
+	BufferedReader br = new BufferedReader (new InputStreamReader 
+	  (new FileInputStream (bookmarksFile)));
+	String line = br.readLine();
+	while (line != null)
+	  {
+	  if (line.indexOf ("=>") == 0)
+	    {
+	    GemLink link = GemLink.parse (line.substring(2).trim());
+	    bookmarks.add (link); 
+	    }
+	  line = br.readLine();
+	  }
+	br.close();
+	}
+      catch (IOException e)
+	{
+	}
+      }
+    fileWasUpdated = false;
     }
 
   @Override

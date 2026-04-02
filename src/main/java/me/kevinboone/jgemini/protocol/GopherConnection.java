@@ -47,19 +47,21 @@ public class GopherConnection extends URLConnection
     PrintStream pos = new PrintStream (os);
 
     String request = path; 
-    if (path.length() >= 3)
+    if (request.length() > 1)
       {
-      if (path.charAt(2) == '/')
-        {
-        gopherType = path.charAt(1);
-        request = path.substring(2);
-        }
+      if (request.startsWith ("/"));
+        request = request.substring(1);
+      }
+
+    if (request.length() >= 2)
+      {
+      gopherType = request.charAt(0);
+      request = request.substring(1);
       }
 
     if (query != null && query.length() > 0)
       request = request + "\t" + query;
 
-    //System.out.println ("req=" + request);
     pos.print (request);
 
     pos.print ("\r\n"); 

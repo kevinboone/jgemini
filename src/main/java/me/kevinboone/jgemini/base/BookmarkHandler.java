@@ -21,7 +21,9 @@ public interface BookmarkHandler
       reason not to add the bookmark -- other than exception --
       is that the URI is already bookmarked. */
   public boolean addBookmark (String displayName, URL uri) throws IOException;
-  public void showBookmarks() throws IOException;
   public void editBookmarks() throws IOException;
+  public int getBookmarkCount();
+  public GemLink getBookmarkLink (int index);
+  public void showBookmarks() throws IOException;
   }
 

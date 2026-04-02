@@ -21,11 +21,12 @@ public class TopBar extends JPanel
   {
   private JComboBox urlBox;
   private MainWindow mainWindow;
+  private boolean urlbarEnabled = true;
 
   public TopBar (MainWindow mainWindow)
     {
     super();
-    Logger.log (getClass(), "TopBar constructor");
+    Logger.in();
     this.mainWindow = mainWindow;
     setLayout (new GridBagLayout());
 
@@ -37,10 +38,17 @@ public class TopBar extends JPanel
       @Override
       public void actionPerformed (ActionEvent e) 
          {
-         Logger.log (getClass(), "TopBar actionPerformed");
-	 String url = (String)urlBox.getEditor().getItem();
-	 if (url.length() > 0)
-	   mainWindow.loadURI (url); 
+         // This is really ugly. The combobox fires _two_ events in succession
+         //   when you hit 'enter' on it -- a change event and an edit event.
+         // This causes two loads in quick succession, which leads to a 
+         //   a pointless thread cancellation. 
+         if (urlbarEnabled && e.getActionCommand().equals ("comboBoxChanged"))
+           {
+           Logger.log (getClass().getName(), Logger.DEBUG, "TopBar actionPerformed");
+	   String url = (String)urlBox.getEditor().getItem();
+	   if (url.length() > 0)
+	     mainWindow.loadURI (url); 
+           }
          }
       });
 
@@ -71,6 +79,8 @@ public class TopBar extends JPanel
     add (refreshButton);
     add (stopButton);
     add (urlBox, c);
+
+    Logger.out();
     }
 
   /** Loads the URL combo box from the history file, if there is one.
@@ -78,12 +88,14 @@ public class TopBar extends JPanel
       will not be reported to the user as an error. */
   public void loadHistoryFile()
     {
-    Logger.log (getClass(), "loadHistoryFile()");
+    Logger.in();
+
+    urlbarEnabled = false; 
 
     Config config = Config.getConfig();
     String historyFile = config.getHistoryFile();
 
-    Logger.log (getClass(), "Loading history from: " + historyFile);
+    Logger.log (getClass().getName(), Logger.DEBUG, "Loading history from: " + historyFile);
 
     try 
       {
@@ -101,17 +113,19 @@ public class TopBar extends JPanel
       }
     catch (Exception e)
       {
-      Logger.log (getClass(), e.toString());
+      Logger.log (getClass().getName(), Logger.DEBUG, e.toString());
       }
 
     urlBox.setSelectedIndex (-1);
+    urlbarEnabled = true; 
+    Logger.out();
     }
 
   /** Saves the history file if one is specified. We'll report an error
       if there is a history file, but it can't be written. */
   private void saveHistoryFile()
     {
-    Logger.log (getClass(), "saveHistoryFile()");
+    Logger.in();
 
     Config config = Config.getConfig();
 
@@ -119,7 +133,8 @@ public class TopBar extends JPanel
 
     String historyFile = config.getHistoryFile();
 
-    Logger.log (getClass(), "Saving history to " + historyFile);
+    Logger.log (getClass().getName(), 
+      Logger.INFO, "Saving history to " + historyFile);
 
     try
       {
@@ -137,12 +152,16 @@ public class TopBar extends JPanel
       JOptionPane.showMessageDialog (this, "Could not write history file: " 
          +  e.toString(), Strings.APP_NAME, JOptionPane.ERROR_MESSAGE); 
       }
+    Logger.out();
     }
 
   private void addToHistory (String url)
     {
+    Logger.in();
     if (Logger.isDebug())
-      Logger.log (getClass(), "addToHistory()" + url);
+      Logger.log (getClass().getName(), Logger.DEBUG, "URI=" + url);
+
+    urlbarEnabled = false;
 
     int l = urlBox.getItemCount();
     Config config = Config.getConfig();
@@ -156,14 +175,20 @@ public class TopBar extends JPanel
 
     if (found)
       {
-      Logger.log (getClass(), "addToHistory() url already present");
+      Logger.log (getClass().getName(), Logger.INFO, 
+        "URI already present in history");
       }
     else
       {
+      Logger.log (getClass().getName(), Logger.DEBUG, 
+        "adding URI to history");
       if (l >= max)
         urlBox.removeItemAt (0);
       urlBox.addItem (url);
       }
+
+    urlbarEnabled = true;
+    Logger.out();
     }
 
   /** showUrl Gets called from MainWindow whenever the user selects a new URL.
@@ -173,16 +198,19 @@ public class TopBar extends JPanel
       I need to think about whether very similar URLs ought to be added. */
   public void showUrl (String url)
     {
-    Logger.log (getClass(), "Adding to URL bar: " + url);
+    Logger.in();
+    Logger.log (getClass().getName(), Logger.DEBUG, "URI=" + url);
     Config config = Config.getConfig();
     addToHistory (url);
     String historyFile = config.getHistoryFile();
     if (historyFile != null)
        {
-       Logger.log (getClass(), "There is a history file: save changes");
+       Logger.log (getClass().getName(), Logger.INFO, 
+          "There is a history file: save changes");
        saveHistoryFile();
        }
 
     urlBox.getEditor().setItem (url);
+    Logger.out();
     }
   }

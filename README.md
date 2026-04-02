@@ -2,7 +2,7 @@
 
 A Java-based graphical browser for Gemini and similar protocols
 
-Version 2.0.1, Kevin Boone, March 2026
+Version 2.0.2, Kevin Boone, April 2026
 
 ## Why another Gemini client?
 
@@ -33,6 +33,15 @@ JGemini is intended for Linux. It appears to work on other platforms with a
 relatively modern JVM, including Windows 11, but I don't care about, or do much
 testing on, anything except Linux. 
 
+If you're looking a Gemini/Spartan capsules that use Unicode emojis -- and
+many do -- you'll probably need to ensure that your computer has fonts
+that contain the relevant glyphs. 
+
+This doesn't seem to be a problem on Windows systems, but Linux typically has fewer
+fonts by default. I've found a good choice to be Segoe UI Emoji. This is a Microsoft
+font so I can't distribute it, but the `.ttf` file is widely available, e.g.,
+from [online-fonts](https://online-fonts.com/fonts/segoe-ui-emoji).
+
 ## Features
 
 - Supports Gemini, Spartan, Gopher, and `nex` protocols, including user input and redirection
@@ -50,6 +59,7 @@ testing on, anything except Linux.
 - Saves no state by default, for privacy
 - Built-in documentation viewer
 - Rudimentary bookmark support, with built-in editor
+- Parses and displays Atom feeds
 
 ## Installing and running JGemini
 
@@ -280,6 +290,18 @@ directory:
 
 This will generate the compiled JARs in `target/`.
 
+## Author and legal
+
+JGemini is maintained by Kevin Boone, and distributed under the terms of the
+GNU Public Licence, v3.0. The binary distribution contains the 
+[jemoji](https://github.com/felldo/jemoji) library, maintained by
+Dominic Fellbaum and others, along with 
+[commonmark-java](https://github.com/commonmark/commonmark-java), which has 
+many contributors. To the best of my knowledge, all open-source components used
+by JGemini are released under terms compatible with the GPL.
+
+There is, of course, no warranty of any kind.
+
 ## Change log
 
 Version 0.1 -- March 2021 -- first release
@@ -332,6 +354,9 @@ Version 2.0.1 -- April 2026
 
 Version 2.0.2 -- April 2026
 - Added rudimentary bookmark support
-- Updated documentation
-
-
+- Updated documentation, particularly related to emoji support
+- Fixed bug in list formatting in Gemtext
+- Put limit on status line in Gemini response, to protect
+  against broken server
+- Fixed (maybe) broken handling of selectors beginning "/" in Gopher
+- Added converter for Atom feeds

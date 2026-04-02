@@ -82,7 +82,8 @@ public class SpartanConnection extends URLConnection
        } while (c != -1);
    
     int status = parseStatus (line);
-    Logger.log (getClass(), "Got status code " + status);
+    Logger.log (getClass().getName(), Logger.DEBUG, 
+      "Got status code " + status);
     meta = parseMeta (line);
     if (status == 2)
       {
@@ -104,7 +105,8 @@ public class SpartanConnection extends URLConnection
 	}
       else if (status == 3)
 	{
-	Logger.log (getClass(), "Throwing a redirect to " + meta);
+	Logger.log (getClass().getName(), Logger.DEBUG, 
+          "Throwing a redirect to " + meta);
 	throw new RedirectedException (new URL(getURL(), meta));
 	}
       else if (status == 4)

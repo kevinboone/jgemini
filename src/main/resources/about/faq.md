@@ -24,16 +24,6 @@ If the relevant page is in the viewer, select File|Set as Home Page from the
 menu. Alternatively, add an entry `url.home` to the [configuration
 file](config_file.md). 
 
-_Why aren't emojis displayed properly?_
-
-You need the appropriate fonts and configuration -- not all fonts contain
-glyphs for the emoji characters. `Segoe UI Emoji` is a workable choice. 
-
-Note that Java Swing is pretty fussy about what fonts it's prepared to use.
-However, once there is a suitable font in place, you don't have to tell 
-JGemini to use it -- the JVM is smart enough to find a font that contains
-the relevant glyphs if the main display font does not have them.
-
 _Why does JGemini not store my URL history between sessions?_
 
 People who use Gemini and similar systems are often quite concerned about
@@ -49,7 +39,7 @@ _How do I open a local .gmi file?_
 
 From the command line, just run
 
-    java -jar /path/to/jgemini-1.0.jar [filename]
+    java -jar /path/to/jgemini-2.0.jar [filename]
 
 
 Depending on how you installed JGemini, you might simply be able to click on
@@ -59,7 +49,7 @@ _How does JGemini handle images?_
 
 With Markdown documents, images are in-lined into the text by default. With
 Gemtext documents, in-lining behaviour is controlled by the configuration file
-property `gemtext.inline.images`, which takes values `1` (yes) or `0` (no).
+property `gemtext.inline.images`, which takes values `yes` or `no`.
 
 If the images are in-lined, they are all displayed with the same width,
 controlled by the property `inline.image.width`. This is because Gemtext
@@ -161,6 +151,35 @@ as a matter of course, this feature might be added.
 _How do I send a client certificate with my requests?_
 
 Please see the separate [page about client certificates](client_certs.md)
+
+## Emoji support 
+
+_Why aren't emojis displayed properly in the document viewer?_
+
+You need the appropriate fonts and configuration -- not all fonts contain
+glyphs for the emoji characters. `Segoe UI Emoji` is a workable choice. 
+
+Note that Java Swing is pretty fussy about what fonts it's prepared to use.
+However, once there is a suitable font in place, you don't have to tell JGemini
+to use it in the document viewer -- the viewer is smart enough to find a font
+that contains the relevant glyphs if the main display font does not have them.
+
+_Why aren't emojis displayed properly in the bookmark editor and menu?_
+
+Unfortunately, the main Java Swing user interface is not as clever as the document
+viewer. It isn't sufficient just to install the font -- you might also have to
+tell the user interface to use it.
+
+There are two relevant settings in the [configuration file](config_file.md):
+`ui.control_font` and `ui.user_font`. These control different aspects of the
+user interface, and probably need to be set the same in most cases.
+
+Segoe UI Emoji is a good font for emojis, but a bad font for anything else. 
+So it's best to specify it as a fall-back from a better font. For example: 
+
+    ui.control_font=Liberation Sans 20; Segoe UI Emoji 20 
+    ui.user_font=Liberation Sans 20; Segoe UI Emoji 20
+
 
 ## Debugging
 

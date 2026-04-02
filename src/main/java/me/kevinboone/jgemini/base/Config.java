@@ -19,11 +19,13 @@ import me.kevinboone.utils.file.*;
 
 public class Config extends Properties
   {
-  public final static String VERSION = "2.0.1";
+  public final static String VERSION = "2.0.2";
   private int logLevel = Logger.ERROR;
+  private int bookmarkMaxMenu = 10;
   private boolean gemtextInlineImages = false;
   private boolean urlbarSearchEnabled = false;
   private boolean historyEnabled = false;
+  private boolean emojiStripBookmarks = false;
 
   private final static String SYS_PREFS_FILE = "jgemini.properties"; 
   private final static String STATE_DIR_NAME = ".jgemini"; 
@@ -32,13 +34,14 @@ public class Config extends Properties
   private final static String HISTORY_FILENAME = "jgemini.history";
 
   public final static String URL_HOME = "url.home";
-  public final static String DEFLT_URL_HOME = 
-      "gemini://geminiprotocol.net/";
+  public final static String DEFLT_URL_HOME = "about:/jgemini_overview.md";
   public final static String LOG_LEVEL = "log.level";
   public final static int DEFLT_LOG_LEVEL = Logger.ERROR;
   public final static String WINDOW_W = "window.w";
   public final static String DEFLT_WINDOW_W = "800";
   public final static String WINDOW_H = "window.h";
+  public final static String EMOJI_STRIP_BOOKMARKS = "emoji.strip.bookmarks";
+  public final static boolean DEFLT_EMOJI_STRIP_BOOKMARKS = false;
   public final static String DEFLT_WINDOW_H = "600";
   public final static String UI_USER_FONT = "ui.user_font"; 
   public final static String DEFLT_UI_USER_FONT = "Sans 20";
@@ -49,7 +52,7 @@ public class Config extends Properties
   public final static String UI_NEW_WINDOW_MODE = "ui,new_window";
   public final static String DEFLT_UI_NEW_WINDOW_MODE = "0";
   public final static String GEMTEXT_INLINE_IMAGES = "gemtext.inline.images";
-  public final static String DEFLT_GEMTEXT_INLINE_IMAGES = "1";
+  public final static boolean DEFLT_GEMTEXT_INLINE_IMAGES = true;
   public final static String INLINE_IMAGE_WIDTH = "inline.image.width";
   public final static String DEFLT_INLINE_IMAGE_WIDTH = "600";
   public final static String UI_DOCUMENT_THEME = "ui.document.theme";
@@ -62,10 +65,12 @@ public class Config extends Properties
   public final static String DEFLT_HISTORY_FILE = null;
   public final static String BOOKMARK_FILE = "bookmark.file";
   public final static String DEFLT_BOOKMARK_FILE = null;
+  public final static String BOOKMARK_MAX_MENU = "bookmark.max.menu";
+  public final static int DEFLT_BOOKMARK_MAX_MENU = 10;
   public final static String HISTORY_ENABLED = "history.enabled";
-  public final static String DEFLT_HISTORY_ENABLED = "0";
+  public final static boolean DEFLT_HISTORY_ENABLED = false;
   public final static String URLBAR_SEARCH_ENABLED = "urlbar.search.enabled";
-  public final static String DEFLT_URLBAR_SEARCH_ENABLED = "1";
+  public final static boolean DEFLT_URLBAR_SEARCH_ENABLED = true;
   public final static String URLBAR_SEARCH_URL = "urlbar.search.url";
   public final static String DEFLT_URLBAR_SEARCH_URL = "gemini://tlgs.one/search";
 
@@ -73,19 +78,14 @@ public class Config extends Properties
 
   private static Config instance = null;
 
-  public static Config getConfig()
-    {
-    if (instance == null)
-      {
-      instance = new Config();
-      instance.load();
-      }
-    return instance;
-    }
-
   public void addConfigChangeListener (ConfigChangeListener l)
     {
     listeners.add (l);
+    }
+
+  public boolean emojiStripBookmark()
+    {
+    return emojiStripBookmarks;
     }
 
   public void ensureBookmarksFileExists() throws IOException
@@ -118,10 +118,23 @@ public class Config extends Properties
     is.close();
     }
 
+  public static Config getConfig()
+    {
+    if (instance == null)
+      {
+      instance = new Config();
+      instance.load();
+      }
+    return instance;
+    }
+
   public String getHomePage()
     {
+    Logger.in();
     String homePage = getProperty (URL_HOME, DEFLT_URL_HOME);
-    Logger.log (Logger.class, "getHomePage() return " + homePage);
+    Logger.log (getClass().getName(), Logger.INFO, 
+      "Home page is " + homePage);
+    Logger.out();
     return homePage;
     }
 
@@ -139,6 +152,11 @@ public class Config extends Properties
     if (bookmarkFile == null)
       bookmarkFile = getStateDir() + File.separator + BOOKMARK_FILENAME;
     return bookmarkFile;
+    }
+
+  public int getBookmarkMaxMenu()
+    {
+    return bookmarkMaxMenu;
     }
 
   public int logLevel()
@@ -204,11 +222,6 @@ public class Config extends Properties
     return Integer.parseInt (s);
     }
 
-  public void setDocumentBaseFontSize (int px)
-    {
-    setProperty (UI_DOCUMENT_FONT_SIZE, "" + px);
-    }
-
   public int getHistorySize()
     {
     String s = getProperty (HISTORY_SIZE, DEFLT_HISTORY_SIZE);
@@ -236,40 +249,53 @@ public class Config extends Properties
     return historyEnabled;
     }
 
+  public boolean getBooleanProperty (String name, boolean deflt)
+    {
+    String val = getProperty (name, deflt ? "1" : "0");
+    if (val == null) return deflt;
+    if (val.equals ("1")) return true;
+    if (val.equals ("yes")) return true;
+    if (val.equals ("on")) return true;
+    return false;
+    }
+
   /* Calculate the values of the instance variables from the raw values
      read from the configuration file. */
   private void deriveProperties()
     {
-    logLevel = Integer.parseInt (getProperty (LOG_LEVEL, ""+DEFLT_LOG_LEVEL));
-    if (getProperty (GEMTEXT_INLINE_IMAGES, DEFLT_GEMTEXT_INLINE_IMAGES).equals ("1")) 
-      gemtextInlineImages = true;
-    else
-      gemtextInlineImages = false;
-    if (getProperty (URLBAR_SEARCH_ENABLED, DEFLT_URLBAR_SEARCH_ENABLED).equals ("1")) 
-      urlbarSearchEnabled = true;
-    else
-      urlbarSearchEnabled = false;
-    if (getProperty (HISTORY_ENABLED, DEFLT_HISTORY_ENABLED).equals ("1")) 
-      historyEnabled = true;
-    else
-      historyEnabled = false;
+    bookmarkMaxMenu = Integer.parseInt (getProperty 
+      (BOOKMARK_MAX_MENU, ""+DEFLT_BOOKMARK_MAX_MENU));
 
-    Logger.log (Config.class, "URLBar search is " 
-      + (urlbarSearchEnabled ? "enabled" : "disabled"));
-    Logger.log (Config.class, "Inline images are " 
-      + (gemtextInlineImages ? "enabled" : "disabled"));
+    logLevel = Integer.parseInt (getProperty (LOG_LEVEL, ""+DEFLT_LOG_LEVEL));
+    Logger.setLevel (logLevel);
+
+    gemtextInlineImages = getBooleanProperty 
+      (GEMTEXT_INLINE_IMAGES, DEFLT_GEMTEXT_INLINE_IMAGES);
+   
+    urlbarSearchEnabled = getBooleanProperty
+      (URLBAR_SEARCH_ENABLED, DEFLT_URLBAR_SEARCH_ENABLED); 
+
+    historyEnabled = getBooleanProperty 
+      (HISTORY_ENABLED, DEFLT_HISTORY_ENABLED);
+
+    emojiStripBookmarks = getBooleanProperty 
+      (EMOJI_STRIP_BOOKMARKS, DEFLT_EMOJI_STRIP_BOOKMARKS);
     }
 
   private void fireSettingsChangedListeners()
     {
+    Logger.in();
     int l = listeners.size();
     for (int i = 0; i < l; i++)
       listeners.elementAt(i).configChanged();
+    Logger.out();
     }
 
   public String getStateDir()
     {
+    Logger.in();
     String home = System.getProperty ("user.home");
+    Logger.out();
     return home + File.separator + STATE_DIR_NAME; 
     }
 
@@ -280,8 +306,10 @@ public class Config extends Properties
 
   public void loadFromFile (String filename)
     {
+    Logger.in();
     if (Logger.isDebug())
-      Logger.log (Config.class, "Loading properties from " + filename);
+      Logger.log (getClass().getName(), Logger.INFO, 
+         "Loading settings from " + filename);
     try (InputStream is = new FileInputStream (new File (filename)))
       {
       load (is);
@@ -290,9 +318,10 @@ public class Config extends Properties
     catch (Exception e)
       {
       // This may not be an error
-      Logger.log (this.getClass(), e.toString());
+      Logger.log (getClass().getName(), Logger.DEBUG, e.toString());
       }
     deriveProperties();
+    Logger.out();
     }
 
   public void load()
@@ -300,19 +329,24 @@ public class Config extends Properties
     // Make a new state directory. We have to do this somewhere,
     //   and it's best to do it early, before we try to save
     //   anything there.
+    Logger.in();
     new File (getStateDir()).mkdir();
 
-    Logger.log (Config.class, "Loading system configuration");
+    Logger.log (getClass().getName(), Logger.INFO, 
+      "Loading system-wide configuration");
     // This won't work on Windows, but it won't do any harm.
     String sysPropsFile = "/etc/jgemini/" + SYS_PREFS_FILE; 
     loadFromFile (sysPropsFile);
 
-    Logger.log (Config.class, "Loading user configuration");
+    Logger.log (getClass().getName(), Logger.DEBUG, 
+      "Loading user configuration");
     String propsFile = getUserConfigFilename(); 
-    Logger.log (Config.class, "User properties file is " + propsFile);
+    Logger.log (getClass().getName(), Logger.DEBUG, 
+      "User properties file is " + propsFile);
     loadFromFile (propsFile);
 
     fireSettingsChangedListeners();
+    Logger.out();
     }
 
   public void removeConfigChangeListener (ConfigChangeListener l)
@@ -322,14 +356,18 @@ public class Config extends Properties
 
   public void save()
     {
+    Logger.in();
     String propsFile = getUserConfigFilename(); 
     saveToFile (propsFile);
+    Logger.out();
     }
 
   private void saveToFile (String filename)
     {
+    Logger.in();
     if (Logger.isDebug())
-      Logger.log (Config.class, "Saving properties to " + filename);
+      Logger.log (getClass().getName(), Logger.INFO, 
+        "Saving properties to " + filename);
     try (OutputStream os = new FileOutputStream (new File (filename)))
       {
       store (os, Strings.PROPS_COMMENTS);
@@ -338,16 +376,22 @@ public class Config extends Properties
     catch (Exception e)
       {
       // This may not be an error
-      Logger.log (this.getClass(), Logger.ERROR, e.toString());
+      Logger.log (getClass().getName(), Logger.DEBUG, e.toString());
       }
     deriveProperties();
+    Logger.out();
     }
 
-  public void setHomePage (String url)
+  public void setDocumentBaseFontSize (int px)
+    {
+    setProperty (UI_DOCUMENT_FONT_SIZE, "" + px);
+    }
+
+  public void setHomePage (String uri)
     {
     if (Logger.isDebug())
-      Logger.log (Logger.class, "setHomePage(), url is" + url);
-    setProperty (URL_HOME, url);
+      Logger.log (Logger.class, Logger.INFO, "setting home page to " + uri);
+    setProperty (URL_HOME, uri);
     }
 
   }

@@ -53,6 +53,9 @@ on Windows.
 
 ## List of settings
 
+Please note that 'binary' configuration values can take any of the values
+'1', 'yes', 'on', '0', 'no', 'off'.
+
 `bookmark.file`  
 Set a custom bookmark filename, rather than `bookmarks.gmi` in the `.jgemini`
 directory. 
@@ -70,15 +73,20 @@ a fallback certificate that matches all hosts, use:
 
 For more information, see the page on [client certificates](client_certs.md).
 
+`emoji.strip.bookmarks`  
+If set to 'yes', JGemini strips Unicode emojis from bookmarks
+before storing them. The default is not to strip emojis, which 
+might require the installation of additional fonts. 
+
 `gemtext.inline.images`  
-Controls whether to display images in-line in Gemtext documents: '1' for yes,
-'0' for no. Note that images are always displayed in-line in Markdown
-documents, and never in gophermaps. Default is 'yes'.
+Controls whether to display images in-line in Gemtext documents.  Note that
+images are always displayed in-line in Markdown documents, and never in
+gophermaps. The default is  'yes', to display in-line images. 
 
 `history.enabled`  
-Set to "1" (enabled) or "0" (disabled) to control whether the URL history
-is saved to a file between sessions. If it is saved, it will be to the 
-file `$HOME/.jgemini/jgemini.history`, unless you set a custom file.
+Determines whether the URL history is saved to a file between sessions. If it
+is saved, it will be to the file `$HOME/.jgemini/jgemini.history`, unless you
+set a custom file.  The default is 'no' -- history is not saved.
 
 `history.file`  
 The full pathname of a file to which to save the URL history, if you
@@ -100,7 +108,13 @@ logging if you run the program from a prompt.
 
 `ui.control_font`  
 Sets the font for user interface elements like buttons and menus.  Default is
-`Liberation Sans 20`.
+`Liberation Sans 20`. You can set multiple fonts like this:
+
+    ui.control_font=Liberation Sans 20; Segoe UI Emoji 20
+
+The user interface will try to use the first font if it can, that is, if the
+font contains the necessary characters. If it can't, it will try other fonts in
+the list.
 
 `ui.document.font.size`  
 Sets the base size for document fonts, in pixels. Other document elements, like
@@ -109,14 +123,15 @@ stylesheet for the document display, this setting may have no effect, because
 you may have overridden it. Default: 16 pixels.
 
 `ui.user_font`  
-Sets the font for text entry boxes.  Default is Default is `Liberation Sans 20`.
+Sets the font for text entry boxes.  Default is `Liberation Sans 20`. For the
+format, see `ui.control_font`.
 
 `url.home`  
 Home page. This must be a full URL, including protocol, or an absolute pathname
 for a local file. 
 
 `urlbar.search.enabled`  
-'1' to enable search from URL bar, or '0' to disable it. Default is enabled.
+Default is 'yes' -- search from the URL bar is enabled.
 
 `urlbar.search.url`  
 The URL to which the search expression is appended. Default is 

@@ -23,7 +23,8 @@ public class StatusBar extends JPanel implements StatusListener
     {
     public void actionPerformed(ActionEvent evt) 
       {
-      Logger.log (this.getClass(), "Timer expired");
+      Logger.log (getClass().getName(), Logger.DEBUG, 
+        "Status bar clear timer expired");
       clearStatus();
       }
     };
@@ -31,34 +32,42 @@ public class StatusBar extends JPanel implements StatusListener
   public StatusBar ()
     {
     super();
+    Logger.in();
     setBorder(new BevelBorder(BevelBorder.LOWERED));
     setLayout (new FlowLayout(FlowLayout.LEFT));
     label = new JLabel();
     label.setText ("OK");
     add (label);
+    Logger.out();
     }
 
   public void setStatus (String status)
     {
-    Logger.log (this.getClass(), "Set status: " + status);
+    Logger.in();
+    Logger.log (getClass().getName(), Logger.DEBUG, 
+      "Set status: " + status);
     label.setText (status);
     label.repaint();
     Timer timer = new Timer (5000, resetListener);
     timer.setRepeats (false);
     timer.start();
+    Logger.out();
     }
 
   @Override
   public void writeStatus (String status)
     {
+    Logger.in();
     setStatus (status);
+    Logger.out();
     }
 
   public void clearStatus ()
     {
-    Logger.log (this.getClass(), "Clearing status");
+    Logger.in();
     label.setText ("OK");
     label.repaint();
+    Logger.out();
     }
 
   }

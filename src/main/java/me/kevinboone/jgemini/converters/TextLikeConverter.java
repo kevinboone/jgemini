@@ -16,7 +16,7 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 import me.kevinboone.jgemini.base.*;
-import com.vdurmont.emoji.EmojiManager;
+import net.fellbaum.jemoji.*;
 
 public class TextLikeConverter
   {
@@ -96,17 +96,20 @@ public class TextLikeConverter
       baseURL to allow for relative links, etc. */
   protected String rewriteLink (String link)
     {
-    Logger.log (getClass(), "rewriteLink() link is " + link);
+    Logger.in();
+    Logger.log (getClass().getName(), Logger.DEBUG, "old link=" + link);
     try
       {
       // I'm still not 100% sure about this
       URI newUri =  new URI (baseURL.toString());
       newUri =  newUri.resolve(link); 
-      Logger.log (getClass(), "rewriteLink() newlink is " + newUri);
+      Logger.log (getClass().getName(), Logger.DEBUG, "new link=" + newUri);
+      Logger.out();
       return newUri.toString();
       }
     catch (Exception e)
       {
+      Logger.out();
       e.printStackTrace();
       return link;
       }

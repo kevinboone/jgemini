@@ -14,7 +14,7 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 import me.kevinboone.jgemini.base.*;
-import com.vdurmont.emoji.EmojiManager;
+import net.fellbaum.jemoji.*;
 
 public class GemConverter extends TextLikeConverter implements Converter
   {
@@ -60,7 +60,7 @@ public class GemConverter extends TextLikeConverter implements Converter
       return "<h2>" + escapeHtml(gem.substring(2)) + "</h2>\n";
     if (gem.startsWith ("#"))
       return "<h1>" + escapeHtml(gem.substring(1)) + "</h1>\n";
-    if (gem.startsWith ("-"))
+    if (gem.startsWith ("* "))
       return "<ul><li>&nbsp;" + escapeHtml(gem.substring(2)) + "</li></ul>\n";
     if (gem.startsWith ("=>"))
       return parseLink (gem.substring(2).trim());

@@ -20,6 +20,7 @@ import me.kevinboone.jgemini.base.*;
 
 public class GeminiConnection extends URLConnection
   {
+  public static final int GEMINI_MAX_HEADER = 1024;
   private SSLSocket s = null;
   private String contentType = null;
   private InputStream is = null;
@@ -30,18 +31,23 @@ public class GeminiConnection extends URLConnection
   public GeminiConnection (URL url) 
     {
     super (url);
+    Logger.in();
+    Logger.out();
     }
 
   private static int parseStatus (String line)
     {
+    Logger.in();
     String[] args = line.split ("\\s+", 2); 
     try 
       {
       int status = Integer.parseInt (args[0]);
+      Logger.out();
       return status;
       }
     catch (NumberFormatException e) 
       {
+      Logger.out();
       return -1;
       }
     }
@@ -57,13 +63,13 @@ public class GeminiConnection extends URLConnection
 
   private void readToData()
     {
-
     }
 
   @Override
   public void connect() 
       throws IOException 
     {
+    Logger.in();
     if (s != null && s.isConnected()) return;
     try
       {
@@ -100,22 +106,32 @@ public class GeminiConnection extends URLConnection
       OutputStream os = s.getOutputStream();
       PrintStream pos = new PrintStream (os);
 
+      if (Logger.isDebug())
+        Logger.log (getClass().getName(), Logger.DEBUG, "Sending request: " + getURL().toString());
       pos.print (getURL().toString());
       pos.print ("\r\n"); 
       pos.flush();
 
       char c; 
       String line = ""; 
+      int len = 0;
       do 
          {
          c = (char)is.read(); 
+         len++;
          if (c == '\n')
            break; 
          if (c != '\r') line += c + "";
-         } while (c != -1);
+         } while (c != -1 && len <= GEMINI_MAX_HEADER);
+      if (len >= GEMINI_MAX_HEADER)
+        {
+        Logger.log (getClass().getName(), Logger.WARNING, 
+          Strings.STATUS_LINE_TOO_LONG + ", URI=" +  getURL());
+        throw new IOException (Strings.STATUS_LINE_TOO_LONG + ", URI=" +  getURL());
+        }
      
       int status = parseStatus (line);
-      Logger.log (getClass(), "Got status code " + status);
+      Logger.log (getClass().getName(), Logger.DEBUG, "Got status code " + status);
       meta = parseMeta (line);
       if (status >= 20 && status < 30)
         {
@@ -137,7 +153,7 @@ public class GeminiConnection extends URLConnection
           }
         else if (status >= 30 && status < 40)
           {
-          Logger.log (getClass(), "Throwing a redirect to " + meta);
+          Logger.log (getClass().getName(), Logger.DEBUG, "Throwing a redirect to " + meta);
           throw new RedirectedException (new URL(getURL(), meta));
           }
         else if (status >= 40)
@@ -154,6 +170,7 @@ public class GeminiConnection extends URLConnection
       {
       throw new IOException (e);
       }
+    Logger.out();
     }
 
   @Override
@@ -166,6 +183,7 @@ public class GeminiConnection extends URLConnection
   public Object getContent() 
       throws IOException 
     {
+    Logger.in();
     if (content != null) return content;
     try
       {
@@ -210,6 +228,7 @@ public class GeminiConnection extends URLConnection
       s.close();
       s = null;
 
+      Logger.out();
       return content;
       }
     catch (IOException e)
@@ -220,13 +239,16 @@ public class GeminiConnection extends URLConnection
      {
      throw new IOException (e2);
      }
+
     }
 
   @Override
   public InputStream getInputStream() 
       throws IOException 
     {
+    Logger.in();
     connect();
+    Logger.out();
     return is;
     }
   }

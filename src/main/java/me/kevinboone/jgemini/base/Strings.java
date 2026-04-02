@@ -67,6 +67,8 @@ public class Strings
   public final static String SELECT_ALL = "Select all"; 
   public final static String SEARCH_WRAPPED_AROUND = "Search wrapped around to top";
   public final static String SHOW = "Show"; 
+  public final static String SHOW_ALL = "Show all"; 
+  public final static String STATUS_LINE_TOO_LONG = "Status line too long"; 
   public final static String STOP = "Stop"; 
   public final static String UNKNOWN = "unknown";
   public final static String UNKNOWN_HOST = "Unknown host: ";

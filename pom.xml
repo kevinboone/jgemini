@@ -25,9 +25,9 @@
 	  <version>0.27.1</version>
       </dependency>
       <dependency>
-	<groupId>com.vdurmont</groupId>
-	<artifactId>emoji-java</artifactId>
-	<version>5.1.1</version>
+	<groupId>net.fellbaum</groupId>
+	<artifactId>jemoji</artifactId>
+	<version>1.7.6</version>
       </dependency>
     </dependencies>  
 

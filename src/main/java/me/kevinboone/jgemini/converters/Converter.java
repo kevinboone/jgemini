@@ -14,7 +14,6 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 import me.kevinboone.jgemini.base.*;
-import com.vdurmont.emoji.EmojiManager;
 
 public interface Converter 
   {
