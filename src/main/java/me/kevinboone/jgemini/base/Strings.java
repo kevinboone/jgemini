@@ -37,7 +37,7 @@ public class Strings
   public final static String EDIT_CONFIG_FILE = "Edit configuration file";
   public final static String EMPTY_WINDOW_TEXT = 
     Strings.APP_NAME + ": a browser for small net protocols";
-  public final static String ENTER_GEMINI_URL = "Enter a Gemini URL:";
+  public final static String ENTER_GEMINI_URL = "Enter a URL:";
   public final static String ENTER_SEARCH_TEXT = "Enter search text:";
   public final static String ENTER_TEXT = "Enter text";
   public final static String EXIT = "Exit";

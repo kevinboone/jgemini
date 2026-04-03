@@ -22,6 +22,8 @@ This is the built-in documentation for JGemini version 2.0.
 
 [JGemini configuration file](config_file.md)
 
+[Emoji support](emoji_support.md)
+
 [Using client certificates](client_certs.md)
 
 [Styling and customizing JGemini's appearance](styling.md)

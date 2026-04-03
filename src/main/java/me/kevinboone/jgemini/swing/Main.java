@@ -48,16 +48,6 @@ public class Main
     UI ui = new SwingUI();
     ui.start();
 
-/*
-    System.setProperty ("swing.aatext", "true");
-    String userFont = Config.getConfig().getUserFont();
-    String controlFont = Config.getConfig().getControlFont();
-    System.setProperty ("swing.plaf.metal.userFont", userFont.trim());
-    System.setProperty ("swing.plaf.metal.controlFont", controlFont.trim());
-
-    viewer = new MainWindow();
-    viewer.setVisible (true);
-*/
     Logger.log (Main.class, Logger.INFO, "Show first page on startup");
     if (args.length >= 1)
       {

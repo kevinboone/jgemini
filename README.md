@@ -33,17 +33,13 @@ JGemini is intended for Linux. It appears to work on other platforms with a
 relatively modern JVM, including Windows 11, but I don't care about, or do much
 testing on, anything except Linux. 
 
-If you're looking a Gemini/Spartan capsules that use Unicode emojis -- and
+If you're looking at Gemini/Spartan capsules that use Unicode emojis -- and
 many do -- you'll probably need to ensure that your computer has fonts
-that contain the relevant glyphs. 
-
-This doesn't seem to be a problem on Windows systems, but Linux typically has fewer
-fonts by default. I've found a good choice to be Segoe UI Emoji. This is a Microsoft
-font so I can't distribute it, but the `.ttf` file is widely available, e.g.,
-from [online-fonts](https://online-fonts.com/fonts/segoe-ui-emoji).
+that contain the relevant glyphs; see `docs/emoji_support.md` for more information.
 
 ## Features
 
+- No specification installation -- supplied as a single Java JAR file
 - Supports Gemini, Spartan, Gopher, and `nex` protocols, including user input and redirection
 - Handles Gemtext, CommonMark Markdown, and plain (usually UTF-8) text
 - Renders local files as well as server content
@@ -360,3 +356,6 @@ Version 2.0.2 -- April 2026
   against broken server
 - Fixed (maybe) broken handling of selectors beginning "/" in Gopher
 - Added converter for Atom feeds
+- Updated documentation concerning emoji fonts
+- Added open-source licences to the built-in documentation
+

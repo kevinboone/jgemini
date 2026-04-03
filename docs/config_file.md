@@ -108,9 +108,9 @@ logging if you run the program from a prompt.
 
 `ui.control_font`  
 Sets the font for user interface elements like buttons and menus.  Default is
-`Liberation Sans 20`. You can set multiple fonts like this:
+`Sans 20; Emoji 20`. You can set multiple fonts like this:
 
-    ui.control_font=Liberation Sans 20; Segoe UI Emoji 20
+    ui.control_font=Sans 20; Segoe UI Emoji 20
 
 The user interface will try to use the first font if it can, that is, if the
 font contains the necessary characters. If it can't, it will try other fonts in
@@ -123,7 +123,7 @@ stylesheet for the document display, this setting may have no effect, because
 you may have overridden it. Default: 16 pixels.
 
 `ui.user_font`  
-Sets the font for text entry boxes.  Default is `Liberation Sans 20`. For the
+Sets the font for text entry boxes.  Default is `Sans 20; Emoji 20`. For the
 format, see `ui.control_font`.
 
 `url.home`  

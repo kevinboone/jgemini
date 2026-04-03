@@ -13,7 +13,10 @@ Catch redirect loops.
 Implement a download manager. At least, find a way to prevent the program exiting whilst a 
 download is in progress.
 
-Improve client certificate management.
+Improve client certificate management. As a first step, show identity for a particular server.
+
+Find a way to supply emoji fonts internally. This isn't easy, unless I want to 
+apply a font to every single element of the document viewer.
 
 Subscribe to feeds? This would make JGemini a feed reader, and would take a lot of
 work.

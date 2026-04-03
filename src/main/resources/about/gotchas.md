@@ -74,7 +74,7 @@ Text search is only case-insensitive, and forward.
 
 The use of Unicode emojis is widespread in the Gemini world. To see these
 properly, you'll need to ensure your operating system has a font with the
-appropriate glyphs, like `Segoe UI Emoji`. 
+appropriate glyphs, like `Segoe UI Emoji` or `Noto Emoji`. 
 
 Because of a limitation in the Java Swing user interface, the document viewer
 and the user interface (menus, etc) have different font settings. While merely
@@ -83,6 +83,12 @@ the user interface needs to be told specifically to use an emoji-aware font.
 This affects primarily bookmarks, which might contain emojis. For more
 information, see the documentation of `ui.control_font` in the 
 [configuration file](config_file.md) page. 
+
+The default values of `ui.control_font`, etc., include a reference to a
+font called `Emoji`. This (probably) isn't a real font name, but should
+match any font with "Emoji" in the name. If you install multiple fonts
+of this kind, you might have to edit the configuration to specify
+a particular one. 
 
 When displaying Gemtext, JGemini uses an arrow symbol to indicate a link that
 can be followed, as well as displaying the link text in a highlighted colour.

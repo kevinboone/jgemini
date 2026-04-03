@@ -54,4 +54,3 @@ You can test changes to a custom stylesheet by refreshing the display (ctrl+R).
 
 [Documentation index](index.md)
 
-:

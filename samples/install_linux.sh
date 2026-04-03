@@ -9,7 +9,6 @@
 #DESTDIR=/
 SHAREDIR=/usr/share
 BINDIR=/usr/bin
-ETCDIR=/etc
 VERSION=2.0
 ICONDIR=${SHAREDIR}/icons/hicolor
 
@@ -26,8 +25,6 @@ if [ -f pom.xml ]; then
   mkdir -p $DESTDIR/$ICONDIR/32x32/apps
   mkdir -p $DESTDIR/$ICONDIR/48x48/apps
   mkdir -p $DESTDIR/$ICONDIR/256x256/apps
-  mkdir -p $DESTDIR/$ETCDIR/jgemini
-  cp -p samples/*.properties $DESTDIR/$ETCDIR/jgemini/
   cp binaries/jgemini-$VERSION.jar $DESTDIR/$MYSHAREDIR 
   cat << EOF > $DESTDIR/$BINDIR/jgemini 
   #!/bin/bash

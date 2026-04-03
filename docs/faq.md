@@ -6,7 +6,8 @@ _How do I install JGemini?_
 
 You don't need to do anything in particular. Just copy the program's JAR file
 `jgemini-2.0.jar` to any convenient directory, and run it using `java -jar
-jgemini-2.0.jar`.
+jgemini-2.0.jar`. Or, on Windows, just double-click the JAR file in the
+file manager.
 
 For more information, see the [page on installation](installing_and_running.md).
 
@@ -15,6 +16,18 @@ _What Java version do I need?_
 Any Java 11 or later should be fine. Because the Gemini protocol is based on
 TLS, you might find old, or cryptographically limited, JVMs don't work
 properly. 
+
+_Why can't JGemini provide its own emoji fonts?_
+
+Installing an emoji font is a slight nuisance, but it should be a one-time
+set-up. There are redistributable emoji fonts that JGemini could bundle, but
+loading a font explicitly doesn't make the document viewer use it. 
+
+JGemini's document viewer is based on Java's built-in HTML renderer. Converting
+all incoming documents to HTML is flexible, and allows for future expansion.
+After all, pretty much anything that can be viewed can be converted to HTML.
+Unfortunately, the built-in document viewer won't use anything except platform
+fonts, so bundling emoji fonts wouldn't be helpful. 
 
 ## Basic features
 
@@ -40,7 +53,6 @@ _How do I open a local .gmi file?_
 From the command line, just run
 
     java -jar /path/to/jgemini-2.0.jar [filename]
-
 
 Depending on how you installed JGemini, you might simply be able to click on
 a `.gmi` file in a file manager.
@@ -70,7 +82,7 @@ only an image, for tedious technical reasons.
 
 _Why can't I see a progress indicator when downloading a large document or image?_
 
-The Gemini protocol does not provide any indication of the size of the
+None of the protocols JGemini supports provide any indication of the size of the
 file, so there's no way for JGemini to know how close the download is to
 being completed. JGemini does display the amount of data transferred so
 far in the status bar, but only every 16kB -- and many Gemini/Gopher/etc
@@ -168,17 +180,8 @@ _Why aren't emojis displayed properly in the bookmark editor and menu?_
 
 Unfortunately, the main Java Swing user interface is not as clever as the document
 viewer. It isn't sufficient just to install the font -- you might also have to
-tell the user interface to use it.
-
-There are two relevant settings in the [configuration file](config_file.md):
-`ui.control_font` and `ui.user_font`. These control different aspects of the
-user interface, and probably need to be set the same in most cases.
-
-Segoe UI Emoji is a good font for emojis, but a bad font for anything else. 
-So it's best to specify it as a fall-back from a better font. For example: 
-
-    ui.control_font=Liberation Sans 20; Segoe UI Emoji 20 
-    ui.user_font=Liberation Sans 20; Segoe UI Emoji 20
+tell the user interface to use it. For more information, see the separate page
+on [emoji support](emoji_support.md).
 
 
 ## Debugging
@@ -189,11 +192,12 @@ In the [configuration file](config_file.md), add the setting
 
     log.level=3
 
+Please be aware that this will slow JGemini down considerably.
+
 _Where does debug logging go?_
 
 It goes to the standard error stream. You'll probably have to run JGemini from
 a command prompt to see and collect the information.
-
 
 [Documentation index](index.md)
 

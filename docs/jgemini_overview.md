@@ -14,6 +14,7 @@ JGemini is distributed as a single Java JAR file, and requires
 
 ## Features
 
+- No specification installation -- supplied as a single Java JAR file
 - Displays Gemtext, CommonMark Markdown, and plain text
 - Renders local files as well as server content
 - Authentication using per-server client certificates
