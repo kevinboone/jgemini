@@ -2,7 +2,7 @@
 
 A Java-based graphical browser for Gemini and similar protocols
 
-Version 2.0.2, Kevin Boone, April 2026
+Version 2.0.3, Kevin Boone, April 2026
 
 ## Why another Gemini client?
 
@@ -16,11 +16,11 @@ documents as well as Gemtext.
 
 ## What is JGemini?
 
-JGemini is a very rudimentary, barely-functional graphical client for the
-Gemini, Spartan, Gopher, and "Nightfall Express" (`nex`) protocols.  It looks
-and behaves rather like the very first graphical Web browsers from the 90s. It
-supports all the features it is required to support by the various
-specifications, and little else.  It is, however, useable. 
+JGemini is a rudimentary graphical client for the Gemini, Spartan, Gopher, and
+"Nightfall Express" (`nex`) protocols.  It looks and behaves rather like the
+first graphical Web browsers from the 90s. It supports all the features it is
+required to support by the various specifications, and little else.  It is,
+however, useable. 
 
 ## Pre-requisites
 
@@ -39,11 +39,13 @@ that contain the relevant glyphs; see `docs/emoji_support.md` for more informati
 
 ## Features
 
-- No specification installation -- supplied as a single Java JAR file
+- No specific installation procedure -- JGemini is supplied as a single Java JAR file
 - Supports Gemini, Spartan, Gopher, and `nex` protocols, including user input and redirection
 - Handles Gemtext, CommonMark Markdown, and plain (usually UTF-8) text
 - Renders local files as well as server content
 - Authentication using per-server client certificates
+- Built-in client certificate manager, which can create new certificates and
+  incorporate existing ones
 - Text styling can be configured to suit the display and user preference
 - Uses anti-aliased font rendering for a smoother text appearance
 - Fetches documents in the background to improve user interface responsiveness
@@ -359,3 +361,10 @@ Version 2.0.2 -- April 2026
 - Updated documentation concerning emoji fonts
 - Added open-source licences to the built-in documentation
 
+Version 2.0.3 -- April 2026
+- Changed the button accelerators from ctrl-something to the platform
+  default (typically alt-something).
+- Moved _all_ the user-visible text strings to resource bundles. What a
+  horrible job -- I should have done it properly from the start
+- Added rudimentary client identity manager
+- Dialog-specific documentation

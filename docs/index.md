@@ -2,15 +2,21 @@
 
 This is the built-in documentation for JGemini version 2.0. 
 
+## What JGemini is, and what it does
+
+[What JGemini is for](what_jgemini_is_for.md)
+
 [About the "small net" protocols](smallnet.md)
 
-## Basic operation
-
 [JGemini overview](jgemini_overview.md)
+
+## Basic operation
 
 [JGemini's user interface](user_interface.md)
 
 [Bookmark support](bookmarks.md)
+
+[Identity](identity.md)
 
 [Things to watch out for](gotchas.md)
 

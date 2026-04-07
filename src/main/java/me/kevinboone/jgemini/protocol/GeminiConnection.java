@@ -13,6 +13,7 @@ import java.io.*;
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.net.*;
+import java.util.*;
 import java.util.Collections;
 import java.security.KeyStore;
 import me.kevinboone.jgemini.ssl.*;
@@ -27,6 +28,10 @@ public class GeminiConnection extends URLConnection
   private byte[] content = null;
   private String meta = null;
   private static StatusHandler statusHandler = StatusHandler.getInstance();
+  private ClientCertManager clientCertManager = 
+    DefaultClientCertManager.getInstance();
+  private final static ResourceBundle messagesBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
 
   public GeminiConnection (URL url) 
     {
@@ -91,7 +96,7 @@ public class GeminiConnection extends URLConnection
       if (port == -1) port = 1965;
 
       KeyManagerFactory kmf = 
-        ClientCertManager.getKMFForURL (url); 
+        clientCertManager.getKMFForURL (url); 
 
       SSLContext sc = SSLContext.getInstance("SSL");
       if (kmf != null)
@@ -125,9 +130,10 @@ public class GeminiConnection extends URLConnection
          } while (c != -1 && len <= GEMINI_MAX_HEADER);
       if (len >= GEMINI_MAX_HEADER)
         {
+        String tooLong = messagesBundle.getString ("status_line_too_long");
         Logger.log (getClass().getName(), Logger.WARNING, 
-          Strings.STATUS_LINE_TOO_LONG + ", URI=" +  getURL());
-        throw new IOException (Strings.STATUS_LINE_TOO_LONG + ", URI=" +  getURL());
+          tooLong + ", URI=" +  getURL());
+        throw new IOException (tooLong + ", URI=" +  getURL());
         }
      
       int status = parseStatus (line);
@@ -205,7 +211,7 @@ public class GeminiConnection extends URLConnection
 	  content_buffer.write (data, 0, nRead);
           totalRead += nRead;
           if (totalRead > 1024)
-            statusHandler.writeMessage (Strings.LOADED + " " 
+            statusHandler.writeMessage (messagesBundle.getString ("loaded") + " " 
               + (totalRead / 1024) + " kb");
 	  }
 	}

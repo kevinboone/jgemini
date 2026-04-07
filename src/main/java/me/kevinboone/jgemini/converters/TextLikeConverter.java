@@ -61,9 +61,9 @@ public class TextLikeConverter
   protected String writeLink (String uri, String title)
     {
     Config config = Config.getConfig();
-    if (isImageUri (uri) && config.gemtextInlineImages())
+    if (isImageUri (uri) && config.getGemtextInlineImages())
       {
-      return "<p><img width=\"" + config.inlineImageWidth() + "\" src=\"" 
+      return "<p><img width=\"" + config.getInlineImageWidth() + "\" src=\"" 
         + rewriteLink (uri) + "\">" + "<br/>" + "<a href=\"" 
            + rewriteLink (uri) + "\">" + getLinkIcon (uri, title) + " " 
              + escapeHtml (title) + "</a><br/></p>"; 

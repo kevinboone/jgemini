@@ -1,4 +1,11 @@
+Change display theme from a menu
+
 Fix the hang-on-exit problem with Gopher.
+
+Handle media streams in some kind of useful way, rather than just downloading
+them endlessly until the disk is full.
+
+Show server information.
 
 Find a way to indicate when page rendering is ongoing, and when it is complete.
 It's not usually a problem for text pages, but images sometimes take a while to

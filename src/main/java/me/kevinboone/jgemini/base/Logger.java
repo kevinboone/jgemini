@@ -59,7 +59,7 @@ public class Logger
     {
     if (level > DEBUG) level = DEBUG;
     if (level < ERROR) level = ERROR;
-    if (level <= Config.getConfig().logLevel())
+    if (level <= Config.getConfig().getLogLevel())
       {
       System.err.print (level_names[level]);
 

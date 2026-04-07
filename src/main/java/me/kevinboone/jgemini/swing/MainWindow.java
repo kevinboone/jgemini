@@ -22,6 +22,7 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.protocol.*;
 import me.kevinboone.jgemini.converters.*;
@@ -30,9 +31,18 @@ import net.fellbaum.jemoji.*;
 
 public class MainWindow extends JFrame implements ConfigChangeListener
   {
-  private final static String DIALOG_CAPTION = Strings.APP_NAME;
-  private final static String WINDOW_CAPTION = Strings.APP_NAME;
-  private final static String EMPTY_WINDOW_TEXT = Strings.EMPTY_WINDOW_TEXT;
+  private final static String DIALOG_CAPTION = Constants.APP_NAME;
+  private final static String WINDOW_CAPTION = Constants.APP_NAME;
+  private final static ResourceBundle messagesBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
+  private final static ResourceBundle generalBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.General");
+  private final static ResourceBundle captionsBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Captions");
+  private final static ResourceBundle menusBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Menus");
+  private final static ResourceBundle dialogsBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Dialogs");
 
   private JEditorPane jEditorPane;
   private URL baseUri = null;
@@ -48,7 +58,9 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   private Config config = Config.getConfig();
   private String displayName = null; // Derived from URI or loaded content
   private BookmarkHandler bookmarkHandler 
-    = new DefaultBookmarkHandler(this);
+    = new DefaultBookmarkHandler (this);
+  private ClientCertHandler clientCertHandler
+    = new DefaultClientCertHandler (this);
 
 
 /*=========================================================================
@@ -140,7 +152,8 @@ public class MainWindow extends JFrame implements ConfigChangeListener
 
     Document doc = kit.createDefaultDocument();
     jEditorPane.setDocument(doc);
-    jEditorPane.setText ("<p align=\"center\">" + EMPTY_WINDOW_TEXT + "</p>");
+    jEditorPane.setText ("<p align=\"center\">" +
+       generalBundle.getString ("empty_window_text") + "</p>");
 
     setSize (config.getWindowWidth(), 
        config.getWindowHeight());
@@ -172,10 +185,12 @@ public class MainWindow extends JFrame implements ConfigChangeListener
 =========================================================================*/
   public void about()
     {
+    String aboutMessage = messagesBundle.getString ("about"); 
+    String versionText = generalBundle.getString ("version_uc"); 
     String s = "<html><head></head><body style='margin: 20'>";
-    s += "<h1>" + Strings.APP_NAME + "</h1>";
-    s += "<h3>" + Strings.VERSION + " " + Config.VERSION + "</h3>";
-    s += "<p>" + Strings.ABOUT_MESSAGE + "</p>\n";
+    s += "<h1>" + Constants.APP_NAME + "</h1>";
+    s += "<h3>" + versionText + " " + Constants.VERSION + "</h3>";
+    s += "<p>" + aboutMessage + "</p>\n";
     s += "<p>&nbsp;</p></body>\n";
     JOptionPane.showMessageDialog (this, s, 
          DIALOG_CAPTION, JOptionPane.INFORMATION_MESSAGE); 
@@ -198,12 +213,12 @@ public class MainWindow extends JFrame implements ConfigChangeListener
       try
         {
         String bookmarkName = displayName;
-        if (config.emojiStripBookmark())
+        if (config.getEmojiStripBookmark())
           bookmarkName = EmojiManager.removeAllEmojis (bookmarkName);
         if (bookmarkHandler.addBookmark (bookmarkName, baseUri))
-          setStatus (Strings.BOOKMARK_ADDED);
+          setStatus (messagesBundle.getString ("bookmark_added")); 
         else
-          setStatus (Strings.ALREADY_BOOKMARKED);
+          setStatus (messagesBundle.getString ("already_bookmarked")); 
         }
       catch (IOException e)
         {
@@ -254,6 +269,44 @@ System.out.println ("LOADWORKER not null");
 
 /*=========================================================================
   
+  createMenuItem
+
+=========================================================================*/
+  private JMenuItem createMenuItem (String menu_name)
+    {
+    String mnemonicKey = menu_name + "_mnemonic";
+    String accelKey = menu_name + "_accel";
+    JMenuItem menuItem = new JMenuItem 
+      (menusBundle.getString (menu_name));
+    if (menusBundle.containsKey (mnemonicKey))
+      {
+      Object o = menusBundle.getObject (mnemonicKey);
+      menuItem.setMnemonic ((int)o);
+      }
+    if (menusBundle.containsKey (accelKey))
+      {
+      Object o = menusBundle.getObject (accelKey);
+      menuItem.setAccelerator ((javax.swing.KeyStroke)o);
+      }
+    return menuItem;
+    }
+
+/*=========================================================================
+  
+  createTopLevelMenu
+
+=========================================================================*/
+  private JMenu createTopLevelMenu (String menu_name)
+    {
+    String mnemonicKey = menu_name + "_mnemonic";
+    JMenu menu = new JMenu (menusBundle.getString (menu_name));
+    Object o = menusBundle.getObject (mnemonicKey);
+    if (o != null) menu.setMnemonic ((int)o);
+    return menu;
+    }
+
+/*=========================================================================
+  
   createMenuBar
 
 =========================================================================*/
@@ -265,118 +318,77 @@ System.out.println ("LOADWORKER not null");
     //   text changes.
 
     // File|Settings submenu
-    JMenu settingsSubMenu = new JMenu (Strings.SETTINGS); 
-    settingsSubMenu.setMnemonic (KeyEvent.VK_E);
-    JMenuItem editMenuItem = new JMenuItem (Strings.EDIT + "..."); 
+    JMenu settingsSubMenu = createTopLevelMenu ("settings");
+    JMenuItem editMenuItem = createMenuItem ("settings_edit"); 
     editMenuItem.addActionListener((event) -> editSettings());
-    editMenuItem.setMnemonic (KeyEvent.VK_E);
-    JMenuItem reloadMenuItem = new JMenuItem (Strings.RELOAD); 
+    JMenuItem reloadMenuItem = createMenuItem ("settings_reload"); 
     reloadMenuItem.addActionListener((event) -> reloadSettings());
-    reloadMenuItem.setMnemonic (KeyEvent.VK_R);
     settingsSubMenu.add (editMenuItem);
     settingsSubMenu.add (reloadMenuItem);
 
     // File menu
-    JMenu fileMenu = new JMenu(Strings.FILE);
-    fileMenu.setMnemonic (KeyEvent.VK_F);
-    JMenuItem newMenuItem = new JMenuItem (Strings.NEW);
-    newMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_N, ActionEvent.CTRL_MASK));
-    newMenuItem.setMnemonic (KeyEvent.VK_N);
+    JMenu fileMenu = createTopLevelMenu ("file");
+
+    JMenuItem newMenuItem = createMenuItem ("file_new");
     newMenuItem.addActionListener((event) -> newWindow());
     fileMenu.add (newMenuItem);
-    JMenuItem openMenuItem = new JMenuItem (Strings.OPEN_LINK);
-    openMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_O, ActionEvent.CTRL_MASK));
-    openMenuItem.setMnemonic (KeyEvent.VK_O);
+    JMenuItem openMenuItem = createMenuItem ("file_open_link");
     openMenuItem.addActionListener((event) -> openLink());
     fileMenu.add (openMenuItem);
-    JMenuItem saveMenuItem = new JMenuItem (Strings.SAVE);
-    saveMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_S, ActionEvent.CTRL_MASK));
-    saveMenuItem.setMnemonic (KeyEvent.VK_S);
+    JMenuItem saveMenuItem = createMenuItem ("file_save");
     saveMenuItem.addActionListener((event) -> save());
     fileMenu.add (saveMenuItem);
     fileMenu.add (new JSeparator());
-    JMenuItem setAsHomeMenuItem = new JMenuItem (Strings.SET_AS_HOME);
-    setAsHomeMenuItem.setMnemonic (KeyEvent.VK_H);
-    setAsHomeMenuItem.addActionListener((event) -> setAsHome());
+    JMenuItem setAsHomeMenuItem = createMenuItem ("file_set_as_home"); 
     fileMenu.add (setAsHomeMenuItem);
     fileMenu.add (new JSeparator());
     fileMenu.add (settingsSubMenu);
     fileMenu.add (new JSeparator());
-    JMenuItem closeMenuItem = new JMenuItem (Strings.CLOSE);
-    closeMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_W, ActionEvent.CTRL_MASK));
-    closeMenuItem.setMnemonic (KeyEvent.VK_C);
+    JMenuItem closeMenuItem = createMenuItem ("file_close"); 
     closeMenuItem.addActionListener((event) -> 
       dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
     fileMenu.add (closeMenuItem);
-    JMenuItem exitMenuItem = new JMenuItem (Strings.EXIT);
-    exitMenuItem.setMnemonic (KeyEvent.VK_X);
+    JMenuItem exitMenuItem = createMenuItem ("file_exit"); 
     exitMenuItem.addActionListener((event) -> System.exit(0));
     fileMenu.add (exitMenuItem);
 
     // Edit menu
-    JMenu editMenu = new JMenu (Strings.EDIT);
-    editMenu.setMnemonic (KeyEvent.VK_E);
-    JMenuItem selectAllMenuItem = new JMenuItem (Strings.SELECT_ALL);
-    selectAllMenuItem.setMnemonic (KeyEvent.VK_A);
-    selectAllMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_A, ActionEvent.CTRL_MASK));
+    JMenu editMenu = createTopLevelMenu ("edit");
+
+    JMenuItem selectAllMenuItem = createMenuItem ("edit_select_all"); 
     selectAllMenuItem.addActionListener((event) -> jEditorPane.selectAll());
     editMenu.add (selectAllMenuItem);
-    JMenuItem copyMenuItem = new JMenuItem (Strings.COPY);
-    copyMenuItem.setMnemonic (KeyEvent.VK_C);
-    copyMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+    JMenuItem copyMenuItem = createMenuItem ("edit_copy"); 
     copyMenuItem.addActionListener((event) -> jEditorPane.copy());
     editMenu.add (copyMenuItem);
-    JMenuItem findMenuItem = new JMenuItem (Strings.FIND_IN_PAGE);
-    findMenuItem.setMnemonic (KeyEvent.VK_F);
-    findMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_F, ActionEvent.CTRL_MASK));
+    JMenuItem findMenuItem = createMenuItem ("edit_find_in_page");
     findMenuItem.addActionListener((event) -> find());
     editMenu.add (findMenuItem);
-    JMenuItem findNextMenuItem = new JMenuItem (Strings.FIND_NEXT);
-    findNextMenuItem.setMnemonic (KeyEvent.VK_N);
-    findNextMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_G, ActionEvent.CTRL_MASK));
+    JMenuItem findNextMenuItem = createMenuItem ("edit_find_next"); 
     findNextMenuItem.addActionListener((event) -> findNext());
     editMenu.add (findNextMenuItem);
 
     // View menu
-    JMenu viewMenu = new JMenu (Strings.VIEW);
-    viewMenu.setMnemonic (KeyEvent.VK_V);
-    JMenuItem zoomInMenuItem = new JMenuItem (Strings.ZOOM_IN);
-    zoomInMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_OPEN_BRACKET, ActionEvent.CTRL_MASK));
-    zoomInMenuItem.setMnemonic (KeyEvent.VK_I);
+    JMenu viewMenu = createTopLevelMenu ("view");
+
+    JMenuItem zoomInMenuItem = createMenuItem ("view_zoom_in"); 
     zoomInMenuItem.addActionListener((event) -> zoomIn());
     viewMenu.add (zoomInMenuItem);
-    JMenuItem zoomOutMenuItem = new JMenuItem (Strings.ZOOM_OUT);
-    zoomOutMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_CLOSE_BRACKET, ActionEvent.CTRL_MASK));
-    zoomOutMenuItem.setMnemonic (KeyEvent.VK_O);
+    JMenuItem zoomOutMenuItem = createMenuItem ("view_zoom_out"); 
     zoomOutMenuItem.addActionListener((event) -> zoomOut());
     viewMenu.add (zoomOutMenuItem);
-    JMenuItem refreshMenuItem = new JMenuItem (Strings.REFRESH);
-    refreshMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_R, ActionEvent.CTRL_MASK));
+    JMenuItem refreshMenuItem = createMenuItem ("view_refresh"); 
     refreshMenuItem.addActionListener((event) -> refresh());
     viewMenu.add (refreshMenuItem);
 
     // Bookmark menu
-    JMenu bookmarksMenu = new JMenu (Strings.BOOKMARKS);
-    bookmarksMenu.setMnemonic (KeyEvent.VK_B);
-    JMenuItem showBookmarksMenuItem = new JMenuItem (Strings.SHOW_ALL);
-    showBookmarksMenuItem.setMnemonic (KeyEvent.VK_S);
+    JMenu bookmarksMenu = createTopLevelMenu ("bookmarks");
+
+    JMenuItem showBookmarksMenuItem = createMenuItem ("bookmarks_show_all"); 
     showBookmarksMenuItem.addActionListener((event) -> showBookmarks());
-    JMenuItem editBookmarksMenuItem = new JMenuItem (Strings.EDIT + "...");
-    editBookmarksMenuItem.setMnemonic (KeyEvent.VK_E);
+    JMenuItem editBookmarksMenuItem = createMenuItem ("bookmarks_edit"); 
     editBookmarksMenuItem.addActionListener((event) -> editBookmarks());
-    JMenuItem bookmarkPageMenuItem = new JMenuItem (Strings.BOOKMARK_THIS_PAGE);
-    bookmarkPageMenuItem.setMnemonic (KeyEvent.VK_B);
+    JMenuItem bookmarkPageMenuItem = createMenuItem ("bookmarks_this_page"); 
     bookmarkPageMenuItem.addActionListener((event) -> bookmarkPage());
 
     bookmarksMenu.addMenuListener (new javax.swing.event.MenuListener()
@@ -417,39 +429,37 @@ System.out.println ("LOADWORKER not null");
       });
 
     // Go menu
-    JMenu goMenu = new JMenu (Strings.GO);
-    goMenu.setMnemonic (KeyEvent.VK_G);
-    JMenuItem backMenuItem = new JMenuItem (Strings.BACK);
-    backMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_BACK_SPACE, 0));
+    JMenu goMenu = createTopLevelMenu ("go");
+
+    JMenuItem backMenuItem = createMenuItem ("go_back"); 
     backMenuItem.addActionListener((event) -> goBack());
     goMenu.add (backMenuItem);
-    JMenuItem homeMenuItem = new JMenuItem (Strings.HOME);
-    homeMenuItem.setAccelerator (KeyStroke.getKeyStroke
-      (KeyEvent.VK_H, ActionEvent.CTRL_MASK));
+    JMenuItem homeMenuItem = createMenuItem ("go_home"); 
     homeMenuItem.addActionListener((event) -> goHome());
     goMenu.add (homeMenuItem);
-    JMenuItem rootMenuItem = new JMenuItem (Strings.ROOT);
-    rootMenuItem.setMnemonic (KeyEvent.VK_R);
+    JMenuItem rootMenuItem = createMenuItem ("go_root"); 
     rootMenuItem.addActionListener((event) -> goRoot());
     goMenu.add (rootMenuItem);
     goMenu.add (new JSeparator());
-    JMenuItem stopMenuItem = new JMenuItem (Strings.STOP);
-    stopMenuItem.setMnemonic (KeyEvent.VK_S);
+    JMenuItem stopMenuItem = createMenuItem ("go_stop"); 
     stopMenuItem.addActionListener((event) -> goStop());
     goMenu.add (stopMenuItem);
 
+    // Tools menu
+    JMenu toolsMenu = createTopLevelMenu ("tools");
+
+    JMenuItem identityMenuItem = createMenuItem ("tools_identity"); 
+    identityMenuItem.addActionListener((event) -> goIdent());
+    toolsMenu.add (identityMenuItem);
+
     // Help menu
-    JMenu helpMenu = new JMenu (Strings.HELP);
-    helpMenu.setMnemonic (KeyEvent.VK_H);
-    JMenuItem helpMenuItem = new JMenuItem (Strings.DOCUMENTATION);
-    helpMenuItem.setMnemonic (KeyEvent.VK_D);
+    JMenu helpMenu = createTopLevelMenu ("help");
+
+    JMenuItem helpMenuItem = createMenuItem ("help_docs"); 
     helpMenuItem.addActionListener ((event) -> help());
     helpMenu.add (helpMenuItem);
     helpMenu.add (new JSeparator());
-    JMenuItem aboutMenuItem = new JMenuItem (Strings.ABOUT 
-      + " " + Strings.APP_NAME + "...");
-    aboutMenuItem.setMnemonic (KeyEvent.VK_A);
+    JMenuItem aboutMenuItem = createMenuItem ("help_about"); 
     aboutMenuItem.addActionListener((event) -> about());
     helpMenu.add (aboutMenuItem);
 
@@ -458,6 +468,7 @@ System.out.println ("LOADWORKER not null");
     menuBar.add (viewMenu);
     menuBar.add (bookmarksMenu);
     menuBar.add (goMenu);
+    menuBar.add (toolsMenu);
     menuBar.add (helpMenu);
     }
 
@@ -520,9 +531,10 @@ System.out.println ("LOADWORKER not null");
     try
       {
       Config.getConfig().ensureUserConfigFileExists();
-      EditFileDialog d = new EditFileDialog (this, 
-        Strings.EDIT_CONFIG_FILE,
-        Config.getConfig().getUserConfigFilename());
+      EditFileDialog d = new EditFileDialog (this, this, 
+        captionsBundle.getString ("edit_config_file"), 
+          Config.getConfig().getUserConfigFilename(), 
+            Constants.DOC_EDIT_SETTINGS);
       d.setVisible (true);
       if (d.didSave())
         Config.getConfig().load();
@@ -543,10 +555,22 @@ System.out.println ("LOADWORKER not null");
    Go back to the home page
 
 =========================================================================*/
-  protected void goHome ()
+  protected void goHome()
     {
     Logger.in();
     loadURI (config.getHomePage());
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   goIdent
+
+=========================================================================*/
+  protected void goIdent()
+    {
+    Logger.in();
+    clientCertHandler.manageIdentity (baseUri);
     Logger.out();
     }
 
@@ -771,8 +795,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 =========================================================================*/
   private void help()
     {
-    newWindow ("about:/index.md", WINDOW_CAPTION + ": " 
-      + Strings.DOCUMENTATION);
+    newWindow (Constants.DOC_INDEX, 
+      captionsBundle.getString ("documentation"));
     }
 
 /*=========================================================================
@@ -785,8 +809,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   private void openLink ()
     {
     Logger.in();
-    String url = JOptionPane.showInputDialog (this, Strings.ENTER_GEMINI_URL, 
-      DIALOG_CAPTION, 1);
+    String url = JOptionPane.showInputDialog (this, 
+      dialogsBundle.getString ("enter_gemini_url") + ":", DIALOG_CAPTION, 1);
     if (url != null)
       {
       try
@@ -1004,7 +1028,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       public void actionPerformed (ActionEvent evt) 
         {
         //System.out.println ("loadtimer action performed" + loadTimer);
-	setStatus (Strings.LOADING);
+	setStatus (messagesBundle.getString ("loading"));
         }
       };
 
@@ -1055,7 +1079,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
         loadTimer.setRepeats (true);
         loadTimer.start(); // TODO
         //System.out.println ("loadtimer start" + loadTimer);
-        setStatus (Strings.LOADING + fullUrl);
+        setStatus (messagesBundle.getString ("loading") + " " + fullUrl);
         gc = loadResponseContent (fullUrl); 
         return "foo"; // Meaningless return
         } 
@@ -1090,11 +1114,14 @@ URL getRootUri (URL baseUri) throws MalformedURLException
             {
             if (e instanceof RetryWithInputException)
               {
+              // Load worked must have finished, if we get this far
+              loadWorker = null;
               RetryWithInputException e2 = (RetryWithInputException)e;
               handleStatus10 (e2.getHide(), e2.getPrompt(), e2.getURL());
               }
             else if (e instanceof RedirectedException)
               {
+              loadWorker = null;
               handleRedirect (((RedirectedException)e).getURL());
               }
             else if (e instanceof ErrorResponseException)
@@ -1239,7 +1266,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     String messageFromServer = e.getMessage();
     if (e instanceof UnknownHostException)
       {
-      reportGenError (url, Strings.UNKNOWN_HOST + e.getMessage());
+      reportGenError (url, messagesBundle.getString ("unknown_host") 
+        + ": " + e.getMessage());
       }
     else
       reportGenError (url, e.getMessage());
@@ -1429,7 +1457,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     if (!url.contains (":"))
        {
        if ((url.contains (" ") || !url.contains (".")) 
-            && Config.getConfig().urlbarSearchEnabled())
+            && Config.getConfig().getUrlbarSearchEnabled())
          {
          String qparam = URLEncoder.encode (url);
          qparam = qparam.replace("+","%20");
@@ -1529,7 +1557,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     if (uri != null)
       loadURI (uri);
     else
-      reportGenError (Strings.UNKNOWN, Strings.COULD_NOT_PARSE_URI);
+      reportGenError (messagesBundle.getString("unknown_url"), 
+       messagesBundle.getString ("could_not_parse_uri"));
     Logger.out();
     }
 
@@ -1732,7 +1761,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
           try
             {
             FileUtil.byteArrayToFile (file, b);
-	    setStatus (Strings.SAVED_FILE + " '"  + file + "'");
+	    setStatus (messagesBundle.getString ("saved_file") 
+              + " '"  + file + "'");
             } 
           catch (Exception e)
             {
@@ -1789,19 +1819,23 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     {
     Logger.in();
 
-    JPopupMenu linkMenu = new JPopupMenu ("Link action"); 
+    JPopupMenu linkMenu = new JPopupMenu ("Link action"); // title not seen
 
-    JMenuItem openMenuItem = new JMenuItem (Strings.OPEN);
+    JMenuItem openMenuItem = 
+      new JMenuItem (menusBundle.getString ("context_open"));
     openMenuItem.addActionListener ((event) -> loadURI (href));
 
-    JMenuItem openNewMenuItem = new JMenuItem (Strings.OPEN_IN_NEW_WINDOW);
+    JMenuItem openNewMenuItem = 
+      new JMenuItem (menusBundle.getString ("context_open_in_new_window"));
     openNewMenuItem.addActionListener ((event) -> newWindow (href, null));
     
-    JMenuItem copyLinkMenuItem = new JMenuItem (Strings.COPY_LINK);
+    JMenuItem copyLinkMenuItem = 
+      new JMenuItem (menusBundle.getString ("context_copy_link"));
     copyLinkMenuItem.addActionListener 
       ((event) -> Clipboard.copyTextToClipboard (href));
 
-    JMenuItem downloadMenuItem = new JMenuItem (Strings.DOWNLOAD);
+    JMenuItem downloadMenuItem = 
+      new JMenuItem (menusBundle.getString ("context_download"));
     downloadMenuItem.addActionListener((event) -> promptDownloadURI (href));
 
     linkMenu.add (openMenuItem);
@@ -1838,7 +1872,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     {
     Logger.in();
     String text = JOptionPane.showInputDialog (this, 
-      Strings.ENTER_SEARCH_TEXT, DIALOG_CAPTION, 1);
+      dialogsBundle.getString ("enter_search_text") + ":", DIALOG_CAPTION, 1);
     if (text != null)
       {
       searchPos = 0;
@@ -1865,7 +1899,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       if (searchPos + findLength > doc.getLength()) 
         {
         searchPos = 0; // Wrap around to beginning
-        setStatus (Strings.SEARCH_WRAPPED_AROUND);
+        setStatus (messagesBundle.getString ("search_wrapped_around"));
         }
       try
         {
@@ -1889,7 +1923,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
            searchPos += findLength;
            }
         else
-          setStatus (Strings.NOT_FOUND);
+          setStatus (messagesBundle.getString ("not_found"));
          }
        catch (BadLocationException e)
          {
@@ -1990,7 +2024,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 	  {
 	  FileUtil.byteArrayToFile 
 	     (fc.getSelectedFile(), lastContent.getContent());
-	  setStatus ("Wrote file " + fc.getSelectedFile());
+	  setStatus (messagesBundle.getString ("wrote_file") 
+             + " " + fc.getSelectedFile());
 	  }
 	catch (IOException e)
 	  {
@@ -2000,8 +2035,9 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       }
     else
       {
-      JOptionPane.showMessageDialog (this, Strings.SAVE_ONLY_TEXT_MESSAGE,
-        Strings.NO_TEXT_TO_SAVE, JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog (this, 
+        messagesBundle.getString ("save_only_text_message"),
+        Constants.APP_NAME, JOptionPane.ERROR_MESSAGE);
       }
     Logger.out();
     }
@@ -2034,13 +2070,13 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 	Logger.log (getClass().getName(), Logger.WARNING, 
           "renderToHtml(), Encoding is " + encoding);
         Logger.out();
-        return Strings.UNSUP_ENCODING_RESP + ": " + encoding;
+        return messagesBundle.getString ("unsup_encoding_resp") + ": " + encoding;
         }
       }
     else
       {
       Logger.out();
-      return Strings.EMPTY_RESP;
+      return messagesBundle.getString ("empty_resp");
       }
     }
 
@@ -2204,7 +2240,7 @@ void setCaptionFromResponse (URL uri, ResponseContent gc)
   setStatus    
 
 =========================================================================*/
-  private void setStatus (String s)
+  protected void setStatus (String s)
     {
     Logger.in();
     statusBar.setStatus (s);

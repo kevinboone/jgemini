@@ -1,19 +1,38 @@
 # JGemini release notes
 
+## Version 2.0.3
+
+This version adds an identity manager, which can create new self-signed client
+certificates and keystores to contain them, as well as incorporating existing
+keystores. Identities can be assigned to, and remove from, specific remote
+hosts.
+ 
+Please note that this change has necessitated a complete change to the format
+of the client certificate information in the configuration file. Sorry about
+that.
+
+The documentation has been expanded considerably, and many of the dialog
+boxes now have "Help" buttons that show the relevant documentation page.
+
+Version 2.0.3 has a large number of internal changes, that should not be
+visible to the user, but which should make the application easier to maintain
+in the long term. 
+
 ## Version 2.0.2 release notes
 
 This release has rudimentary bookmark support. See `docs/bookmarks.md`.
 
 ## Version 2.0.1 release notes
 
-Please be aware that this version changes the location of the user configuration file.
-It's been moved into a Gemini-specific directory `$HOME/.jgemini`, which is used
-by default for bookmarks and other saved state. I thought grouping the JGemini-specific
-files this way would make them easier to manage.
+Please be aware that this version changes the location of the user
+configuration file.  It's been moved into a Gemini-specific directory
+`$HOME/.jgemini`, which is used by default for bookmarks and other saved state.
+I thought grouping the JGemini-specific files this way would make them easier
+to manage.
 
-This release also introduces a built-in settings editor. There's still no way to
-make most configuration changes other than by hacking on the configuration file,
-but at least having a built-in editor makes it a bit less of a nuisance.
+This release also introduces a built-in settings editor. There's still no way
+to make most configuration changes other than by hacking on the configuration
+file, but at least having a built-in editor makes it a bit less of a nuisance.
 
 Certain things will now automatically overwrite the configuration file with new
 values. For example, setting the current page as the home page overwrite the

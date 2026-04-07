@@ -16,18 +16,29 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.stream.Collectors;
 import me.kevinboone.jgemini.base.*;
+import me.kevinboone.jgemini.Constants;
 
-public class EditFileDialog extends JDialog
+public class EditFileDialog extends JGeminiDialog
 {
 private JTextArea textArea;
 private File file;
 private boolean didSave = false;
 private Config config = Config.getConfig();
+private MainWindow mainWindow;
+private String docUrl;
 
-public EditFileDialog (JFrame parent, String caption, 
-          String filename) throws IOException
+/*=========================================================================
+  
+  Constructor 
+
+=========================================================================*/
+public EditFileDialog (JFrame parent, MainWindow mainWindow, String caption, 
+          String filename, String docUrl) throws IOException
   {
-  super (parent, Strings.APP_NAME, Dialog.ModalityType.DOCUMENT_MODAL);
+  super (parent, Constants.APP_NAME, Dialog.ModalityType.DOCUMENT_MODAL);
+  
+  this.mainWindow = mainWindow;
+  this.docUrl = docUrl;
 
   file = new File (filename);
   InputStream is = new FileInputStream (file);
@@ -46,8 +57,9 @@ public EditFileDialog (JFrame parent, String caption,
 
   add (new JScrollPane(textArea), BorderLayout.CENTER); 
 
-  JButton saveButton = new JButton ("Save [ctrl+S]");
-  JButton cancelButton = new JButton ("Cancel [esc]");
+  JButton docsButton = createButton ("editfiledialog_docs"); 
+  JButton saveButton = createButton ("editfiledialog_save");
+  JButton cancelButton = createButton ("editfiledialog_cancel");
 
   cancelButton.addActionListener (new ActionListener() 
     {
@@ -57,6 +69,15 @@ public EditFileDialog (JFrame parent, String caption,
       didSave = false;
       dispose(); 
       }});
+
+  docsButton.addActionListener (new ActionListener() 
+    {
+    @Override
+    public void actionPerformed (ActionEvent e) 
+      {
+      handleDocs();
+      }
+    });
 
   saveButton.addActionListener (new ActionListener() 
     {
@@ -75,6 +96,7 @@ public EditFileDialog (JFrame parent, String caption,
       }
     };
 
+/*
   Action performSubmit = new AbstractAction ("Submit") 
     {  
     public void actionPerformed(ActionEvent e) 
@@ -82,8 +104,10 @@ public EditFileDialog (JFrame parent, String caption,
       save();
       }
     };
+*/
 
   JPanel buttonPanel = new JPanel();
+  buttonPanel.add (docsButton);
   buttonPanel.add (cancelButton);
   buttonPanel.add (saveButton);
 
@@ -93,17 +117,34 @@ public EditFileDialog (JFrame parent, String caption,
   cancelButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put (keyCancel, "performCancel"); 
   cancelButton.getActionMap().put ("performCancel", performCancel);
 
-  KeyStroke keySubmit = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK);
-  saveButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put (keySubmit, "performSubmit"); 
-  saveButton.getActionMap().put ("performSubmit", performSubmit);
-
   pack();
   setResizable (true); 
   setLocationRelativeTo (parent);
   }
 
+/*=========================================================================
+  
+  didSave 
+
+=========================================================================*/
 public boolean didSave() { return didSave; }
 
+/*=========================================================================
+  
+  handleDocs
+
+=========================================================================*/
+private void handleDocs()
+  {
+  mainWindow.newWindow (docUrl,
+    "New identity dialog"); // Caption will not show when loaded
+  }
+
+/*=========================================================================
+  
+  save 
+
+=========================================================================*/
 public void save()
   {
   try
@@ -121,7 +162,7 @@ public void save()
   catch (Exception e)
     {
     JOptionPane.showMessageDialog (this, e.getMessage(), // TODO -- expand
-      Strings.APP_NAME, JOptionPane.ERROR_MESSAGE); 
+      Constants.APP_NAME, JOptionPane.ERROR_MESSAGE); 
     }
   }
 

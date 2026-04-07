@@ -6,11 +6,14 @@ All the "small net" protocols that JGemini supports, apart from Gemini,
 are entirely plain-text. Your requests and responses are visible to anybody
 who can see your network traffic. 
 
-On the positive side, however, none of these protocols are very traceable,
+On the positive side, however, none of these protocols is very traceable,
 because they don't carry much information from the client. There's no realistic
 chance of "browser fingerprinting", which is now ubiquitous on the mainstream
-web. If you use a VPN, you are essentially anonymous unless you deliberately
-identify yourself, unless you're using Gemini with a client certificate.
+web. If you use a VPN, you're essentially anonymous unless you deliberately
+identify yourself. 
+
+Things are slightly different if you're using Gemini, because it supports
+TLS encryption, and authentication using a client certificate.
 
 If you send the same client certificate to all servers it's possible, in theory,
 for server administrators to collude to track you. There's no reason to 
@@ -35,8 +38,8 @@ JGemini might store the following on disk.
   file in whatever application handled it then, of course, it will be
   saved permanently
 - Your URL history, but only if you have explicitly enabled this. 
-  Otherwise, history is only stored for the duration of the session.
-- Bookmarks that you explicitly save.
+  Otherwise, history is only stored in memory, for the duration of the session.
+- Bookmarks you explicitly save.
 
 By default, all local state is saved in the `$HOME/.jgemini` directory.
 

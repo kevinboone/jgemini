@@ -1,8 +1,11 @@
 # Configuration file
 
-By design, JGemini provides little interactive configuration, so the configuration
-file is important -- particularly if you need to use client certificates
-for authentication.
+> *Note*  
+> You can manage most of JGemini's functionality using the main user interface,
+> and there's not usually much need to hack on the configuration file manually.
+> However, it's still exposed and documented, for more complex usage scenarios.
+> Be aware, though, that careless hacking on the configuration file can break
+> things in non-obvious ways.
 
 Although you can use any text editor to edit the configuration file, there is
 a built-in editor: use the File|Settings|Edit menu. When you exit the
@@ -18,12 +21,12 @@ File|Settings|Reload to activate your changes.
 However you edit the settings file, it might be a good idea to have this
 page open in a separate window, so you can see what settings to change.
 
-If you have no configuration file at all -- which will be the case the
-first time you run JGemini -- the program will create a template that
-you can edit. Please be aware, however, that the comments in the template
-don't get saved when you save the configuration from within JGemini.
-If you want to leave the comments intact, it might be better to locate
-the configuration file, and edit it using a text editor.
+If you have no configuration file at all -- which will be the case the first
+time you run JGemini -- the program will create a template that you can edit.
+Please be aware, however, that the comments in the template don't get saved
+when you save the configuration from within JGemini -- only the actual settings
+get changed.  If you want to leave the comments intact, it might be better to
+locate the configuration file on disk, and edit it using a text editor.
 
 If you use Notepad to edit the configuration on Windows, be aware that Notepad
 likes to add `.txt` to all filenames, so you might need to rename the file
@@ -36,11 +39,11 @@ then the user configuration file. On Windows, and perhaps other platforms,
 there's no defined location for a system-level configuration file, so only the
 user configuration file is read.
 
-The name of the user configuration file is `jgemini.properties`, in the directory 
-`.jgemini`, in the location that the Java JVM recognizes as the "home"
-directory. On Linux, that's whatever is stored in the `$HOME` environment
-variable. On Windows, it's typically `C:\users\{username}`. So the configuration
-file will be
+The name of the user configuration file is `jgemini.properties`, in the
+directory `.jgemini`, in the location that the Java JVM recognizes as the
+"home" directory. On Linux, that's whatever is stored in the `$HOME`
+environment variable. On Windows, it's typically `C:\users\{username}`. So the
+configuration file will be
 
     $HOME/.jgemini/jgemini.properties
 
@@ -61,15 +64,12 @@ Set a custom bookmark filename, rather than `bookmarks.gmi` in the `.jgemini`
 directory. 
 
 `clientcert`  
-Control which client certificate to send, for a specified host. There can be
+Control which client certificate to send, for a specified identity. There can be
 any number of these entries. The format is:
 
-    clientcert.foo.bar=/path/to/keystore.jks password 
+    clientcert.{ident}=/path/to/keystore.jks password 
 
-where `foo.bar` is the hostname. The password is that of the keystore. To specify
-a fallback certificate that matches all hosts, use:
-
-    clientcert.*=/path/to/keystore.jks password 
+See also the entry for `ident`.
 
 For more information, see the page on [client certificates](client_certs.md).
 
@@ -96,6 +96,11 @@ don't want to use the default location. The default filename is
 `history.size`  
 Number of lines of URL history to save, if saving is enabled. The
 default is 30.
+
+`ident.{hostname}`  
+Assign an identity name to a particular hostname. To use the same identity on
+all hosts, use `ident.any`. See the entry for `clientcert` to see how to assign
+an identity to a client certificate.
 
 `inline.image.width`  
 Sets the width of in-line images in pixels. The height is determined automatically,
@@ -128,7 +133,7 @@ format, see `ui.control_font`.
 
 `url.home`  
 Home page. This must be a full URL, including protocol, or an absolute pathname
-for a local file. 
+for a local file. The default is to show an internal welcome page.
 
 `urlbar.search.enabled`  
 Default is 'yes' -- search from the URL bar is enabled.

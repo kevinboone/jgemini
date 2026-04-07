@@ -1,7 +1,7 @@
 # Styling JGemini's document window
 
-JGemini's main document window is styled using CSS stylesheets. Be aware, though,
-that Java's CSS support is pretty ancient, and only a limited range of
+You can style JGemini's main document window using CSS stylesheets. Be aware,
+though, that Java's CSS support is pretty ancient, and only a limited range of
 styles are useable. In addition, "modern" features, like being able to set
 sizes in "em" units, aren't supported.
 
@@ -43,10 +43,9 @@ JGemini uses the following styleable elements:
 - "pre" -- pre-formatted text
 - "ul" -- lists
 
-The fonts that can be applied to these styles are JVM fonts, which may
-be named differently to platform fonts (and, in some cases, are more
-extensive). To get a list all JVM fonts, run JGemini like this: 
-switch 
+The fonts that can be applied to these styles are JVM fonts, which may be named
+differently to platform fonts (and, in some cases, are more extensive). To get
+a list all JVM fonts, run JGemini like this: 
 
     java -Djgemini.dumpfonts -jar jgemini-1.0.jar
 

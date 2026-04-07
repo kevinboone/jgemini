@@ -11,7 +11,7 @@ package me.kevinboone.jgemini.protocol;
 
 import java.io.*;
 import java.net.*;
-import java.util.Collections;
+import java.util.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.utils.file.ContentGuesser;
 
@@ -24,6 +24,8 @@ public class GopherConnection extends URLConnection
   private String meta = null;
   private static StatusHandler statusHandler = StatusHandler.getInstance();
   private char gopherType = '0';
+  private final static ResourceBundle messagesBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
 
   public GopherConnection (URL url) 
     {
@@ -116,7 +118,7 @@ public class GopherConnection extends URLConnection
 	  content_buffer.write (data, 0, nRead);
           totalRead += nRead;
           if (totalRead > 1024)
-            statusHandler.writeMessage (Strings.LOADED + " " 
+            statusHandler.writeMessage (messagesBundle.getString ("loaded") + " " 
               + (totalRead / 1024) + " kb");
 	  }
 	}

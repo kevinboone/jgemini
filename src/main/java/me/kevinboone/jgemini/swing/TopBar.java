@@ -13,15 +13,19 @@
 package me.kevinboone.jgemini.swing;
 import java.awt.*;
 import java.io.*;
+import java.util.*;
 import java.awt.event.*;
 import javax.swing.*;
 import me.kevinboone.jgemini.base.*;
+import me.kevinboone.jgemini.Constants;
 
 public class TopBar extends JPanel
   {
   private JComboBox urlBox;
   private MainWindow mainWindow;
   private boolean urlbarEnabled = true;
+  private final static ResourceBundle tooltipsBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Tooltips");
 
   public TopBar (MainWindow mainWindow)
     {
@@ -56,18 +60,27 @@ public class TopBar extends JPanel
     ImageIcon backIcon = new ImageIcon (backImgURL);
     JButton backButton = new JButton (backIcon);
     backButton.addActionListener((event) -> mainWindow.goBack());
+    backButton.setToolTipText (tooltipsBundle.getString("back"));
     java.net.URL homeImgURL = getClass().getResource("/images/home.png");
     ImageIcon homeIcon = new ImageIcon (homeImgURL);
     JButton homeButton = new JButton (homeIcon);
     homeButton.addActionListener((event) -> mainWindow.goHome());
+    homeButton.setToolTipText (tooltipsBundle.getString("home"));
     java.net.URL refreshImgURL = getClass().getResource("/images/refresh.png");
     ImageIcon refreshIcon = new ImageIcon (refreshImgURL);
     JButton refreshButton = new JButton (refreshIcon);
     refreshButton.addActionListener((event) -> mainWindow.refresh());
+    refreshButton.setToolTipText (tooltipsBundle.getString("refresh"));
+    java.net.URL identImgURL = getClass().getResource("/images/person.png");
+    ImageIcon identIcon = new ImageIcon (identImgURL);
+    JButton identButton = new JButton (identIcon);
+    identButton.addActionListener((event) -> mainWindow.goIdent());
+    identButton.setToolTipText (tooltipsBundle.getString("identity"));
     java.net.URL stopImgURL = getClass().getResource("/images/stop.png");
     ImageIcon stopIcon = new ImageIcon (stopImgURL);
     JButton stopButton = new JButton (stopIcon);
     stopButton.addActionListener((event) -> mainWindow.goStop());
+    stopButton.setToolTipText (tooltipsBundle.getString("stop"));
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 1.0;
@@ -75,6 +88,7 @@ public class TopBar extends JPanel
     c.insets = new Insets (0, 15, 0, 15);
 
     add (backButton);
+    add (identButton);
     add (homeButton);
     add (refreshButton);
     add (stopButton);
@@ -129,7 +143,7 @@ public class TopBar extends JPanel
 
     Config config = Config.getConfig();
 
-    if (!config.historyEnabled()) return;
+    if (!config.getHistoryEnabled()) return;
 
     String historyFile = config.getHistoryFile();
 
@@ -150,7 +164,7 @@ public class TopBar extends JPanel
     catch (Exception e)
       {
       JOptionPane.showMessageDialog (this, "Could not write history file: " 
-         +  e.toString(), Strings.APP_NAME, JOptionPane.ERROR_MESSAGE); 
+         +  e.toString(), Constants.APP_NAME, JOptionPane.ERROR_MESSAGE); 
       }
     Logger.out();
     }

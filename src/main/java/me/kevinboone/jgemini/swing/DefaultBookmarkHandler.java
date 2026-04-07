@@ -12,6 +12,7 @@ package me.kevinboone.jgemini.swing;
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.utils.file.FileUtil;
 
@@ -24,6 +25,9 @@ public class DefaultBookmarkHandler implements BookmarkHandler
   //   getBookmarkCount to reload from file.
   private boolean fileWasUpdated = true;
   private Vector<GemLink> bookmarks = new Vector<GemLink>();
+
+  private final static ResourceBundle captionsBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Captions");
 
   DefaultBookmarkHandler (MainWindow mainWindow)
     {
@@ -42,7 +46,6 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     for (int i = 0; i < l; i++)
       {
       GemLink link = bookmarks.elementAt(i);
-System.out.println ("suri=" + sUri + " link=" + link);
       if (link.getUri().equals (sUri)) return true;
       }
     return false;
@@ -71,9 +74,9 @@ System.out.println ("suri=" + sUri + " link=" + link);
     {
     config.ensureBookmarksFileExists();
     String bookmarksFile = config.getBookmarksFile();
-    EditFileDialog d = new EditFileDialog (mainWindow, 
-        Strings.BOOKMARKS,
-        bookmarksFile);
+    EditFileDialog d = new EditFileDialog (mainWindow, mainWindow, 
+        captionsBundle.getString ("bookmarks"),
+          bookmarksFile, Constants.DOC_EDIT_BOOKMARKS);
     d.setVisible (true);
     if (d.didSave())
       {

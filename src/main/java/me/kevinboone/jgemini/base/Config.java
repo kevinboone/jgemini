@@ -13,13 +13,13 @@ package me.kevinboone.jgemini.base;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.io.*;
+import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.utils.file.*;
 
 
 public class Config extends Properties
   {
-  public final static String VERSION = "2.0.2";
   private int logLevel = Logger.ERROR;
   private int bookmarkMaxMenu = 10;
   private boolean gemtextInlineImages = false;
@@ -27,76 +27,102 @@ public class Config extends Properties
   private boolean historyEnabled = false;
   private boolean emojiStripBookmarks = false;
 
-  private final static String SYS_PREFS_FILE = "jgemini.properties"; 
-  private final static String STATE_DIR_NAME = ".jgemini"; 
-  private final static String PREFS_FILE = "jgemini.properties"; 
-  private final static String BOOKMARK_FILENAME = "bookmarks.gmi"; 
-  private final static String HISTORY_FILENAME = "jgemini.history";
-
-  public final static String URL_HOME = "url.home";
-  public final static String DEFLT_URL_HOME = "about:/jgemini_overview.md";
-  public final static String LOG_LEVEL = "log.level";
   public final static int DEFLT_LOG_LEVEL = Logger.ERROR;
-  public final static String WINDOW_W = "window.w";
-  public final static String DEFLT_WINDOW_W = "1200";
-  public final static String WINDOW_H = "window.h";
-  public final static String EMOJI_STRIP_BOOKMARKS = "emoji.strip.bookmarks";
   public final static boolean DEFLT_EMOJI_STRIP_BOOKMARKS = false;
-  public final static String DEFLT_WINDOW_H = "900";
-  public final static String UI_USER_FONT = "ui.user_font"; 
-  public final static String DEFLT_UI_USER_FONT = "Sans 20; Emoji 20";
-  public final static String UI_CONTROL_FONT = "ui.control_font"; 
-  public final static String DEFLT_UI_CONTROL_FONT = "Sans 20; Emoji 20";
-  public final static String UI_DOCUMENT_FONT_SIZE = "ui.document.font.size";
-  public final static String DEFLT_UI_DOCUMENT_FONT_SIZE = "16";
-  public final static String UI_NEW_WINDOW_MODE = "ui,new_window";
-  public final static String DEFLT_UI_NEW_WINDOW_MODE = "0";
-  public final static String GEMTEXT_INLINE_IMAGES = "gemtext.inline.images";
   public final static boolean DEFLT_GEMTEXT_INLINE_IMAGES = true;
-  public final static String INLINE_IMAGE_WIDTH = "inline.image.width";
-  public final static String DEFLT_INLINE_IMAGE_WIDTH = "600";
-  public final static String UI_DOCUMENT_THEME = "ui.document.theme";
-  public final static String DEFLT_UI_DOCUMENT_THEME = "light";
-  public final static String UI_DOCUMENT_CUSTOM_CSS = "ui.document.custom.css";
   public final static String DEFLT_UI_DOCUMENT_CUSTOM_CSS = null;
-  public final static String HISTORY_SIZE = "history.size";
-  public final static String DEFLT_HISTORY_SIZE = "30";
-  public final static String HISTORY_FILE = "history.file";
   public final static String DEFLT_HISTORY_FILE = null;
-  public final static String BOOKMARK_FILE = "bookmark.file";
   public final static String DEFLT_BOOKMARK_FILE = null;
-  public final static String BOOKMARK_MAX_MENU = "bookmark.max.menu";
   public final static int DEFLT_BOOKMARK_MAX_MENU = 10;
-  public final static String HISTORY_ENABLED = "history.enabled";
   public final static boolean DEFLT_HISTORY_ENABLED = false;
-  public final static String URLBAR_SEARCH_ENABLED = "urlbar.search.enabled";
   public final static boolean DEFLT_URLBAR_SEARCH_ENABLED = true;
-  public final static String URLBAR_SEARCH_URL = "urlbar.search.url";
-  public final static String DEFLT_URLBAR_SEARCH_URL = "gemini://tlgs.one/search";
 
   private Vector<ConfigChangeListener> listeners = new Vector<ConfigChangeListener>();
 
   private static Config instance = null;
 
+/*=========================================================================
+  
+  addClientCert
+
+=========================================================================*/
+  public void addClientCert (String name, String keystoreFile,
+      String keystorePassword) 
+    {
+    setProperty (Constants.CLIENTCERT_TAG + name,
+      keystoreFile + " " + keystorePassword);
+    save();
+    }
+
+/*=========================================================================
+  
+  addConfigChangeListener
+
+=========================================================================*/
   public void addConfigChangeListener (ConfigChangeListener l)
     {
     listeners.add (l);
     }
 
-  public boolean emojiStripBookmark()
+/*=========================================================================
+  
+  deriveProperties 
+
+=========================================================================*/
+  /* Calculate the values of the instance variables from the raw values
+     read from the configuration file. */
+  private void deriveProperties()
+    {
+    bookmarkMaxMenu = Integer.parseInt (getProperty 
+      (Constants.BOOKMARK_MAX_MENU, ""+DEFLT_BOOKMARK_MAX_MENU));
+
+    logLevel = Integer.parseInt (getProperty (Constants.LOG_LEVEL, 
+      "" + DEFLT_LOG_LEVEL));
+    Logger.setLevel (logLevel);
+
+    gemtextInlineImages = getBooleanProperty 
+      (Constants.GEMTEXT_INLINE_IMAGES, DEFLT_GEMTEXT_INLINE_IMAGES);
+   
+    urlbarSearchEnabled = getBooleanProperty
+      (Constants.URLBAR_SEARCH_ENABLED, DEFLT_URLBAR_SEARCH_ENABLED); 
+
+    historyEnabled = getBooleanProperty 
+      (Constants.HISTORY_ENABLED, DEFLT_HISTORY_ENABLED);
+
+    emojiStripBookmarks = getBooleanProperty 
+      (Constants.EMOJI_STRIP_BOOKMARKS, DEFLT_EMOJI_STRIP_BOOKMARKS);
+    }
+
+/*=========================================================================
+  
+  getEmojiStripBookmark 
+
+=========================================================================*/
+  public boolean getEmojiStripBookmark()
     {
     return emojiStripBookmarks;
     }
 
+/*=========================================================================
+  
+  ensureBookmarksFileExists 
+
+=========================================================================*/
   public void ensureBookmarksFileExists() throws IOException
     {
     String filename = getBookmarksFile();
     File file = new File (filename);
     if (file.exists()) return;
     file.createNewFile();
-    FileUtil.appendStringToFile (filename, "# " + Strings.BOOKMARKS + "\n");
+    FileUtil.appendStringToFile (filename, "# " 
+      + Constants.BOOKMARKS_COMMENTS + "\n");
     }
 
+/*=========================================================================
+  
+  ensureUserConfigFileExists 
+
+=========================================================================*/
   public void ensureUserConfigFileExists() throws IOException
     {
     String filename = getUserConfigFilename();
@@ -118,6 +144,11 @@ public class Config extends Properties
     is.close();
     }
 
+/*=========================================================================
+  
+  getConfig 
+
+=========================================================================*/
   public static Config getConfig()
     {
     if (instance == null)
@@ -128,127 +159,229 @@ public class Config extends Properties
     return instance;
     }
 
+/*=========================================================================
+  
+  getHomePage 
+
+=========================================================================*/
   public String getHomePage()
     {
     Logger.in();
-    String homePage = getProperty (URL_HOME, DEFLT_URL_HOME);
+    String homePage = getProperty (Constants.URL_HOME, 
+      Constants.DEFLT_URL_HOME);
     Logger.log (getClass().getName(), Logger.INFO, 
       "Home page is " + homePage);
     Logger.out();
     return homePage;
     }
 
+/*=========================================================================
+  
+  getHistoryFile
+
+=========================================================================*/
   public String getHistoryFile()
     {
-    String historyFile = getProperty (HISTORY_FILE, DEFLT_HISTORY_FILE);
+    String historyFile = getProperty (Constants.HISTORY_FILE, 
+      DEFLT_HISTORY_FILE);
     if (historyFile == null)
-      historyFile = getStateDir() + File.separator + HISTORY_FILENAME;
+      historyFile = getStateDir() + File.separator + Constants.HISTORY_FILENAME;
     return historyFile;
     }
 
+/*=========================================================================
+  
+  getBookmarksFile
+
+=========================================================================*/
   public String getBookmarksFile()
     {
-    String bookmarkFile = getProperty (BOOKMARK_FILE, DEFLT_BOOKMARK_FILE);
+    String bookmarkFile = getProperty (Constants.BOOKMARK_FILE, 
+      DEFLT_BOOKMARK_FILE);
     if (bookmarkFile == null)
-      bookmarkFile = getStateDir() + File.separator + BOOKMARK_FILENAME;
+      bookmarkFile = getStateDir() + File.separator 
+        + Constants.BOOKMARK_FILENAME;
     return bookmarkFile;
     }
 
+/*=========================================================================
+  
+  getBookmarkMaxMenu
+
+=========================================================================*/
   public int getBookmarkMaxMenu()
     {
     return bookmarkMaxMenu;
     }
 
-  public int logLevel()
+/*=========================================================================
+  
+  getLogLevel 
+
+=========================================================================*/
+  public int getLogLevel()
     {
     return logLevel;
     }
 
-  public boolean gemtextInlineImages()
+/*=========================================================================
+  
+  getGemtextInlineImages 
+
+=========================================================================*/
+  public boolean getGemtextInlineImages()
     {
     return gemtextInlineImages;
     }
 
-  public String inlineImageWidth()
+/*=========================================================================
+  
+  getInlineImageWidth 
+
+=========================================================================*/
+  public String getInlineImageWidth()
     {
     return getProperty 
-        (INLINE_IMAGE_WIDTH, DEFLT_INLINE_IMAGE_WIDTH);
+        (Constants.INLINE_IMAGE_WIDTH, Constants.DEFLT_INLINE_IMAGE_WIDTH);
     }
 
+/*=========================================================================
+  
+  getNewWindowMode
+
+=========================================================================*/
   public int getNewWindowMode ()
     {
     return Integer.parseInt (getProperty 
-        (UI_NEW_WINDOW_MODE, DEFLT_UI_NEW_WINDOW_MODE));
+        (Constants.UI_NEW_WINDOW_MODE, Constants.DEFLT_UI_NEW_WINDOW_MODE));
     }
 
+/*=========================================================================
+  
+  getWindowWidth
+
+=========================================================================*/
   public int getWindowWidth ()
     {
-    return Integer.parseInt (getProperty (WINDOW_W, DEFLT_WINDOW_W));
+    return Integer.parseInt (getProperty (Constants.WINDOW_W, 
+      Constants.DEFLT_WINDOW_W));
     }
 
+/*=========================================================================
+  
+  getWindowHeight
+
+=========================================================================*/
   public int getWindowHeight ()
     {
-    return Integer.parseInt (getProperty (WINDOW_H, DEFLT_WINDOW_H));
+    return Integer.parseInt (getProperty (Constants.WINDOW_H, 
+      Constants.DEFLT_WINDOW_H));
     }
 
+/*=========================================================================
+  
+  getControlFont 
+
+=========================================================================*/
   public String getControlFont()
     {
-    return getProperty (UI_CONTROL_FONT, DEFLT_UI_CONTROL_FONT);
+    return getProperty (Constants.UI_CONTROL_FONT, Constants.
+      DEFLT_UI_CONTROL_FONT);
     }
 
+/*=========================================================================
+  
+  getUserFont
+
+=========================================================================*/
   public String getUserFont()
     {
-    return getProperty (UI_USER_FONT, DEFLT_UI_USER_FONT);
+    return getProperty (Constants.UI_USER_FONT, 
+      Constants.DEFLT_UI_USER_FONT);
     }
 
+/*=========================================================================
+  
+  getCustomCSSFile
+
+=========================================================================*/
   public String getCustomCSSFile()
     {
-    return getProperty (UI_DOCUMENT_CUSTOM_CSS, DEFLT_UI_DOCUMENT_CUSTOM_CSS);
+    return getProperty (Constants.UI_DOCUMENT_CUSTOM_CSS, 
+      DEFLT_UI_DOCUMENT_CUSTOM_CSS);
     }
 
+/*=========================================================================
+  
+  getTheme
+
+=========================================================================*/
   public String getTheme()
     {
-    return getProperty (UI_DOCUMENT_THEME, DEFLT_UI_DOCUMENT_THEME);
+    return getProperty (Constants.UI_DOCUMENT_THEME, 
+      Constants.DEFLT_UI_DOCUMENT_THEME);
     }
 
+/*=========================================================================
+  
+  getUrlbarSearchUrl
+
+=========================================================================*/
   public String getUrlbarSearchUrl()
     {
-    return getProperty (URLBAR_SEARCH_URL, DEFLT_URLBAR_SEARCH_URL);
+    return getProperty (Constants.URLBAR_SEARCH_URL, 
+      Constants.DEFLT_URLBAR_SEARCH_URL);
     }
 
+/*=========================================================================
+  
+  getDocumentBaseFontSize
+
+=========================================================================*/
   public int getDocumentBaseFontSize()
     {
-    String s = getProperty (UI_DOCUMENT_FONT_SIZE, DEFLT_UI_DOCUMENT_FONT_SIZE);
+    String s = getProperty (Constants.UI_DOCUMENT_FONT_SIZE, 
+      Constants.DEFLT_UI_DOCUMENT_FONT_SIZE);
     return Integer.parseInt (s);
     }
 
+/*=========================================================================
+  
+  getHistorySize
+
+=========================================================================*/
   public int getHistorySize()
     {
-    String s = getProperty (HISTORY_SIZE, DEFLT_HISTORY_SIZE);
+    String s = getProperty (Constants.HISTORY_SIZE, 
+      Constants.DEFLT_HISTORY_SIZE);
     return Integer.parseInt (s);
     }
 
-  /** The method returns null if there is no entry in the configuration 
-        file for the specific host. */
-  public String getClientCertSpecForHost (String hostname)
-    {
-    String key = "clientcert." + hostname; 
-    String result = getProperty (key);
-    if (result == null)
-      result = getProperty ("clientcert.*");
-    return result;
-    }
+/*=========================================================================
+  
+  getUrlbarSearchEnabled 
 
-  public boolean urlbarSearchEnabled()
+=========================================================================*/
+  public boolean getUrlbarSearchEnabled()
     {
     return urlbarSearchEnabled;
     }
 
-  public boolean historyEnabled()
+/*=========================================================================
+  
+  getHistoryEnabled 
+
+=========================================================================*/
+  public boolean getHistoryEnabled()
     {
     return historyEnabled;
     }
 
+/*=========================================================================
+  
+  getBooleanProperty
+
+=========================================================================*/
   public boolean getBooleanProperty (String name, boolean deflt)
     {
     String val = getProperty (name, deflt ? "1" : "0");
@@ -259,29 +392,11 @@ public class Config extends Properties
     return false;
     }
 
-  /* Calculate the values of the instance variables from the raw values
-     read from the configuration file. */
-  private void deriveProperties()
-    {
-    bookmarkMaxMenu = Integer.parseInt (getProperty 
-      (BOOKMARK_MAX_MENU, ""+DEFLT_BOOKMARK_MAX_MENU));
+/*=========================================================================
+  
+  fireSettingsChangedListeners 
 
-    logLevel = Integer.parseInt (getProperty (LOG_LEVEL, ""+DEFLT_LOG_LEVEL));
-    Logger.setLevel (logLevel);
-
-    gemtextInlineImages = getBooleanProperty 
-      (GEMTEXT_INLINE_IMAGES, DEFLT_GEMTEXT_INLINE_IMAGES);
-   
-    urlbarSearchEnabled = getBooleanProperty
-      (URLBAR_SEARCH_ENABLED, DEFLT_URLBAR_SEARCH_ENABLED); 
-
-    historyEnabled = getBooleanProperty 
-      (HISTORY_ENABLED, DEFLT_HISTORY_ENABLED);
-
-    emojiStripBookmarks = getBooleanProperty 
-      (EMOJI_STRIP_BOOKMARKS, DEFLT_EMOJI_STRIP_BOOKMARKS);
-    }
-
+=========================================================================*/
   private void fireSettingsChangedListeners()
     {
     Logger.in();
@@ -291,19 +406,97 @@ public class Config extends Properties
     Logger.out();
     }
 
+/*=========================================================================
+  
+  getIdents
+
+=========================================================================*/
+  public Set<String> getIdents()
+    {
+    HashSet<String> s = new HashSet<String>();
+
+    Enumeration e = propertyNames();
+    while (e.hasMoreElements())
+      {
+      String k = (String)e.nextElement();
+      if (k.startsWith (Constants.CLIENTCERT_TAG))
+        {
+        String value = k.substring (Constants.CLIENTCERT_TAG.length());
+        if (!value.equals ("any"))
+          s.add (value);
+        }
+      }
+
+    return s;
+    }
+
+/*=========================================================================
+  
+  getIdentisDir
+
+=========================================================================*/
+  public String getIdentsDir()
+    {
+    Logger.in();
+    String identsDir = getStateDir() + File.separator + Constants.IDENTS_DIRNAME; 
+    Logger.out();
+    return identsDir;
+    }
+
+/*=========================================================================
+  
+  getKeystoreSpecForIdent 
+
+=========================================================================*/
+public KeystoreSpec getKeystoreSpecForIdent (String ident)
+    {
+    String clientCertSpec = getProperty (Constants.CLIENTCERT_TAG + ident);
+    if (clientCertSpec == null) return null;
+
+    String[] tokens = clientCertSpec.trim().split ("\\s+");
+    if (tokens.length != 2) 
+      {
+      Logger.log (getClass().getName(), Logger.WARNING, 
+        "Bad client certificate specification: " + clientCertSpec);
+      return null;
+      }
+
+    String clientCertKeyStoreFile = tokens[0];
+    String clientCertKeyStorePassword = tokens[1];
+
+    return new KeystoreSpec (clientCertKeyStoreFile, 
+      clientCertKeyStorePassword);
+    }
+
+
+/*=========================================================================
+  
+  getStateDir
+
+=========================================================================*/
   public String getStateDir()
     {
     Logger.in();
     String home = System.getProperty ("user.home");
     Logger.out();
-    return home + File.separator + STATE_DIR_NAME; 
+    return home + File.separator + Constants.STATE_DIR_NAME; 
     }
 
+/*=========================================================================
+  
+  getUserConfigFilename
+
+=========================================================================*/
   public String getUserConfigFilename()
     {
-    return getStateDir() + File.separator + PREFS_FILE;
+    return getStateDir() + File.separator + Constants.PREFS_FILE;
     }
 
+/*=========================================================================
+  
+  loadFromFile 
+
+=========================================================================*/
   public void loadFromFile (String filename)
     {
     Logger.in();
@@ -324,6 +517,11 @@ public class Config extends Properties
     Logger.out();
     }
 
+/*=========================================================================
+  
+  load
+
+=========================================================================*/
   public void load()
     {
     // Make a new state directory. We have to do this somewhere,
@@ -331,11 +529,12 @@ public class Config extends Properties
     //   anything there.
     Logger.in();
     new File (getStateDir()).mkdir();
+    new File (getIdentsDir()).mkdir();
 
     Logger.log (getClass().getName(), Logger.INFO, 
       "Loading system-wide configuration");
     // This won't work on Windows, but it won't do any harm.
-    String sysPropsFile = "/etc/jgemini/" + SYS_PREFS_FILE; 
+    String sysPropsFile = "/etc/jgemini/" + Constants.SYS_PREFS_FILE; 
     loadFromFile (sysPropsFile);
 
     Logger.log (getClass().getName(), Logger.DEBUG, 
@@ -349,11 +548,31 @@ public class Config extends Properties
     Logger.out();
     }
 
+/*=========================================================================
+  
+  removeConfigChangeListener 
+
+=========================================================================*/
   public void removeConfigChangeListener (ConfigChangeListener l)
     {
     listeners.remove (l);
     }
 
+/*=========================================================================
+  
+  removeIdent 
+
+=========================================================================*/
+  public void removeIdent (String hostname)
+    {
+    remove (Constants.IDENT_TAG + hostname);
+    }
+
+/*=========================================================================
+  
+  save 
+
+=========================================================================*/
   public void save()
     {
     Logger.in();
@@ -362,6 +581,11 @@ public class Config extends Properties
     Logger.out();
     }
 
+/*=========================================================================
+  
+  saveToFile 
+
+=========================================================================*/
   private void saveToFile (String filename)
     {
     Logger.in();
@@ -370,7 +594,7 @@ public class Config extends Properties
         "Saving properties to " + filename);
     try (OutputStream os = new FileOutputStream (new File (filename)))
       {
-      store (os, Strings.PROPS_COMMENTS);
+      store (os, Constants.PROPS_COMMENTS);
       os.close();
       }
     catch (Exception e)
@@ -382,16 +606,46 @@ public class Config extends Properties
     Logger.out();
     }
 
+/*=========================================================================
+  
+  setDocumentBaseFontSize 
+
+=========================================================================*/
   public void setDocumentBaseFontSize (int px)
     {
-    setProperty (UI_DOCUMENT_FONT_SIZE, "" + px);
+    setProperty (Constants.UI_DOCUMENT_FONT_SIZE, "" + px);
     }
 
+/*=========================================================================
+  
+  setHomePage 
+
+=========================================================================*/
   public void setHomePage (String uri)
     {
     if (Logger.isDebug())
       Logger.log (Logger.class, Logger.INFO, "setting home page to " + uri);
-    setProperty (URL_HOME, uri);
+    setProperty (Constants.URL_HOME, uri);
+    }
+
+/*=========================================================================
+  
+  setIdentForHostname
+
+  writes a property "ident.{hostname}={ident}"
+
+  Note that "none" is a valid ident, but null is not. to remove an
+  ident from a hostname, use removeIdent()
+
+=========================================================================*/
+  public void setIdentForHostname (String hostname, String ident)
+    {
+    Logger.in();
+    if (Logger.isDebug())
+      Logger.log (Logger.class, Logger.INFO, "setting ident for " + hostname
+        + " to " + ident);
+    setProperty (Constants.IDENT_TAG + hostname, ident);
+    Logger.out();
     }
 
   }

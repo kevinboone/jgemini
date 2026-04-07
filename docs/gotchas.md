@@ -148,6 +148,16 @@ multiple URLs for the same entry.
 Most significantly, JGemini is not a feed aggregator -- it doesn't 
 provide a way to subscribe to multiple feeds.
 
+## There is no streaming support
+
+None of the protocols that JGemini supports provide any information about
+the length of the data the server will send. A stream (audio, video) by
+its very nature has no end; but JGemini can't distinguish a stream from a
+file it could download to completion.
+
+As a result, if you follow a link to a stream, JGemini will download it until
+you get bored waiting, or you disk fills up.
+
 ## Missing features
 
 There is no download manager. JGemini will download multiple files concurrently,

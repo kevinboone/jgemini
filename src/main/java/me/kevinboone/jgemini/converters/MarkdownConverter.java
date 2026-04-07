@@ -45,7 +45,7 @@ class LinkAttributeProvider implements AttributeProvider
       {
       Config config = Config.getConfig();
       String oldSrc = attributes.get ("src");
-      attributes.put("width", config.inlineImageWidth());
+      attributes.put("width", config.getInlineImageWidth());
       try
         {
         URL src = new URL (baseUrl, oldSrc);

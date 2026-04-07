@@ -19,8 +19,9 @@ import java.awt.event.*;
 import java.net.URL;
 import java.net.URLEncoder;
 import me.kevinboone.jgemini.base.*;
+import me.kevinboone.jgemini.Constants;
 
-public class TextEntryDialog extends JDialog
+public class TextEntryDialog extends JGeminiDialog
 {
 private String input;
 private JTextArea textArea;
@@ -29,14 +30,15 @@ private int maxInputBytes;
 
 public TextEntryDialog (JFrame parent, int maxInputBytes)
   {
-  super (parent, Strings.APP_NAME, Dialog.ModalityType.DOCUMENT_MODAL);
+  super (parent, Constants.APP_NAME, Dialog.ModalityType.DOCUMENT_MODAL);
 
   input = null;	
   this.maxInputBytes = maxInputBytes;
   setLayout(new BorderLayout());
  
   textArea = new JTextArea (8, 40);
-  textArea.setBorder(BorderFactory.createTitledBorder(Strings.ENTER_TEXT));
+  textArea.setBorder (BorderFactory.createTitledBorder 
+    (dialogsBundle.getString ("textentrydialog_enter_text")));
   textArea.setLineWrap (true); 
   textArea.setWrapStyleWord (true); 
   textArea.addKeyListener(new KeyAdapter() 
@@ -50,8 +52,8 @@ public TextEntryDialog (JFrame parent, int maxInputBytes)
 
   add (new JScrollPane(textArea), BorderLayout.CENTER); 
 
-  JButton submitButton = new JButton ("Submit [ctrl+S]");
-  JButton cancelButton = new JButton ("Cancel [esc]");
+  JButton submitButton = createButton ("textentrydialog_submit"); 
+  JButton cancelButton = createButton ("textentrydialog_cancel");
 
   cancelButton.addActionListener (new ActionListener() 
     {
@@ -77,6 +79,7 @@ public TextEntryDialog (JFrame parent, int maxInputBytes)
       }
     };
 
+/*
   Action performSubmit = new AbstractAction ("Submit") 
     {  
     public void actionPerformed(ActionEvent e) 
@@ -86,6 +89,7 @@ public TextEntryDialog (JFrame parent, int maxInputBytes)
         dispose();
       }
     };
+*/
 
   countLabel = new JLabel ("");
 
@@ -101,9 +105,11 @@ public TextEntryDialog (JFrame parent, int maxInputBytes)
   cancelButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put (keyCancel, "performCancel"); 
   cancelButton.getActionMap().put ("performCancel", performCancel);
 
+/*
   KeyStroke keySubmit = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK);
   submitButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put (keySubmit, "performSubmit"); 
   submitButton.getActionMap().put ("performSubmit", performSubmit);
+*/
 
   checkLength();
 

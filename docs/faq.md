@@ -9,7 +9,8 @@ You don't need to do anything in particular. Just copy the program's JAR file
 jgemini-2.0.jar`. Or, on Windows, just double-click the JAR file in the
 file manager.
 
-For more information, see the [page on installation](installing_and_running.md).
+You may prefer a more integrated installation; for more information, see the
+[page on installation](installing_and_running.md).
 
 _What Java version do I need?_
 
@@ -20,7 +21,7 @@ properly.
 _Why can't JGemini provide its own emoji fonts?_
 
 Installing an emoji font is a slight nuisance, but it should be a one-time
-set-up. There are redistributable emoji fonts that JGemini could bundle, but
+task. There are redistributable emoji fonts that JGemini could bundle, but
 loading a font explicitly doesn't make the document viewer use it. 
 
 JGemini's document viewer is based on Java's built-in HTML renderer. Converting
@@ -33,7 +34,7 @@ fonts, so bundling emoji fonts wouldn't be helpful.
 
 _How do I set the home page?_
 
-If the relevant page is in the viewer, select File|Set as Home Page from the
+If the relevant page is in the viewer, select _File|Set as Home Page_ from the
 menu. Alternatively, add an entry `url.home` to the [configuration
 file](config_file.md). 
 
@@ -47,6 +48,10 @@ unless expressly configured by the user.
 
 To allow JGemini to store URL history, add `history.enabled=1` to the 
 [configuration file](config_file.md). 
+
+Please note that there is no way to make this change using the JGemini
+user interface -- it's deliberately been left as something slightly
+awkward, so you can't do it by accident.
 
 _How do I open a local .gmi file?_
 
@@ -70,14 +75,14 @@ let the image display at its full size.
 
 _How do I see an image at full size?_
 
-Right-click the caption or URI under the image, and select "Open" or "Open in
-new window" from the menu. This will display the image without size
+Right-click the caption or URI under the image, and select _Open_ 
+or _Open in new window_ from the menu. This will display the image without size
 constraints.
 
 _How do I download an image?_
 
 Right-click the caption or URI under the image, or the link to the image, and
-select "Download".  The File|Save menu won't work on a window that contains
+select _Download_.  The _File|Save_ menu won't work on a window that contains
 only an image, for tedious technical reasons.
 
 _Why can't I see a progress indicator when downloading a large document or image?_
@@ -162,7 +167,31 @@ as a matter of course, this feature might be added.
 
 _How do I send a client certificate with my requests?_
 
-Please see the separate [page about client certificates](client_certs.md)
+Please see the page on [identity](identity.md) to get started. 
+
+_What does the error message "Badly formatted directory" mean in the_
+New identity _dialog box?_
+
+You've entered an invalid name in the _Name for certificate_ field.  A
+"directory" here refers to a _user_ directory, and has nothing to do with files
+or folders. The name that goes into the client certificate has strict
+formatting rules but, for Gemini purposes, a name of the form "CN=My name" will
+almost always be sufficient.
+
+_How do I import an identity from another browser like Lagrange?_
+
+At present, this is a rather fiddly, manual process, because most applications
+that handle TLS certificates store them in the "PEM" format, while JGemini
+requires PKCS12 (or Java's proprietary 'JKS' format).
+
+See the section "Importing a certificate from another application" in the
+[client certificates](client_certs.md) page.
+
+_Does JGemini expose keystore passwords?_
+
+Yes. This is a clear security limitation, but it's no worse -- and perhaps
+slightly better -- than those clients which don't use any password protection
+on certificates at all.
 
 ## Emoji support 
 

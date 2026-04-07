@@ -14,13 +14,25 @@
 package me.kevinboone.jgemini.swing;
 import  me.kevinboone.jgemini.protocol.*;
 import javax.swing.SwingUtilities;
-import javax.swing.JOptionPane;
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.net.*;
 import java.io.*;
 import java.awt.GraphicsEnvironment;
 import me.kevinboone.jgemini.base.*;
+
+import java.security.*;
+import javax.security.auth.x500.*;
+import javax.security.cert.*;
+import org.bouncycastle.asn1.*;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.cert.*;
+import org.bouncycastle.cert.jcajce.*;
+import java.util.*;
+import java.math.*;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.jce.provider.*;
 
 public class Main
   {
@@ -29,6 +41,11 @@ public class Main
   public static void main (String[] args)
       throws Exception
     {
+    Security.addProvider (new BouncyCastleProvider());  
+
+    me.kevinboone.utils.ssl.CertUtil.makeSelfSignedCertKeystore ("JKS", "foo.jks", "CN=test",
+      "myclient", "changeit");
+
     if (System.getProperty ("jgemini.dumpfonts") != null)
       {
       String fonts[] = 

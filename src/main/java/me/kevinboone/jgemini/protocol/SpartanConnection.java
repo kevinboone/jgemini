@@ -11,7 +11,7 @@ package me.kevinboone.jgemini.protocol;
 
 import java.io.*;
 import java.net.*;
-import java.util.Collections;
+import java.util.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.utils.file.ContentGuesser;
 
@@ -23,6 +23,8 @@ public class SpartanConnection extends URLConnection
   private byte[] content = null;
   private String meta = null;
   private static StatusHandler statusHandler = StatusHandler.getInstance();
+  private final static ResourceBundle messagesBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
 
   public SpartanConnection (URL url) 
     {
@@ -151,7 +153,7 @@ public class SpartanConnection extends URLConnection
 	  content_buffer.write (data, 0, nRead);
           totalRead += nRead;
           if (totalRead > 1024)
-            statusHandler.writeMessage (Strings.LOADED + " " 
+            statusHandler.writeMessage (messagesBundle.getString ("loaded") + " " 
               + (totalRead / 1024) + " kb");
 	  }
 	}
