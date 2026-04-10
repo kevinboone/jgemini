@@ -34,8 +34,9 @@ fonts, so bundling emoji fonts wouldn't be helpful.
 
 _How do I set the home page?_
 
-If the relevant page is in the viewer, select _File|Set as Home Page_ from the
-menu. Alternatively, add an entry `url.home` to the [configuration
+If the relevant page is in the viewer, select _Edit|Settings_ from the
+menu to open the [Settings dialog](settings_dialog.md), and then select
+the _Home_ tab. Alternatively, add an entry `url.home` to the [configuration
 file](config_file.md). 
 
 _Why does JGemini not store my URL history between sessions?_
@@ -46,12 +47,17 @@ privacy hazard. Although there are ways to mitigate this hazard, I thought
 it would be easier, and safer, if JGemini simply didn't store it at all,
 unless expressly configured by the user.
 
-To allow JGemini to store URL history, add `history.enabled=1` to the 
+To allow JGemini to store URL history, go to the _History_ tab in 
+the [Settings dialog](settings_dialog), and check the box. 
+Alternatively add `history.enabled=1` to the 
 [configuration file](config_file.md). 
 
-Please note that there is no way to make this change using the JGemini
-user interface -- it's deliberately been left as something slightly
-awkward, so you can't do it by accident.
+_How do I clear my URL history?_
+
+Ggo to the _History_ tab in 
+the [Settings dialog](settings_dialog), and click "Clear history".
+Unless you disable the saving of URL history, JGemini will continue
+to add new URLs to the history after clearing existing ones. 
 
 _How do I open a local .gmi file?_
 
@@ -66,7 +72,9 @@ _How does JGemini handle images?_
 
 With Markdown documents, images are in-lined into the text by default. With
 Gemtext documents, in-lining behaviour is controlled by the configuration file
-property `gemtext.inline.images`, which takes values `yes` or `no`.
+property `gemtext.inline.images`, which takes values `yes` or `no`. You
+can also use the _Images_ tab of the _Settings_ dialog to control this
+behaviour.
 
 If the images are in-lined, they are all displayed with the same width,
 controlled by the property `inline.image.width`. This is because Gemtext
@@ -103,15 +111,17 @@ without reimplementing the whole renderer.
 
 _What document types can JGemini display?_
 
-Gemtext, plain text, Markdown, and gophermaps. In a client-server interaction,
-the file type is determined by the response, with protocols that provide that
-information. For local files, it's just based on the filename extension. The
-same is true for protocols like Gopher, which don't give detailed file type
-information.
+Gemtext, plain text, Markdown, and gophermaps, along with images in
+GIF, PNG, and JPEG format.
+
+In a client-server interaction, the file type is determined by the response
+from the server, with protocols that provide that information. For local files,
+it's just based on the filename extension. The same is true for protocols like
+Gopher, which don't give detailed file type information.
 
 _How do I go to the top-level directory of a Gemini capsule?_
 
-Use the Go|Root menu command.  JGemini tries to do the same as the Lagrange
+Use the _Go|Site root_ menu command.  JGemini tries to do the same as the Lagrange
 browser, and use a reasonable guess at what the "root" path amounts to. In many
 cases it will just be `/`. However, in a URI that contains a username
 (`~fred`), then it's more useful to interpret the top level of the user's
@@ -124,11 +134,12 @@ Some keystrokes only work when the input focus is in the document viewer window
 
 _How do I disable the use of the URL bar for searching?_
 
-In the configuration file, set `urlbar.search.enabled=0`.
+In the configuration file, set `urlbar.search.enabled=0`, or got to the
+_Search_ tab of the _Settings_ dialog.
 
 ## Configuration
 
-_How do I change the fonts?_
+_How do I change the document fonts?_
 
 You'll have to provide a custom stylesheet in CSS format. See the
 page on [styling](styling.md). 
@@ -139,18 +150,25 @@ _How do I find out what fonts are available?_
 
 _The screen font is too small. What should I do?_
 
-Edit the base font size in the configuration file.  You can increase or
+You can increase or
 decrease the base font size at runtime using ctrl-[ and ctrl-]. 
+To make a permanent change, use the _Appearance_ tab of the _Settings_
+dialog, or edit the `ui.document.font.size` setting in the
+user configuration file.
 
 ## Bookmarks
 
-_In the "Bookmark|Edit feature, in what format are bookmarks stored?_
+_In what format are bookmarks shown in the bookmarks editor?_
 
 Bookmarks are stored in the local bookmarks file as links in a Gemtext document. 
 Every time you bookmark a page, JGemini just appends a new link for the
 bookmark. You can edit the bookmarks however you wish, so long as it remains
 a valid Gemtext document, and you don't mind having new links added to the
 end. 
+
+Therefore, bookmarks are just Gemtext links, with the format:
+
+    => {URL} {text} 
 
 _Where are bookmarks stored?_
 
@@ -161,9 +179,7 @@ file in the `$HOME/.jgemeni` directory called `bookmarks.gmi`.
 
 _Can I see the server's certificate?_
 
-Not easily, and JGemini doesn't check anything in the certificate, anyway. If
-there ever comes a time when Gemini servers start using verifiable certificates
-as a matter of course, this feature might be added. 
+Yes: use the menu command _Tools|Server certificate info_.
 
 _How do I send a client certificate with my requests?_
 
@@ -174,7 +190,7 @@ New identity _dialog box?_
 
 You've entered an invalid name in the _Name for certificate_ field.  A
 "directory" here refers to a _user_ directory, and has nothing to do with files
-or folders. The name that goes into the client certificate has strict
+and folders. The name that goes into the client certificate has strict
 formatting rules but, for Gemini purposes, a name of the form "CN=My name" will
 almost always be sufficient.
 
@@ -190,8 +206,8 @@ See the section "Importing a certificate from another application" in the
 _Does JGemini expose keystore passwords?_
 
 Yes. This is a clear security limitation, but it's no worse -- and perhaps
-slightly better -- than those clients which don't use any password protection
-on certificates at all.
+slightly better -- than those Gemini clients which don't use any password
+protection on certificates at all.
 
 ## Emoji support 
 
@@ -200,7 +216,7 @@ _Why aren't emojis displayed properly in the document viewer?_
 You need the appropriate fonts and configuration -- not all fonts contain
 glyphs for the emoji characters. `Segoe UI Emoji` is a workable choice. 
 
-Note that Java Swing is pretty fussy about what fonts it's prepared to use.
+Note that Java Swing is pretty fussy about which fonts it's prepared to use.
 However, once there is a suitable font in place, you don't have to tell JGemini
 to use it in the document viewer -- the viewer is smart enough to find a font
 that contains the relevant glyphs if the main display font does not have them.

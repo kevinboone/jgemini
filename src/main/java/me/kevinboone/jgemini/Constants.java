@@ -4,15 +4,15 @@
 
   Constants
 
-  This file contains definitions of all the constant text items that are
+  This file contains definitions of all the constants that are
     referenced in more than one place. In the case of settings keys,
     one of those places might be the documentation -- not everything in
     this file is referenced more than once in Java code.
 
-  I haven't included here configuration defaults that aren't textual,
-    or for which 'null' is a necessary default.
+  I haven't included here configuration defaults for which 'null' 
+    is a necessary default.
 
-  None of these strings need to be translated.
+  None of the strings need to be translated.
 
   Copyright (c)2026 Kevin Boone, GPLv3.0 
 
@@ -24,7 +24,7 @@ public interface Constants
   // General
 
   public final static String APP_NAME = "JGemini";
-  public final static String VERSION = "2.0.3";
+  public final static String VERSION = "2.0.4";
   // Header of user properties file
   public final static String PROPS_COMMENTS = "JGemini user configuration"; 
   // Header of bookmarks file
@@ -90,6 +90,10 @@ public interface Constants
     "about:/edit_bookmarks_dialog.md"; 
   public final static String DOC_EDIT_SETTINGS = 
     "about:/edit_settings_dialog.md"; 
+  public final static String DOC_INDEX = 
+    "about:/index.md"; 
+  public final static String DOC_RELEASE_NOTES = 
+    "about:/release_notes.md"; 
   public final static String DOC_NEW_IDENT_DIALOG = 
     "about:/new_identity_dialog.md"; 
   // "Attach identity to keystore" dialog
@@ -97,7 +101,14 @@ public interface Constants
     "about:/attach_identity_dialog.md"; 
   public final static String DOC_SET_IDENT_DIALOG = 
     "about:/set_identity_dialog.md"; 
-  public final static String DOC_INDEX = 
-    "about:/index.md"; 
+  public final static String DOC_THEME_DIALOG = 
+    "about:/theme_dialog.md"; 
+  public final static String DOC_SETTINGS_DIALOG = 
+    "about:/settings_dialog.md"; 
+
+  // Sizes
+
+  public static final int DIALOG_ROWS = 6;
+  public static final int DIALOG_COLS = 25;
   }
 

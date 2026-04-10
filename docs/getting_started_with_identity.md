@@ -36,12 +36,12 @@ tools.
 
 When you click _Submit_, all being well, JGemini will generate the
 necessary files, and return to the _Set identity_ dialog, where you can assign
-the newly-created identity to the remote host.
+the newly-created identity to the host that provided the current page.
 
-Please note that JGemini's identity manager is somewhat rudimentary. 
-It can create new identities, switch identities for remote hosts, 
-and assign an existing keystore to an identity. What it can't do is
-to delete existing identity entries. To do that you'll need
+Please note that JGemini's identity manager is somewhat rudimentary.  It can
+create new identities, switch identities for remote hosts, and assign an
+existing keystore to an identity. What it can't do, however, o is to delete
+existing identity entries. To do that you'll need
 to edit the [configuration file](config_file.md).
 
 

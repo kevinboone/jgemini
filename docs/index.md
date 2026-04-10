@@ -10,6 +10,10 @@ This is the built-in documentation for JGemini version 2.0.
 
 [JGemini overview](jgemini_overview.md)
 
+[Release notes](release_notes.md)
+
+[Some useful links](useful_links.md)
+
 ## Basic operation
 
 [JGemini's user interface](user_interface.md)

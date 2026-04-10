@@ -95,10 +95,10 @@ public class Config extends Properties
 
 /*=========================================================================
   
-  getEmojiStripBookmark 
+  getEmojiStripBookmarks
 
 =========================================================================*/
-  public boolean getEmojiStripBookmark()
+  public boolean getEmojiStripBookmarks()
     {
     return emojiStripBookmarks;
     }
@@ -239,10 +239,10 @@ public class Config extends Properties
   getInlineImageWidth 
 
 =========================================================================*/
-  public String getInlineImageWidth()
+  public int getInlineImageWidth()
     {
-    return getProperty 
-        (Constants.INLINE_IMAGE_WIDTH, Constants.DEFLT_INLINE_IMAGE_WIDTH);
+    return Integer.parseInt (getProperty 
+        (Constants.INLINE_IMAGE_WIDTH, Constants.DEFLT_INLINE_IMAGE_WIDTH));
     }
 
 /*=========================================================================
@@ -388,6 +388,7 @@ public class Config extends Properties
     if (val == null) return deflt;
     if (val.equals ("1")) return true;
     if (val.equals ("yes")) return true;
+    if (val.equals ("true")) return true;
     if (val.equals ("on")) return true;
     return false;
     }
@@ -397,12 +398,12 @@ public class Config extends Properties
   fireSettingsChangedListeners 
 
 =========================================================================*/
-  private void fireSettingsChangedListeners()
+  public void fireSettingsChangedListeners (int ccMode)
     {
     Logger.in();
     int l = listeners.size();
     for (int i = 0; i < l; i++)
-      listeners.elementAt(i).configChanged();
+      listeners.elementAt(i).configChanged (ccMode);
     Logger.out();
     }
 
@@ -544,7 +545,7 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
       "User properties file is " + propsFile);
     loadFromFile (propsFile);
 
-    fireSettingsChangedListeners();
+    fireSettingsChangedListeners (ConfigChangeListener.CCMODE_REFRESH);
     Logger.out();
     }
 
@@ -618,6 +619,17 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
 
 /*=========================================================================
   
+  setEmojiStripBookmark 
+
+=========================================================================*/
+  public void setEmojiStripBookmarks (boolean f)
+    {
+    emojiStripBookmarks = f;
+    setProperty (Constants.EMOJI_STRIP_BOOKMARKS, "" + f);
+    }
+
+/*=========================================================================
+  
   setHomePage 
 
 =========================================================================*/
@@ -626,6 +638,27 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
     if (Logger.isDebug())
       Logger.log (Logger.class, Logger.INFO, "setting home page to " + uri);
     setProperty (Constants.URL_HOME, uri);
+    }
+
+/*=========================================================================
+  
+  setCustomCssFile
+
+=========================================================================*/
+  public void setCustomCssFile (String file)
+    {
+    setProperty (Constants.UI_DOCUMENT_CUSTOM_CSS, file);
+    }
+
+/*=========================================================================
+  
+  setHistoryEnabled
+
+=========================================================================*/
+  public void setHistoryEnabled (boolean enabled)
+    {
+    historyEnabled = enabled;
+    setProperty (Constants.HISTORY_ENABLED, "" + enabled);
     }
 
 /*=========================================================================
@@ -647,6 +680,89 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
     setProperty (Constants.IDENT_TAG + hostname, ident);
     Logger.out();
     }
+
+/*=========================================================================
+  
+  setTheme
+
+=========================================================================*/
+  public void setTheme (String theme)
+    {
+    setProperty (Constants.UI_DOCUMENT_THEME, theme);
+    }
+
+/*=========================================================================
+  
+  setGemtextInlineImages 
+
+=========================================================================*/
+  public void setGemtextInlineImages (boolean f)
+    {
+    gemtextInlineImages = f;
+    setProperty (Constants.GEMTEXT_INLINE_IMAGES, "" + f);
+    }
+
+/*=========================================================================
+  
+  setHistorySize
+
+=========================================================================*/
+  public void setHistorySize (int n)
+    {
+    setProperty (Constants.HISTORY_SIZE, "" + n);
+    }
+
+/*=========================================================================
+  
+  setInlineImageWidth 
+
+=========================================================================*/
+  public void setInlineImageWidth (int n)
+    {
+    setProperty (Constants.INLINE_IMAGE_WIDTH, "" + n);
+    }
+
+/*=========================================================================
+  
+  getUrlbarSearchEnabled 
+
+=========================================================================*/
+  public void setUrlbarSearchEnabled (boolean f)
+    {
+    urlbarSearchEnabled = f;
+    setProperty (Constants.URLBAR_SEARCH_ENABLED, "" + f);
+    }
+
+/*=========================================================================
+  
+  setUrlbarSearchUrl
+
+=========================================================================*/
+  public void setUrlbarSearchUrl (String url)
+    {
+    setProperty (Constants.URLBAR_SEARCH_URL, url);
+    }
+
+/*=========================================================================
+  
+  setWindowHeight
+
+=========================================================================*/
+  public void setWindowHeight (int h)
+    {
+    setProperty (Constants.WINDOW_H, "" + h);
+    }
+
+/*=========================================================================
+  
+  setWindowWidth
+
+=========================================================================*/
+  public void setWindowWidth (int w)
+    {
+    setProperty (Constants.WINDOW_W, "" + w);
+    }
+
 
   }
 

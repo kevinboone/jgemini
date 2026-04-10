@@ -32,12 +32,20 @@ public class GeminiConnection extends URLConnection
     DefaultClientCertManager.getInstance();
   private final static ResourceBundle messagesBundle = 
     ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
+  private String certinfo = null;
 
   public GeminiConnection (URL url) 
     {
     super (url);
     Logger.in();
     Logger.out();
+    }
+
+  @Override
+  public String getRequestProperty (String key)
+    {
+    if ("certinfo".equals (key)) return certinfo;
+    return super.getRequestProperty (key);
     }
 
   private static int parseStatus (String line)
@@ -135,6 +143,32 @@ public class GeminiConnection extends URLConnection
           tooLong + ", URI=" +  getURL());
         throw new IOException (tooLong + ", URI=" +  getURL());
         }
+
+      // If we got this far, we must have had a reasonable SSL handshake.
+      // So let's save the certificate information for future use.
+      StringBuffer sb = new StringBuffer();
+      SSLSession session = s.getSession();
+      java.security.cert.Certificate[] certs = session.getPeerCertificates();
+      int cl = certs.length;
+      for (int i = 0; i < cl; i++)
+        {
+        java.security.cert.Certificate cert = certs[i];
+        if (cert instanceof java.security.cert.X509Certificate)
+          {
+          java.security.cert.X509Certificate xcert = (java.security.cert.X509Certificate)cert;
+          sb.append ("" + i);
+          sb.append (":\nSubject: ");
+          sb.append (xcert.getSubjectDN().toString());
+          sb.append ("\nIssuer: ");
+          sb.append (xcert.getIssuerDN().toString());
+          sb.append ("\nExpires: ");
+          sb.append (xcert.getNotAfter().toString());
+          sb.append ("\nAlgorithm: ");
+          sb.append (xcert.getSigAlgName());
+          sb.append ("\n");
+          }
+        }
+      certinfo = new String (sb); 
      
       int status = parseStatus (line);
       Logger.log (getClass().getName(), Logger.DEBUG, "Got status code " + status);

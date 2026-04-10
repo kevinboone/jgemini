@@ -19,7 +19,7 @@ A client certificate contains a minimum of information about the user --
 usually just a user ID -- encoded in a cryptographically strong way. It would
 be exceptionally difficult to impersonate another user by spoofing the user's
 certificate. To be able to use a client certificate at all, a Gemini browser
-has to have access to its accompanying _private key_ This is private
+has to have access to its accompanying _private key_ This is internal 
 information that is never sent over the network. The client certificate and the
 associated private key are nearly always generated as a pair, and used
 together.
@@ -43,10 +43,11 @@ format Java understands, and tell JGemini to use it.  You might have to do that
 if you want to import a client certificate from some other
 application.
 
-It's important to understand that, although a keystore can contain many
-different certificates with many different purposes, JGemini doesn't expect to
-find more than one client certificate in any keystore.  JGemini will always use
-the first certificate it finds in a keystore, regardless how many there are. 
+It's important to understand that although a keystore may -- in principle --
+contain many different certificates with many different purposes, JGemini
+doesn't expect to find more than one client certificate in any keystore.
+JGemini will always use the first certificate it finds in a keystore,
+regardless how many there are. 
 
 As a result, creating a new "identity" in JGemini amounts to creating a
 keystore that contains exactly one client certificate. Because keystores are

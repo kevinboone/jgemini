@@ -7,9 +7,14 @@ To navigate to a site (capsule, gopherhole, etc), just enter (or copy/paste) its
 URL into the URL bar at the top of the window. The "Home" and "Back" buttons
 on the toolbar do what you'd expect. 
 
-JGemini will display the amount of data it's received from the server, in
-increments of 16kB. Many documents used with small net protocols are smaller
-than this, so all you'll see is "Loading..." in the status bar.
+If direct searching from the URL bar is enabled (by default it is), you can enter
+a search string directly into the URL bar. JGemini has to guess at what is a
+search term and what a URL, and sometimes it will get this wrong, which is why
+this feature can be disabled.
+
+JGemini will display in the status bar the amount of data it's received from
+the server, in increments of 16kB. Many documents used with small net protocols
+are smaller than this, so all you'll see is "Loading..." flash in the status bar.
 
 Use the `X` button on the toolbar, or the _Go|Stop_ menu command, to cancel a
 transfer in progress.

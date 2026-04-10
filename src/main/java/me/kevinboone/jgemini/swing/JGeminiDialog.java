@@ -18,6 +18,7 @@ import java.util.*;
 import java.awt.event.*;
 import java.net.URL;
 import java.net.URLEncoder;
+import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.ssl.*;
 
@@ -25,6 +26,8 @@ public class JGeminiDialog extends JDialog
   {
   protected final static ResourceBundle dialogsBundle = 
     ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Dialogs");
+
+  final String caption;
 
 /*=========================================================================
   
@@ -34,6 +37,7 @@ public class JGeminiDialog extends JDialog
   JGeminiDialog (Window parent, String caption, Dialog.ModalityType modality)
     {
     super (parent, caption, modality);
+    this.caption = caption;
     }
 
 /*=========================================================================
@@ -41,7 +45,7 @@ public class JGeminiDialog extends JDialog
   createButton
 
 =========================================================================*/
-  JButton createButton (String key)
+  protected JButton createButton (String key)
     {
     String label = dialogsBundle.getString (key);
     JButton button = new JButton (label);
@@ -52,6 +56,49 @@ public class JGeminiDialog extends JDialog
       button.setMnemonic ((int)o);
       }
     return button;
+    }
+
+/*=========================================================================
+  
+  createLabel
+
+=========================================================================*/
+  protected JLabel createLabel (String key)
+    {
+    String label = dialogsBundle.getString (key);
+    JLabel l = new JLabel (label);
+    String mKey = key + "_mnemonic";
+    if (dialogsBundle.containsKey (mKey))
+      {
+      Object o = dialogsBundle.getObject (mKey);
+      l.setDisplayedMnemonic ((int)o);
+      }
+    return l;
+    }
+
+/*=========================================================================
+  
+  reportGenError
+
+  Do something vaguely useful with error messages
+
+=========================================================================*/
+  protected void reportGenError (String message)
+    {
+    DialogHelper.errorDialog (this, null, message);
+    }
+
+/*=========================================================================
+  
+  reportGenException
+
+  Do something vaguely useful with exceptions. In the longer term,
+  we need to make the whole exception text available 
+
+=========================================================================*/
+  protected void reportGenException (Exception e)
+    {
+    reportGenError (e.toString()); // TODO
     }
 
   }

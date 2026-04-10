@@ -1,26 +1,22 @@
-Change display theme from a menu
+gophers support.
+
+Pop up the URL history and have it respond to the URL bar.
 
 Fix the hang-on-exit problem with Gopher.
 
 Handle media streams in some kind of useful way, rather than just downloading
-them endlessly until the disk is full.
-
-Show server information.
+them endlessly until we run out of memory. 
 
 Find a way to indicate when page rendering is ongoing, and when it is complete.
 It's not usually a problem for text pages, but images sometimes take a while to
 transfer.
 
-Add links to in-line images with Markdown documents.
-
-Report server certificate information or, at least, indicate when TLS is in use.
+Add clickable links to in-line images within Markdown documents.
 
 Catch redirect loops.
 
 Implement a download manager. At least, find a way to prevent the program exiting whilst a 
 download is in progress.
-
-Improve client certificate management. As a first step, show identity for a particular server.
 
 Find a way to supply emoji fonts internally. This isn't easy, unless I want to 
 apply a font to every single element of the document viewer.

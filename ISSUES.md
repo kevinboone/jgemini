@@ -124,46 +124,6 @@ to implement them. Using multiple windows looks the same, from the user
 perspective, as opening multiple instances of JGemini. However, since all
 windows share a JVM, the multi-window approach uses much less memory.
 
-## LIMITATION : No feed support
-
-JGemini does not support feeds of any kind. If you select a feed, you'll
-probably get a page of XML sent to the platform's default web browser.
-As a minimum, we should convert feeds into viewable documents with
-embedded links. It would even be possible -- but a lot of work
--- to subscribe to feeds.
-
-## LIMITATION : Emoji detection is not very robust
-
-When displaying Gemtext, JGemini uses an arrow symbol to indicate a link that
-can be followed, as well as displaying the link text in a highlighted colour.
-If the first character of the link text is an emoji, then the link doesn't get
-the arrow -- I assume that the author is using emojis to highlight links, and
-the extra arrow would look odd.  However, it's not as easy to detect emojis in
-Java as it ought to be (before Java 21), and sometimes this test doesn't work
-properly.
-
-## LIMITATION : Can't show a list of bookmarks in a menu
-
-JGemini shows bookmarks in a separate document. While this works fine, and 
-allows fine-grained control over the layout, it would be nice to have 
-a bookmarks menu, that shows the most popular bookmarks without loading
-a new document.
-
-Unfortunately, I can't find a way to do this in Java Swing, because so many
-site/capsule captions contain emojis. Although JGemini's document window will
-handle emojis -- with the appropriate fonts installed -- I don't see any way
-to put them on menus. This makes it difficult to implement a bookmarks
-menu, unless I filter out all the emojis.
-
-## LIMITATION : Bookmark editor doesn't show emojis properly
-
-Although JGemini's document window will handle emojis -- with the appropriate
-fonts installed -- the Java Swing JTextArea does not. They appear as empty
-boxes.
- 
-It's still possible to edit the bookmark captions, so long as you realize that
-the boxes are actually emojis, and don't just delete them. 
-
 ## LIMITATION : Some style/appearance changes can't be made without a restart
 
 If you edit the configuration file, JGemini will reload the changed settings.
@@ -174,13 +134,6 @@ This is because it appears only to be possible to change elements of the Swing
 "pluggable look and feel" before components are created. There are various
 kluges that are supposed to work around this, but none of them worked when I
 tried.
-
-## LIMITATION : Management of client certificates is manual and clunky
-
-Although I've documented the process, I imagine it's hard for somebody to
-follow, who isn't familiar with the use of Java keystores. It would be nicer if
-JGemini could create and store client certificates on demand, perhaps in the
-same way that Lagrange does. But this will need a lot of work to implement. 
 
 ## LIMITATION : No download manager
 

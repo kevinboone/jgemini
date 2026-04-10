@@ -222,8 +222,7 @@ private void handleSubmit()
     }
   catch (Exception e)
     {
-    JOptionPane.showMessageDialog (this, e.getMessage(), 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenError (e.getMessage());
     idName.requestFocus();
     return;
     }
@@ -231,8 +230,7 @@ private void handleSubmit()
     {
     String keystoreEmpty = dialogsBundle.getString 
       ("attachidentitydialog_keystore_empty");
-    JOptionPane.showMessageDialog (this, keystoreEmpty, 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenError (keystoreEmpty);
     keystore.requestFocus();
     return;
     }
@@ -240,8 +238,7 @@ private void handleSubmit()
     {
     String passwordEmpty = dialogsBundle.getString 
       ("attachidentitydialog_password_empty");
-    JOptionPane.showMessageDialog (this, passwordEmpty, 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenError (passwordEmpty);
     password.requestFocus();
     return;
     }
@@ -252,8 +249,7 @@ private void handleSubmit()
     }
   catch (Exception e)
     {
-    JOptionPane.showMessageDialog (this, e.toString(), 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenException (e);
     password.requestFocus();
     return;
     }
@@ -263,9 +259,7 @@ private void handleSubmit()
 
   if (keystoreSpec != null)
     {
-    JOptionPane.showMessageDialog (this,  
-      messagesBundle.getString ("identity_exists") + ": " + name,
-        caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenError (messagesBundle.getString ("identity_exists") + ": " + name);
     idName.requestFocus();
     return ; 
     }
@@ -278,13 +272,9 @@ private void handleSubmit()
     }
   catch (Exception e)
     {
-    JOptionPane.showMessageDialog (this, e.toString(), 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenException (e);
     }
   }
 }
-
-
-
 
 

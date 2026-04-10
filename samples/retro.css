@@ -1,0 +1,70 @@
+a 
+  {
+  text-decoration: none; 
+  color: #00FF00; 
+  }
+
+body 
+  {
+  background: black; 
+  color: green; 
+  font: %%base_font_size%%px monospace; 
+  margin-left: 40px; 
+  margin-right: 40px; 
+  margin-bottom: 10px; 
+  margin-top: 20px 
+  }
+
+blockquote 
+  {
+  background: #101010; 
+  font-weight: bold; 
+  padding: 8px 
+  }
+
+code 
+  {
+  color:white; 
+  font: %%base_font_size%%px monospace
+  }
+
+h1 
+  {
+  color: black; 
+  background: green;
+  font: %%h1_font_size%%px monospace; 
+  font-weight: bold;
+  padding: 10px;
+  }
+
+h2 
+  {
+  color: black; 
+  background: green;  
+  font: %%h2_font_size%%px monospace;
+  margin-top: 10px;
+  padding: 5px;
+  }
+
+h3 
+  {
+  color: green; 
+  font: %%h3_font_size%%px monospace;
+  }
+
+p 
+  {
+  color: green; 
+  }
+
+pre 
+  {
+  font: %%base_font_size%%px monospace; 
+  margin-top: 16px;
+  }
+
+ul 
+  {
+  margin-top: 8px;
+  }
+

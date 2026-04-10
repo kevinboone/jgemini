@@ -2,12 +2,12 @@
 
 ## TLS and certificate issues with Gemini
 
-There is no TLS certificate check, not even trust-on-first-use.  JGemini uses
+There is _no_ TLS certificate check, not even trust-on-first-use.  JGemini uses
 encrypted TLS communication because Gemini demands it. However, most Gemini
 servers do not issue certificates that are validated by external authorities.
 So, rather than prompting the user to confirm every site, JGemini simply
 assumes every server certificate is fine. Is this a security problem?  Sure. If
-you're planning world domination, or think governments are monitoring your
+you're planning world domination, or think governments are spying on your
 communication, this isn't the software to use. 
 
 ## Please be patient
@@ -15,8 +15,8 @@ communication, this isn't the software to use.
 Most "small net" servers run on low-cost cloud hosts or in people's homes; they
 are often not very responsive.
 
-In order to keep the user interface moving, all the content-fetching is
-done asynchronously, in background threads. It's not always easy to see if a
+In order to keep the user interface moving, JGemini does all content-fetching
+asynchronously in background threads. It's not always easy to see if a
 download is still in progress, and this can cause problems with slow servers.
 
 If you try to download something else while an existing download is ongoing,
@@ -38,17 +38,16 @@ Please be patient.
 
 JGemini displays text in Gemtext, plain text, and Markdown formats, Atom feeds,
 and popular image types.  
-Where the server provides a content type, JGemini will usually use it.
-If the server doesn't, or can't, provide one, JGemini relies on
-filename extensions and guesswork.
+
+Where the server provides a content type, JGemini will usually use it.  If the
+server doesn't, or can't, provide one, JGemini relies on filename extensions
+and guesswork.
 
 Sometimes JGemini will override a clear content type from the server, or a
-clear filename.
-
-For example, when it receives a file using `nex`, with a filename ending in
-`.txt`, or where there is no filename, JGemini treats the file as
-"nex-flavoured text". This format is just like plain text, except that lines
-beginning with "=>" are treated as links, as with Gemtext. 
+clear filename.  For example, when it receives a file using `nex`, with a
+filename ending in `.txt`, or where there is no filename, JGemini treats the
+file as "nex-flavoured text". This format is just like plain text, except that
+lines beginning with "=>" are treated as links, as with Gemtext. 
 
 In addition, because Gemini servers often don't report the MIME type of
 Markdown correctly, JGemini treats any file it retrieves whose name ends in
@@ -110,9 +109,9 @@ but that doesn't mean the server will understand them -- particularly Gopher.
 
 ## Document font size affects only text 
 
-The main document font size, whether it's set in the configuration file
+The main document font size, whether it's set in configuration 
 or by using ctrl+[ and ctrl+], only affects text. Images will always be
-displayed using the size in the configuration file, or full-sized if they
+displayed using the fixed size in the configuration, or full-sized if they
 are in a page of their own.
 
 ## Gopher can be a bit awkward 
@@ -133,38 +132,43 @@ leading `/` to get a response.
 
 ## Feed rendering is rudimentary
 
-JGemini supports only Atom feeds, and only to the extent of formatting
-them for display in the document viewer. Authoring tools for Atom aren't
-particularly consistent with one another. For example, some tools 
-fill in the 'publication date' field, while others use the 'updated date'.
-Some supply both. 
+JGemini supports only Atom feeds, and only to the extent of formatting them for
+display in the document viewer. Authoring tools for Atom aren't particularly
+consistent with one another. For example, some tools fill in the 'publication
+date' field, while others use the 'updated date'.  Some supply both. 
 
-Some feeds have multiple URLs for the same entry, and they aren't always
-easy to distinguish.
+Some feeds have multiple URLs for the same entry, and they aren't always easy
+to distinguish.
 
-JGemini doesn't distinguish the different dates, or try to disambiguate 
+JGemini doesn't distinguish the different dates, or try to disambiguate
 multiple URLs for the same entry.
 
-Most significantly, JGemini is not a feed aggregator -- it doesn't 
-provide a way to subscribe to multiple feeds.
+Most significantly, JGemini is not a feed aggregator -- it doesn't provide a
+way to subscribe to multiple feeds.
 
 ## There is no streaming support
 
 None of the protocols that JGemini supports provide any information about
-the length of the data the server will send. A stream (audio, video) by
+the length of the data the server is sending. A stream (audio, video) by
 its very nature has no end; but JGemini can't distinguish a stream from a
-file it could download to completion.
+file it could, in principle, download to completion.
 
 As a result, if you follow a link to a stream, JGemini will download it until
-you get bored waiting, or you disk fills up.
+you get bored waiting, or it runs out of memory.
+
+## Styling issues
+
+You can switch themes at run-time, using the _Theme_ tab of the
+[Settings dialog](settings_dialog.md). However,
+not all themes apply all possible styles to all elements. If you do change
+themes at runtime, the results might not be _exactly_ as they would be if you
+started JGemini from scratch. They should be similar, though.
 
 ## Missing features
 
-There is no download manager. JGemini will download multiple files concurrently,
+_There is no download manager_. JGemini will download multiple files concurrently,
 but there's no way to see which transfers are active and which completed. Nor
 is there a way to stop a particular transfer.
-
-Management of client certificates is manual, and clunky.
 
 
 [Documentation index](index.md)

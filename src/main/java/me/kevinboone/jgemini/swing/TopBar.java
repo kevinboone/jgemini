@@ -26,7 +26,13 @@ public class TopBar extends JPanel
   private boolean urlbarEnabled = true;
   private final static ResourceBundle tooltipsBundle = 
     ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Tooltips");
+  private Config config = Config.getConfig();
 
+/*=========================================================================
+  
+  Constructor
+
+=========================================================================*/
   public TopBar (MainWindow mainWindow)
     {
     super();
@@ -59,12 +65,12 @@ public class TopBar extends JPanel
     java.net.URL backImgURL = getClass().getResource("/images/back.png");
     ImageIcon backIcon = new ImageIcon (backImgURL);
     JButton backButton = new JButton (backIcon);
-    backButton.addActionListener((event) -> mainWindow.goBack());
+    backButton.addActionListener((event) -> mainWindow.back());
     backButton.setToolTipText (tooltipsBundle.getString("back"));
     java.net.URL homeImgURL = getClass().getResource("/images/home.png");
     ImageIcon homeIcon = new ImageIcon (homeImgURL);
     JButton homeButton = new JButton (homeIcon);
-    homeButton.addActionListener((event) -> mainWindow.goHome());
+    homeButton.addActionListener((event) -> mainWindow.home());
     homeButton.setToolTipText (tooltipsBundle.getString("home"));
     java.net.URL refreshImgURL = getClass().getResource("/images/refresh.png");
     ImageIcon refreshIcon = new ImageIcon (refreshImgURL);
@@ -74,12 +80,12 @@ public class TopBar extends JPanel
     java.net.URL identImgURL = getClass().getResource("/images/person.png");
     ImageIcon identIcon = new ImageIcon (identImgURL);
     JButton identButton = new JButton (identIcon);
-    identButton.addActionListener((event) -> mainWindow.goIdent());
+    identButton.addActionListener((event) -> mainWindow.manageIdentity());
     identButton.setToolTipText (tooltipsBundle.getString("identity"));
     java.net.URL stopImgURL = getClass().getResource("/images/stop.png");
     ImageIcon stopIcon = new ImageIcon (stopImgURL);
     JButton stopButton = new JButton (stopIcon);
-    stopButton.addActionListener((event) -> mainWindow.goStop());
+    stopButton.addActionListener((event) -> mainWindow.stop());
     stopButton.setToolTipText (tooltipsBundle.getString("stop"));
 
     GridBagConstraints c = new GridBagConstraints();
@@ -97,16 +103,86 @@ public class TopBar extends JPanel
     Logger.out();
     }
 
-  /** Loads the URL combo box from the history file, if there is one.
-      Not having a history file specified, or failing to load one that is,
-      will not be reported to the user as an error. */
+/*=========================================================================
+  
+  addToHistory 
+
+=========================================================================*/
+  private void addToHistory (String url)
+    {
+    Logger.in();
+    if (Logger.isDebug())
+      Logger.log (getClass().getName(), Logger.DEBUG, "URI=" + url);
+
+    urlbarEnabled = false;
+
+    int l = urlBox.getItemCount();
+    int max = config.getHistorySize();
+    boolean found = false;
+    for (int i = 0; i < l && !found; i++)
+      {
+      String s = (String)urlBox.getItemAt (i);
+      if (s.equals (url)) found = true;
+      }
+
+    if (found)
+      {
+      Logger.log (getClass().getName(), Logger.INFO, 
+        "URI already present in history");
+      }
+    else
+      {
+      Logger.log (getClass().getName(), Logger.DEBUG, 
+        "adding URI to history");
+      if (l >= max)
+        urlBox.removeItemAt (0);
+      urlBox.addItem (url);
+      }
+
+    urlbarEnabled = true;
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+  clearHistory 
+
+=========================================================================*/
+  protected void clearHistory() 
+    {
+    Logger.in();
+    urlbarEnabled = false;
+    urlBox.removeAllItems();
+    String historyFile = config.getHistoryFile();
+    if (historyFile != null && historyFile.length() > 0)
+    try
+      {
+      (new File (historyFile)).delete();
+      }
+    catch (Exception e)
+      {
+      DialogHelper.exceptionDialog (this, null, e);
+      }
+
+    urlbarEnabled = true;
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+  loadHistoryFile
+
+  Loads the URL combo box from the history file, if there is one.
+  Not having a history file specified, or failing to load one that is,
+  will not be reported to the user as an error. 
+
+=========================================================================*/
   public void loadHistoryFile()
     {
     Logger.in();
 
     urlbarEnabled = false; 
 
-    Config config = Config.getConfig();
     String historyFile = config.getHistoryFile();
 
     Logger.log (getClass().getName(), Logger.DEBUG, "Loading history from: " + historyFile);
@@ -135,13 +211,17 @@ public class TopBar extends JPanel
     Logger.out();
     }
 
-  /** Saves the history file if one is specified. We'll report an error
-      if there is a history file, but it can't be written. */
+/*=========================================================================
+  
+  saveHistoryFile
+
+  Saves the history file if one is specified. We'll report an error
+    if there is a history file, but it can't be written. 
+
+=========================================================================*/
   private void saveHistoryFile()
     {
     Logger.in();
-
-    Config config = Config.getConfig();
 
     if (!config.getHistoryEnabled()) return;
 
@@ -163,58 +243,26 @@ public class TopBar extends JPanel
       }
     catch (Exception e)
       {
-      JOptionPane.showMessageDialog (this, "Could not write history file: " 
-         +  e.toString(), Constants.APP_NAME, JOptionPane.ERROR_MESSAGE); 
+      mainWindow.reportGenError ("Could not write history file: " 
+         +  e.toString());
       }
     Logger.out();
     }
 
-  private void addToHistory (String url)
-    {
-    Logger.in();
-    if (Logger.isDebug())
-      Logger.log (getClass().getName(), Logger.DEBUG, "URI=" + url);
+/*=========================================================================
+  
+  showUrl 
 
-    urlbarEnabled = false;
-
-    int l = urlBox.getItemCount();
-    Config config = Config.getConfig();
-    int max = config.getHistorySize();
-    boolean found = false;
-    for (int i = 0; i < l && !found; i++)
-      {
-      String s = (String)urlBox.getItemAt (i);
-      if (s.equals (url)) found = true;
-      }
-
-    if (found)
-      {
-      Logger.log (getClass().getName(), Logger.INFO, 
-        "URI already present in history");
-      }
-    else
-      {
-      Logger.log (getClass().getName(), Logger.DEBUG, 
-        "adding URI to history");
-      if (l >= max)
-        urlBox.removeItemAt (0);
-      urlBox.addItem (url);
-      }
-
-    urlbarEnabled = true;
-    Logger.out();
-    }
-
-  /** showUrl Gets called from MainWindow whenever the user selects a new URL.
-      This may not be the exact thing the user typed: the URL may have been
-      sanitized. We will add the new URL to the combo box, provided it isn't
-      already there, and provided we don't have too many entries already.
-      I need to think about whether very similar URLs ought to be added. */
+  showUrl Gets called from MainWindow whenever the user selects a new URL.
+  This may not be the exact thing the user typed: the URL may have been
+    sanitized. We will add the new URL to the combo box, provided it isn't
+    already there, and provided we don't have too many entries already.
+  I need to think about whether very similar URLs ought to be added. 
+=========================================================================*/
   public void showUrl (String url)
     {
     Logger.in();
     Logger.log (getClass().getName(), Logger.DEBUG, "URI=" + url);
-    Config config = Config.getConfig();
     addToHistory (url);
     String historyFile = config.getHistoryFile();
     if (historyFile != null)

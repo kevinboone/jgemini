@@ -1,8 +1,16 @@
 # JGemini
 
-A Java-based graphical browser for Gemini and similar protocols
+A Java-based graphical browser for Gemini and other 'small net' protocols
 
-Version 2.0.3, Kevin Boone, April 2026
+Version 2.0.4, Kevin Boone, April 2026
+
+## What is JGemini?
+
+JGemini is a graphical client for the Gemini, Spartan, Gopher, and "Nightfall
+Express" (`nex`) protocols.  It looks and behaves rather like the first
+graphical Web browsers from the 90s. So far as I know, it supports all the
+features it is required to support by the various specifications, and little
+else.  It's useable, though: I use it every day.
 
 ## Why another Gemini client?
 
@@ -14,14 +22,6 @@ experiments -- I doubt it would be much use to anybody else. It has the small,
 putative advantage over other clients that it natively supports Markdown
 documents as well as Gemtext.
 
-## What is JGemini?
-
-JGemini is a rudimentary graphical client for the Gemini, Spartan, Gopher, and
-"Nightfall Express" (`nex`) protocols.  It looks and behaves rather like the
-first graphical Web browsers from the 90s. It supports all the features it is
-required to support by the various specifications, and little else.  It is,
-however, useable. 
-
 ## Pre-requisites
 
 To run JGemini you'll need a computer with some kind of graphical desktop, and
@@ -29,33 +29,34 @@ a Java JVM. JGemini should work with any Java version 11.0 or later.
 I've tested it with OpenJDK versions 11-27. If you want to build JGemini from
 source, you'll probably need Maven. 
 
-JGemini is intended for Linux. It appears to work on other platforms with a
-relatively modern JVM, including Windows 11, but I don't care about, or do much
-testing on, anything except Linux. 
+JGemini is intended for Linux. It works on other platforms with a relatively
+modern JVM, including Windows 11, but I don't care about, or do much testing
+on, anything except Linux. 
 
 If you're looking at Gemini/Spartan capsules that use Unicode emojis -- and
-many do -- you'll probably need to ensure that your computer has fonts
-that contain the relevant glyphs; see `docs/emoji_support.md` for more information.
+many do -- you'll probably need to ensure that your computer has fonts that
+contain the relevant glyphs; see `docs/emoji_support.md` for more information.
 
 ## Features
 
-- No specific installation procedure -- JGemini is supplied as a single Java JAR file
-- Supports Gemini, Spartan, Gopher, and `nex` protocols, including user input and redirection
+- No specific installation procedure (if you have a Java JVM) -- JGemini is
+  supplied as a single Java JAR file
+- Supports Gemini, Spartan, Gopher, and `nex` protocols
 - Handles Gemtext, CommonMark Markdown, and plain (usually UTF-8) text
-- Renders local files as well as server content
+- Renders local files as well as remote content
 - Authentication using per-server client certificates
 - Built-in client certificate manager, which can create new certificates and
   incorporate existing ones
 - Text styling can be configured to suit the display and user preference
 - Uses anti-aliased font rendering for a smoother text appearance
-- Fetches documents in the background to improve user interface responsiveness
+- Fetches documents asynchronously to improve user interface responsiveness
 - Text selection with cut-and-paste
 - Search in document
-- Downloaded documents can be saved
+- Downloaded documents can be saved to file
 - Supports multiple windows
 - Search directly from the URL bar
-- Saves no state by default, for privacy
-- Built-in documentation viewer
+- Saves little state by default, for privacy
+- Reasonably comprehensive documentation with built-in viewer
 - Rudimentary bookmark support, with built-in editor
 - Parses and displays Atom feeds
 
@@ -368,3 +369,12 @@ Version 2.0.3 -- April 2026
   horrible job -- I should have done it properly from the start
 - Added rudimentary client identity manager
 - Dialog-specific documentation
+
+Version 2.0.4 -- April 2026
+- Added a way to show server certificate information
+- Added a 'settings' dialog box
+- Removed a bunch of superfluous menu commands, and rearranged some others
+- Window size is now saved when closing a window
+- Fixed a number of stupid bugs
+- Added a "useful links" page
+

@@ -20,6 +20,8 @@ public class Captions extends ListResourceBundle
     {"edit_config_file", "Edit settings"},
     {"new_identity", "New identity"},
     {"set_identity", "Set identity"},
+    {"settings", "Settings"},
+    {"release_notes", "Release notes"},
     };
 
   @Override

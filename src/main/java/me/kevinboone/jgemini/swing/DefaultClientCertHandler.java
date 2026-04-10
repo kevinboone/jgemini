@@ -19,7 +19,8 @@ import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.ssl.*;
 import me.kevinboone.jgemini.Constants;
 
-public class DefaultClientCertHandler implements ClientCertHandler
+public class DefaultClientCertHandler 
+    implements ClientCertHandler
   {
   private Config config;
   private MainWindow mainWindow;
@@ -54,9 +55,8 @@ public class DefaultClientCertHandler implements ClientCertHandler
     String protocol = baseUri.getProtocol();
     if (hostname == null || hostname.length() == 0)
       {
-      JOptionPane.showMessageDialog (mainWindow, 
-        messagesBundle.getString ("ident_remote_only"),
-          Constants.APP_NAME, JOptionPane.INFORMATION_MESSAGE); 
+      mainWindow.reportGenError 
+        (messagesBundle.getString ("ident_remote_only"));
       return;
       }
 
@@ -68,9 +68,8 @@ public class DefaultClientCertHandler implements ClientCertHandler
       }
     else
       {
-      JOptionPane.showMessageDialog (mainWindow, 
-        messagesBundle.getString ("protocol_no_ident") + ": " + protocol, 
-        Constants.APP_NAME, JOptionPane.INFORMATION_MESSAGE); 
+      mainWindow.reportGenInfo (messagesBundle.getString ("protocol_no_ident") 
+        + ": " + protocol); 
       return;
       }
     }

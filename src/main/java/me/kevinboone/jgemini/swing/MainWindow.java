@@ -18,6 +18,7 @@ import javax.swing.text.html.StyleSheet;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.filechooser.*;
+import javax.swing.border.EmptyBorder;
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -133,7 +134,23 @@ public class MainWindow extends JFrame implements ConfigChangeListener
         }
       public void windowClosing (WindowEvent e) 
         {
-        Config.getConfig().removeConfigChangeListener (mainWindow); 
+        config.removeConfigChangeListener (mainWindow); 
+
+        // I'm reluctant to save the config unless something's
+        //   genuinely changed, because saving removes any
+        //   comments or layout in the config file
+        int oldW = config.getWindowWidth();
+        int oldH = config.getWindowHeight();
+        Dimension dim = getSize();
+        int newW = dim.width;
+        int newH = dim.height;
+        if (newH != oldH || newW != oldW)
+          {
+          config.setWindowWidth (newW);
+          config.setWindowHeight (newH);
+          config.save();
+          }
+        
         dispose();
         }
       });
@@ -180,22 +197,94 @@ public class MainWindow extends JFrame implements ConfigChangeListener
 
 /*=========================================================================
   
-  about 
+  applyInitialStyles 
+
+  Read the CSS styles from the Config class, and apply them to
+  the HTML editor
 
 =========================================================================*/
-  public void about()
+  private void applyInitialStyles ()
     {
-    String aboutMessage = messagesBundle.getString ("about"); 
-    String versionText = generalBundle.getString ("version_uc"); 
-    String s = "<html><head></head><body style='margin: 20'>";
-    s += "<h1>" + Constants.APP_NAME + "</h1>";
-    s += "<h3>" + versionText + " " + Constants.VERSION + "</h3>";
-    s += "<p>" + aboutMessage + "</p>\n";
-    s += "<p>&nbsp;</p></body>\n";
-    JOptionPane.showMessageDialog (this, s, 
-         DIALOG_CAPTION, JOptionPane.INFORMATION_MESSAGE); 
+    Logger.in();
+    try
+      {
+      InputStream is = null; 
+      String theme = config.getTheme();
+      if (Logger.isDebug())
+	Logger.log (getClass().getName(), Logger.DEBUG, "Theme is " + theme);
+
+
+      if ("custom".equals (theme))
+	{ 
+	String cssFile = config.getCustomCSSFile();
+	if (Logger.isDebug())
+	  Logger.log (getClass().getName(), Logger.DEBUG, "Using custom theme" + cssFile);
+	if (cssFile != null)
+	  is = new FileInputStream (new File (cssFile));
+	else
+          {
+	  Logger.log (getClass().getName(), Logger.WARNING, 
+             "Config file set custom theme, but no CSS file in configuration"); 
+	  throw new IOException ("No CSS file specified for custom theme");
+          }
+	} 
+      else
+        {
+        String themeFile = "css/" + theme + ".css";
+	is = getClass().getClassLoader().getResourceAsStream (themeFile);
+        }
+
+      if (is != null)
+	{
+	applyStylesFromStream (is);
+	try {is.close(); } catch (Exception e){};
+	}
+      else
+	{
+	throw new IOException ("Can't open stream for CSS stylesheet"); 
+	}
+      if (is != null) is.close();
+      }
+    catch (Exception e)
+      {
+      reportGenError (e.toString());
+      }
+
+    Logger.out();
     }
 
+/*=========================================================================
+  
+   back
+
+   Go back to the previous page, if there was one.
+
+=========================================================================*/
+  public void back()
+    {
+    Logger.in();
+    // Note that the current URL -- at there always will be one -- will
+    //   be at the top of the stack. So we have to take that off, then get
+    //   to the previous URL. If we take it off and there _isn'_ a 
+    //   previous URL, we can't go anywhere, so we have to put the current
+    //   URL back on the stack.
+    URL current = backlinks.pop();
+    if (backlinks.size() > 0)
+      {
+      URL backUrl = backlinks.pop();
+      if (Logger.isDebug())
+        Logger.log (getClass().getName(), Logger.DEBUG, "Back URL " + backUrl);
+      loadURI (backUrl);
+      }
+    else
+      {
+      if (Logger.isDebug())
+        Logger.log (getClass().getName(), Logger.DEBUG, 
+          "back-link stack is empty");
+      backlinks.push (current);
+      }
+    Logger.out();
+    }
 
 /*=========================================================================
   
@@ -213,7 +302,7 @@ public class MainWindow extends JFrame implements ConfigChangeListener
       try
         {
         String bookmarkName = displayName;
-        if (config.getEmojiStripBookmark())
+        if (config.getEmojiStripBookmarks())
           bookmarkName = EmojiManager.removeAllEmojis (bookmarkName);
         if (bookmarkHandler.addBookmark (bookmarkName, baseUri))
           setStatus (messagesBundle.getString ("bookmark_added")); 
@@ -222,8 +311,7 @@ public class MainWindow extends JFrame implements ConfigChangeListener
         }
       catch (IOException e)
         {
-        JOptionPane.showMessageDialog (this, e.getMessage(), 
-           DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+        reportGenError (e.getMessage());
         }
       }
     }
@@ -239,7 +327,9 @@ public class MainWindow extends JFrame implements ConfigChangeListener
     Logger.in();
     if (loadWorker != null)
       {
-System.out.println ("LOADWORKER not null");
+      System.out.println ("Debug message: loadworker not null. If this");
+      System.out.println (" wasn't the result of cancelling a request,");
+      System.out.println (" please log a bug!");
       Logger.log (getClass().getName(), Logger.DEBUG, 
          "Cancelling loadWorker");
       loadWorker.cancel (true);
@@ -258,12 +348,22 @@ System.out.println ("LOADWORKER not null");
   configChanged 
 
 =========================================================================*/
-  public void configChanged() 
+  public void configChanged (int ccMode) 
     {
     Logger.in();
-    applyInitialStyles();
-    String s = jEditorPane.getText ();
-    jEditorPane.setText (s);
+    if (ccMode > ConfigChangeListener.CCMODE_NOUPDATE)
+      {
+      applyInitialStyles();
+      if (ccMode > ConfigChangeListener.CCMODE_REFRESH)
+        {
+        menuCommandReload();
+        }
+      else
+        {
+        String s = jEditorPane.getText ();
+        jEditorPane.setText (s);
+        }
+      }
     Logger.out();
     }
 
@@ -330,19 +430,14 @@ System.out.println ("LOADWORKER not null");
     JMenu fileMenu = createTopLevelMenu ("file");
 
     JMenuItem newMenuItem = createMenuItem ("file_new");
-    newMenuItem.addActionListener((event) -> newWindow());
+    newMenuItem.addActionListener((event) -> menuCommandNewWindow());
     fileMenu.add (newMenuItem);
     JMenuItem openMenuItem = createMenuItem ("file_open_link");
-    openMenuItem.addActionListener((event) -> openLink());
+    openMenuItem.addActionListener((event) -> menuCommandOpenLink());
     fileMenu.add (openMenuItem);
     JMenuItem saveMenuItem = createMenuItem ("file_save");
-    saveMenuItem.addActionListener((event) -> save());
+    saveMenuItem.addActionListener((event) -> menuCommandSave());
     fileMenu.add (saveMenuItem);
-    fileMenu.add (new JSeparator());
-    JMenuItem setAsHomeMenuItem = createMenuItem ("file_set_as_home"); 
-    fileMenu.add (setAsHomeMenuItem);
-    fileMenu.add (new JSeparator());
-    fileMenu.add (settingsSubMenu);
     fileMenu.add (new JSeparator());
     JMenuItem closeMenuItem = createMenuItem ("file_close"); 
     closeMenuItem.addActionListener((event) -> 
@@ -367,18 +462,23 @@ System.out.println ("LOADWORKER not null");
     JMenuItem findNextMenuItem = createMenuItem ("edit_find_next"); 
     findNextMenuItem.addActionListener((event) -> findNext());
     editMenu.add (findNextMenuItem);
+    editMenu.add (new JSeparator());
+    JMenuItem editSettingsMenuItem = createMenuItem ("edit_settings"); 
+    editSettingsMenuItem.addActionListener((event) -> menuCommandSettings());
+    editMenu.add (editSettingsMenuItem);
 
     // View menu
     JMenu viewMenu = createTopLevelMenu ("view");
 
     JMenuItem zoomInMenuItem = createMenuItem ("view_zoom_in"); 
-    zoomInMenuItem.addActionListener((event) -> zoomIn());
+    zoomInMenuItem.addActionListener((event) -> menuCommandZoomIn());
     viewMenu.add (zoomInMenuItem);
     JMenuItem zoomOutMenuItem = createMenuItem ("view_zoom_out"); 
-    zoomOutMenuItem.addActionListener((event) -> zoomOut());
+    zoomOutMenuItem.addActionListener((event) -> menuCommandZoomOut());
     viewMenu.add (zoomOutMenuItem);
+    viewMenu.add (new JSeparator());
     JMenuItem refreshMenuItem = createMenuItem ("view_refresh"); 
-    refreshMenuItem.addActionListener((event) -> refresh());
+    refreshMenuItem.addActionListener((event) -> menuCommandReload());
     viewMenu.add (refreshMenuItem);
 
     // Bookmark menu
@@ -409,6 +509,8 @@ System.out.println ("LOADWORKER not null");
           {
           GemLink link = bookmarkHandler.getBookmarkLink (i);
           String text = link.getText();
+          if (config.getEmojiStripBookmarks())
+            text = EmojiManager.removeAllEmojis (text);
           if (text.length() > 23)
             text = text.substring (0, 20) + "...";
           JMenuItem item;
@@ -432,35 +534,43 @@ System.out.println ("LOADWORKER not null");
     JMenu goMenu = createTopLevelMenu ("go");
 
     JMenuItem backMenuItem = createMenuItem ("go_back"); 
-    backMenuItem.addActionListener((event) -> goBack());
+    backMenuItem.addActionListener((event) -> menuCommandBack());
     goMenu.add (backMenuItem);
     JMenuItem homeMenuItem = createMenuItem ("go_home"); 
-    homeMenuItem.addActionListener((event) -> goHome());
+    homeMenuItem.addActionListener((event) -> menuCommandHome());
     goMenu.add (homeMenuItem);
     JMenuItem rootMenuItem = createMenuItem ("go_root"); 
-    rootMenuItem.addActionListener((event) -> goRoot());
+    rootMenuItem.addActionListener((event) -> menuCommandRoot());
     goMenu.add (rootMenuItem);
     goMenu.add (new JSeparator());
     JMenuItem stopMenuItem = createMenuItem ("go_stop"); 
-    stopMenuItem.addActionListener((event) -> goStop());
+    stopMenuItem.addActionListener((event) -> menuCommandStop());
     goMenu.add (stopMenuItem);
 
     // Tools menu
     JMenu toolsMenu = createTopLevelMenu ("tools");
 
     JMenuItem identityMenuItem = createMenuItem ("tools_identity"); 
-    identityMenuItem.addActionListener((event) -> goIdent());
+    identityMenuItem.addActionListener((event) -> menuCommandIdent());
     toolsMenu.add (identityMenuItem);
+    JMenuItem serverCertMenuItem = createMenuItem ("tools_server_cert"); 
+    serverCertMenuItem.addActionListener((event) -> menuCommandServerCert());
+    toolsMenu.add (serverCertMenuItem);
+    toolsMenu.add (new JSeparator());
+    toolsMenu.add (settingsSubMenu);
 
     // Help menu
     JMenu helpMenu = createTopLevelMenu ("help");
 
     JMenuItem helpMenuItem = createMenuItem ("help_docs"); 
-    helpMenuItem.addActionListener ((event) -> help());
+    helpMenuItem.addActionListener ((event) -> menuCommandDocs());
     helpMenu.add (helpMenuItem);
+    JMenuItem releaseNotesMenuItem = createMenuItem ("help_release_notes"); 
+    releaseNotesMenuItem.addActionListener ((event) -> menuCommandReleaseNotes());
+    helpMenu.add (releaseNotesMenuItem);
     helpMenu.add (new JSeparator());
     JMenuItem aboutMenuItem = createMenuItem ("help_about"); 
-    aboutMenuItem.addActionListener((event) -> about());
+    aboutMenuItem.addActionListener((event) -> menuCommandAbout());
     helpMenu.add (aboutMenuItem);
 
     menuBar.add (fileMenu);
@@ -472,6 +582,15 @@ System.out.println ("LOADWORKER not null");
     menuBar.add (helpMenu);
     }
 
+/*=========================================================================
+  
+  clearHistory
+
+=========================================================================*/
+  protected void clearHistory ()
+    {
+    topBar.clearHistory();
+    }
 
 /*=========================================================================
   
@@ -483,6 +602,73 @@ System.out.println ("LOADWORKER not null");
     statusBar.clearStatus ();
     }
 
+/*=========================================================================
+  
+  downloadURI 
+
+  Download a URL to the specified file. This takes place in a background
+  thread and, at present, there's no control over it when it's started
+  (except by quitting the program).
+
+=========================================================================*/
+  void downloadURI (String href, File file)
+    {
+    Logger.in();
+    Logger.log (getClass().getName(), Logger.INFO, 
+        "Downloading " + href + " to " + file);
+
+    SwingWorker dlWorker = new SwingWorker()  
+      { 
+      byte[] b = null;
+      Exception e = null;
+      @Override
+      protected String doInBackground() 
+        { 
+        Logger.log (getClass().getName(), 
+          Logger.DEBUG, "Download worker doInBackground()");
+        try
+          {
+          e = null;
+          b = FileUtil.urlToByteArray (new URL (href)); 
+          }
+        catch (Exception e1)
+          {
+          e = e1;
+          }
+        return "foo"; // Meaningless return
+        } 
+
+      @Override
+      protected void process (java.util.List chunks) { } 
+
+      @Override
+      protected void done()  
+        { 
+        Logger.log (getClass().getName(), Logger.DEBUG, 
+          "Download worker done()");
+        if (b != null)
+          {
+          try
+            {
+            FileUtil.byteArrayToFile (file, b);
+	    setStatus (messagesBundle.getString ("saved_file") 
+              + " '"  + file + "'");
+            } 
+          catch (Exception e)
+            {
+            reportException (href, e);
+            }
+          }
+        else if (e != null)
+          {
+          reportException (href, e);
+          }
+        }
+      }; 
+
+    dlWorker.execute();  
+    Logger.out();
+    }
 
 /*=========================================================================
   
@@ -497,8 +683,7 @@ System.out.println ("LOADWORKER not null");
       }
     catch (Exception e)
       {
-      JOptionPane.showMessageDialog (this, e.getMessage(), 
-         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+      reportGenError (e.getMessage());
       }
     }
 
@@ -517,7 +702,6 @@ System.out.println ("LOADWORKER not null");
     topBar.enable();
     Logger.out();
     }
-
 
 /*=========================================================================
   
@@ -541,8 +725,7 @@ System.out.println ("LOADWORKER not null");
       }
     catch (Exception e) 
       {
-      JOptionPane.showMessageDialog (this, e.getMessage(), // TODO -- expand
-         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+      reportGenError (e.getMessage());
       }
 
     Logger.out();
@@ -550,12 +733,58 @@ System.out.println ("LOADWORKER not null");
 
 /*=========================================================================
   
-   goHome
+  fiddleWithKeyMap 
+
+  Make the HTML editor stop grabbing the backspace and ctrl+H keys, which
+  it seems to want, and accept the up/down keys, which it doesn't.
+
+  Honestly, I have next to no idea what I'm doing here -- I got this
+  working by trial and error.
+
+=========================================================================*/
+  void fiddleWithKeyMap (HTMLEditorKit kit)
+    {
+    Logger.in();
+
+    InputMap inputMap = jEditorPane.getInputMap();
+    inputMap.put (KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0),
+      "none");
+    inputMap.put (KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK),
+      "none");
+
+    KeyStroke keyUp = KeyStroke.getKeyStroke (KeyEvent.VK_UP, 0); 
+    inputMap.put (keyUp, kit.upAction);
+    KeyStroke keyDown = KeyStroke.getKeyStroke (KeyEvent.VK_DOWN, 0); 
+    inputMap.put (keyDown, kit.downAction);
+
+    String keyStrokeAndKey = "UP";
+    KeyStroke keyStroke = KeyStroke.getKeyStroke (keyStrokeAndKey);
+    jEditorPane.getInputMap().put(keyStroke, keyStrokeAndKey);
+    keyStrokeAndKey = "DOWN";
+    keyStroke = KeyStroke.getKeyStroke (keyStrokeAndKey);
+    jEditorPane.getInputMap().put(keyStroke, keyStrokeAndKey);
+
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   getCurrentURI 
+
+=========================================================================*/
+  protected URL getCurrentURI()
+    {
+    return baseUri;
+    }
+
+/*=========================================================================
+  
+   home
 
    Go back to the home page
 
 =========================================================================*/
-  protected void goHome()
+  protected void home()
     {
     Logger.in();
     loadURI (config.getHomePage());
@@ -564,13 +793,71 @@ System.out.println ("LOADWORKER not null");
 
 /*=========================================================================
   
-   goIdent
+  find
 
 =========================================================================*/
-  protected void goIdent()
+  public void find()
     {
     Logger.in();
-    clientCertHandler.manageIdentity (baseUri);
+    String text = JOptionPane.showInputDialog (this, 
+      dialogsBundle.getString ("enter_search_text") + ":", DIALOG_CAPTION, 1);
+    if (text != null)
+      {
+      searchPos = 0;
+      searchText = text.toLowerCase();
+      findNext();
+      }
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+  findNext 
+
+=========================================================================*/
+  public void findNext ()
+    {
+    Logger.in();
+    Logger.log (getClass().getName(), Logger.DEBUG, 
+       "text=" + searchText);
+    if (searchText != null)
+      {
+      Document doc = jEditorPane.getDocument();
+      int findLength = searchText.length();
+      if (searchPos + findLength > doc.getLength()) 
+        {
+        searchPos = 0; // Wrap around to beginning
+        setStatus (messagesBundle.getString ("search_wrapped_around"));
+        }
+      try
+        {
+        boolean found = false;
+        while (searchPos + findLength <= doc.getLength()) 
+          {
+          String match = doc.getText (searchPos, findLength).toLowerCase();
+          if (match.equals (searchText)) 
+             {
+             found = true;
+             break;
+             }
+           searchPos++;
+           }
+         if (found) 
+           {
+           Rectangle viewRect = jEditorPane.modelToView (searchPos);
+           jEditorPane.scrollRectToVisible (viewRect);
+           jEditorPane.setCaretPosition (searchPos + findLength);
+           jEditorPane.moveCaretPosition (searchPos);
+           searchPos += findLength;
+           }
+        else
+          setStatus (messagesBundle.getString ("not_found"));
+         }
+       catch (BadLocationException e)
+         {
+         Logger.log (getClass().getName(), Logger.WARNING, e.getMessage()); 
+         }
+      }
     Logger.out();
     }
 
@@ -613,39 +900,6 @@ public String getDisplayNameFromURI (URL uri)
 
 /*=========================================================================
   
-   goBack
-
-   Go back to the previous page, if there was one.
-
-=========================================================================*/
-  protected void goBack ()
-    {
-    Logger.in();
-    // Note that the current URL -- at there always will be one -- will
-    //   be at the top of the stack. So we have to take that off, then get
-    //   to the previous URL. If we take it off and there _isn'_ a 
-    //   previous URL, we can't go anywhere, so we have to put the current
-    //   URL back on the stack.
-    URL current = backlinks.pop();
-    if (backlinks.size() > 0)
-      {
-      URL backUrl = backlinks.pop();
-      if (Logger.isDebug())
-        Logger.log (getClass().getName(), Logger.DEBUG, "Back URL " + backUrl);
-      loadURI (backUrl);
-      }
-    else
-      {
-      if (Logger.isDebug())
-        Logger.log (getClass().getName(), Logger.DEBUG, 
-          "back-link stack is empty");
-      backlinks.push (current);
-      }
-    Logger.out();
-    }
-
-/*=========================================================================
-  
    getRootUri 
 
    Get the site root. What that means depends on the URI. In particular,
@@ -669,37 +923,6 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     return newUrl;
     }
   }
-
-/*=========================================================================
-  
-   goRoot
-
-=========================================================================*/
-  protected void goRoot()
-    {
-    Logger.in();
-    try
-      {
-      loadURI (getRootUri (baseUri));
-      }
-    catch (Exception e)
-      {
-      e.printStackTrace();
-      }
-    Logger.out();
-    }
-
-/*=========================================================================
-  
-   goStop
-
-=========================================================================*/
-  protected void goStop()
-    {
-    Logger.in();
-    cancelLoad();
-    Logger.out();
-    }
 
 /*=========================================================================
   
@@ -787,47 +1010,6 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     Logger.out();
     }
 
-
-/*=========================================================================
-  
-   help 
-
-=========================================================================*/
-  private void help()
-    {
-    newWindow (Constants.DOC_INDEX, 
-      captionsBundle.getString ("documentation"));
-    }
-
-/*=========================================================================
-  
-   openLink 
-
-   Prompt the user for a URL, and try to open it
-
-=========================================================================*/
-  private void openLink ()
-    {
-    Logger.in();
-    String url = JOptionPane.showInputDialog (this, 
-      dialogsBundle.getString ("enter_gemini_url") + ":", DIALOG_CAPTION, 1);
-    if (url != null)
-      {
-      try
-        {
-        if (Logger.isDebug())
-          Logger.log (getClass().getName(), Logger.DEBUG, "User selected " + url);
-        loadURI (new URL(url));
-        }
-      catch (Exception e)
-        {
-        reportException (url, e);
-        }
-      }
-    Logger.out();
-    }
-
-
 /*=========================================================================
   
   loadResponseContent
@@ -858,6 +1040,10 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       String mime = conn.getContentType();
       gc.setMime (mime);
       gc.setContent (content);
+      String proto = baseUri.getProtocol();
+      // getRequestProperty() fail in a weird way on file: URIs.
+      if (!"file".equals (proto))
+        gc.setCertinfo (conn.getRequestProperty ("certinfo"));
       }
     catch (Exception e)
       {
@@ -917,7 +1103,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       backlinks.push (fullUrl);
       setLastContent (gc);
       }
-    else if (mime.startsWith ("text/gophermap")|| urlStr.endsWith (".gopher")) // Not a real MIME
+    else if (mime.startsWith ("text/gophermap")|| 
+        urlStr.endsWith (".gopher")) // Not a real MIME
       {
       baseUri = fullUrl; 
       String encoding = MimeUtil.getEncodingFromMime (mime);
@@ -1126,13 +1313,11 @@ URL getRootUri (URL baseUri) throws MalformedURLException
               }
             else if (e instanceof ErrorResponseException)
               {
-              e.printStackTrace();
               reportErrorResponseException (fullUrl.toString(), 
                  (ErrorResponseException)e); 
               }
             else 
               {
-              e.printStackTrace();
               reportException (fullUrl.toString(), e); 
               }
             }
@@ -1145,178 +1330,56 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     Logger.out();
     }
 
-
 /*=========================================================================
   
-  loadNex
-  
-  We have a nex:// URL. Load it through its content handler.
+   handleLinkClick 
 
-  // *** Merged with loadFromUri() ***
+   Easy -- just load the URL
 
 =========================================================================*/
-/*
-  private void loadNex (URL url, String qparam)
+  public void handleLinkClick (URL uri)
     {
-    ActionListener loadTimerListener = new ActionListener() 
-      {
-      public void actionPerformed (ActionEvent evt) 
-        {
-	setStatus (Strings.LOADING);
-        }
-      };
-
-    cancelLoad(); // Kill any existing background load
-    removeLastContent(); // Delete any data associated with the last request
-    try
-      {
-      Logger.log (getClass().getName(), Logger.DEBUG, "loadNex(), url=" 
-        + url.toString() + ", qparam=" + qparam);
-
-      if (qparam != null)
-        {
-        // URLEncoder does seem on its own to generate encodings that Gemini 
-        //   services like. They seem to prefer "$20" to "+" for plain spaces.
-        //   Since %20 will always work, munge the encoded string to use 
-        //   this format.
-        URL tempUrl = new URL (url.toString() + "?" + URLEncoder.encode (qparam));
-        String sURL = tempUrl.toString().replace("+","%20");
-        url = new URL (sURL);
-        }
-
-      if (url.getPath().length() == 0)
-        {
-        Logger.log (getClass().getName(), Logger.DEBUG, "Adding path to URL that lacks one");
-        url = new URL (url.toString() + "/");
-        }
-      }
-    catch (Exception e)
-      {
-      // Fallen at that first hurdle.
-      reportException (url.toString(), e);
-      return;
-      }
-
-    final URL fullUrl = url;
-
-    loadWorker = new SwingWorker()  
-      { 
-      ResponseContent gc = null;
-
-      @Override
-      protected String doInBackground() throws Exception  
-        { 
-        loadTimer = new javax.swing.Timer (1000, loadTimerListener);
-        loadTimer.setRepeats (true);
-        loadTimer.start();
-        setStatus (Strings.LOADING + fullUrl);
-        gc = loadResponseContent (fullUrl); 
-        return "foo"; // Meaningless return
-        } 
-
-      @Override
-      protected void process (java.util.List chunks) { } 
-
-      @Override
-      protected void done()  
-        { 
-	loadTimer.stop();
-	loadTimer = null;
-        if (!isCancelled())
-          {
-          clearStatus ();
-          Exception e = gc.getException();
-          if (e == null)
-            {
-            handleResponseContent (fullUrl, gc);
-            }
-         else
-            {
-            if (e instanceof ErrorResponseException)
-              {
-              e.printStackTrace();
-              reportErrorResponseException (fullUrl.toString(), 
-                 (ErrorResponseException)e); 
-              }
-            else 
-              {
-              e.printStackTrace();
-              reportException (fullUrl.toString(), e); 
-              }
-            }
-          }
-        loadWorker = null;
-        }
-      }; 
-
-    loadWorker.execute();  
-    }
-*/
-
-/*=========================================================================
-  
-  reportException
-
-  Do something vaguely useful with exceptions
-
-=========================================================================*/
-  private void reportException (String url, Exception e)
-    {
-    e.printStackTrace();
-    String messageFromServer = e.getMessage();
-    if (e instanceof UnknownHostException)
-      {
-      reportGenError (url, messagesBundle.getString ("unknown_host") 
-        + ": " + e.getMessage());
-      }
+    Logger.in();
+    Logger.log (getClass().getName(), Logger.DEBUG, "uri=" + uri);
+    if (uri != null)
+      loadURI (uri);
     else
-      reportGenError (url, e.getMessage());
+      reportGenError (messagesBundle.getString ("unknown_url"), 
+        messagesBundle.getString ("could_not_parse_uri"));
+    Logger.out();
     }
 
 /*=========================================================================
   
-  reportErrorResponseException
+   handleLinkHover
 
-  Do something vaguely useful with server error responses 
+   Write the link as a status message when the mouse moves over a 
+   link in the HTML editor
 
 =========================================================================*/
-  private void reportErrorResponseException (String url, 
-           ErrorResponseException e)
+  private void handleLinkHover (URL linkUri)
     {
-    String messageFromServer = e.getMessage();
-    String message = "Error response " + e.getStatus() + " from server";
-    if (messageFromServer != null && messageFromServer.length() > 0)
-      message += ": <i>" + messageFromServer + "</i>";
-    e.printStackTrace();
-    reportGenError (url, message);
+    Logger.in();
+    Logger.log (getClass().getName(), Logger.DEBUG, "uri" + linkUri);
+    if (linkUri != null)
+      setStatus (linkUri.toString());
+    Logger.out();
     }
 
 /*=========================================================================
   
-  reportGenError
+   handleLinkUnhover
 
-  Do something vaguely useful with error messages
+   // TODO: do we actually need this? Messages in the status area
+   // time out automatically
 
 =========================================================================*/
-  private void reportGenError (String url, String message)
+  private void handleLinkUnhover (URL linkUri)
     {
-    StringBuffer sb = new StringBuffer();
-    // We need to override styles here, because the styles applied to the
-    //   main window -- which is also an HTML viewer -- will also be
-    //   partially applied here, and look odd. 
-    sb.append ("<html><body width=\"400px\" style=\"margin: 30\">");
-    sb.append ("<p><b>");
-    // Be aware that a URL could, in theory, be > 1000 characters long.
-    // We don't want to put all those into the dialog box.
-    if (url.length() > 50)
-      url = url.substring (0, 20) + "...";
-    sb.append (url);
-    sb.append ("</b></p><p></p><p>");
-    sb.append (message);
-    sb.append ("</p><p></p>");
-    JOptionPane.showMessageDialog (this, new String(sb), 
-         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
-    sb.append ("</body></html>");
+    if (Logger.isDebug())
+      Logger.log (getClass().getName(), Logger.DEBUG, "uri=" + linkUri);
+    if (linkUri != null)
+      clearStatus();
     }
 
 /*=========================================================================
@@ -1477,13 +1540,309 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       }
     }
 
+/*=========================================================================
+  
+  manageIdentity 
+
+=========================================================================*/
+  protected void manageIdentity()
+    {
+    Logger.in();
+    clientCertHandler.manageIdentity (baseUri);
+    Logger.out();
+    }
 
 /*=========================================================================
   
-   zoomIn 
+  menuCommandAbout 
 
 =========================================================================*/
-  public void zoomIn()
+  public void menuCommandAbout()
+    {
+    String aboutMessage = messagesBundle.getString ("about"); 
+    String versionText = generalBundle.getString ("version_uc"); 
+    String s = Constants.APP_NAME + " " + versionText 
+      + " " + Constants.VERSION + "\n\n"; 
+    s += aboutMessage + "\n";
+
+    JTextArea textArea = new JTextArea (s);
+    textArea.setWrapStyleWord (true);
+    textArea.setLineWrap (true);
+    textArea.setEditable (false);
+    textArea.setRows (Constants.DIALOG_ROWS);
+    textArea.setColumns (Constants.DIALOG_COLS * 2);
+    textArea.setBorder(new EmptyBorder (20, 20, 20, 20));
+
+    JScrollPane scrollPane = new JScrollPane (textArea);
+
+    JOptionPane.showMessageDialog (this, scrollPane, 
+         DIALOG_CAPTION, JOptionPane.INFORMATION_MESSAGE); 
+    }
+
+/*=========================================================================
+  
+   menuCommandBack
+
+   Go back to the previous page, if there was one.
+
+=========================================================================*/
+  protected void menuCommandBack()
+    {
+    Logger.in();
+    back();
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   menuCommandDocs 
+
+=========================================================================*/
+  private void menuCommandDocs()
+    {
+    newWindow (Constants.DOC_INDEX, 
+      captionsBundle.getString ("documentation"));
+    }
+
+/*=========================================================================
+  
+   menuCommandReleaseNotes
+
+=========================================================================*/
+  private void menuCommandReleaseNotes()
+    {
+    newWindow (Constants.DOC_RELEASE_NOTES, 
+      captionsBundle.getString ("release_notes"));
+    }
+
+/*=========================================================================
+  
+   menuCommandIdent
+
+=========================================================================*/
+  protected void menuCommandIdent()
+    {
+    Logger.in();
+    manageIdentity();
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   menuCommandHome 
+
+=========================================================================*/
+  protected void menuCommandHome()
+    {
+    Logger.in();
+    home();
+    Logger.out();
+    }
+
+
+/*=========================================================================
+  
+  menuCommandNewWindow 
+
+=========================================================================*/
+  protected static void menuCommandNewWindow ()
+    {
+    Logger.in();
+    MainWindow viewer = new MainWindow();
+    viewer.setVisible (true);
+    if (Config.getConfig().getNewWindowMode() == 0)
+      viewer.home();
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   menuCommandOpenLink 
+
+   Prompt the user for a URL, and try to open it
+
+=========================================================================*/
+  protected void menuCommandOpenLink ()
+    {
+    Logger.in();
+    String url = JOptionPane.showInputDialog (this, 
+      dialogsBundle.getString ("enter_gemini_url") + ":", DIALOG_CAPTION, 1);
+    if (url != null)
+      {
+      try
+        {
+        if (Logger.isDebug())
+          Logger.log (getClass().getName(), Logger.DEBUG, 
+            "User selected " + url);
+        loadURI (new URL(url));
+        }
+      catch (Exception e)
+        {
+        reportException (url, e);
+        }
+      }
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   menuCommandReload
+
+   Reload the current URL
+
+=========================================================================*/
+  protected void menuCommandReload()
+    {
+    Logger.in();
+    applyInitialStyles ();
+    if (baseUri != null)
+      {
+      // This is potentially nasty. We have to pop the back-link at TOS
+      // because loadURI() will replace it. But loadURI() won't replace
+      // it unless the load succeeds -- we don't want a dead link lurking
+      // on the stack. But loadURI() won't do this itself -- it will 
+      // schedule it to be done when the load completes (if it completes).
+      // So we pop the TOS here, with no guarantee that it will actually
+      // get put back. In practice, we're refreshing a link that previously
+      // loaded OK; so it should be fine. Still, it's a bit ugly.
+      backlinks.pop();
+      loadURI (baseUri);
+      }
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   menuCommandRoot
+
+=========================================================================*/
+  protected void menuCommandRoot()
+    {
+    Logger.in();
+    try
+      {
+      loadURI (getRootUri (baseUri));
+      }
+    catch (Exception e)
+      {
+      // The exception has already been shown 
+      }
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   menuCommandStop
+
+=========================================================================*/
+  protected void menuCommandStop()
+    {
+    Logger.in();
+    stop();
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+  menuCommandSave 
+
+=========================================================================*/
+  public void menuCommandSave()
+    {
+    Logger.in();
+    if (lastContent != null)
+      {
+      String ext = FileUtil.getDefaultExtension (lastContent.getMime());
+      JFileChooser fc = new JFileChooser();
+      javax.swing.filechooser.FileFilter filter = 
+        new FileNameExtensionFilter (lastContent.getMime(), ext);
+      fc.addChoosableFileFilter (filter);
+      if (fc.showSaveDialog (this) == JFileChooser.APPROVE_OPTION)
+        {
+	Logger.log (getClass().getName(), Logger.DEBUG, 
+          "Save file " + fc.getSelectedFile());
+	try
+	  {
+	  FileUtil.byteArrayToFile 
+	     (fc.getSelectedFile(), lastContent.getContent());
+	  setStatus (messagesBundle.getString ("wrote_file") 
+             + " " + fc.getSelectedFile());
+	  }
+	catch (IOException e)
+	  {
+	  reportException (fc.getSelectedFile().toString(), e);
+	  }
+	}
+      }
+    else
+      {
+      reportGenError (messagesBundle.getString ("save_only_text_message"));
+      }
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   menuCommandSettings
+
+=========================================================================*/
+  protected void menuCommandSettings()
+    {
+    Logger.in();
+    SettingsDialog d = new SettingsDialog (this);
+    d.setVisible (true);
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   menuCommandServerCert
+
+=========================================================================*/
+  protected void menuCommandServerCert()
+    {
+    Logger.in();
+    if (lastContent == null)
+      {
+      reportGenInfo (messagesBundle.getString ("page_not_remote"));
+      }
+    else
+      {
+      String certinfo = lastContent.getCertinfo();
+      if (certinfo == null)
+        {
+        reportGenInfo (messagesBundle.getString ("no_certinfo"));
+        }
+      else
+        {   
+        reportGenInfo (certinfo);
+        }
+      }
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+  menuCommandSetAsHome
+
+=========================================================================*/
+void menuCommandSetAsHome ()
+  {
+  Logger.in();
+  if (baseUri != null)
+    {
+    config.setHomePage (baseUri.toString());
+    config.save();
+    }
+  Logger.out();
+  }
+
+/*=========================================================================
+  
+   menuCommandZoomIn 
+
+=========================================================================*/
+  protected void menuCommandZoomIn()
     {
     Logger.in();
     int n = config.getDocumentBaseFontSize();
@@ -1496,10 +1855,10 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 
 /*=========================================================================
   
-   zoomOut
+   menuCommandZoomOut
 
 =========================================================================*/
-  public void zoomOut()
+  protected void menuCommandZoomOut()
     {
     Logger.in();
     int n = config.getDocumentBaseFontSize();
@@ -1545,58 +1904,6 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 
 /*=========================================================================
   
-   handleLinkClick 
-
-   Easy -- just load the URL
-
-=========================================================================*/
-  public void handleLinkClick (URL uri)
-    {
-    Logger.in();
-    Logger.log (getClass().getName(), Logger.DEBUG, "uri=" + uri);
-    if (uri != null)
-      loadURI (uri);
-    else
-      reportGenError (messagesBundle.getString("unknown_url"), 
-       messagesBundle.getString ("could_not_parse_uri"));
-    Logger.out();
-    }
-
-/*=========================================================================
-  
-   handleLinkHover
-
-   Write the link as a status message when the mouse moves over a 
-   link in the HTML editor
-
-=========================================================================*/
-  private void handleLinkHover (URL linkUri)
-    {
-    Logger.in();
-    Logger.log (getClass().getName(), Logger.DEBUG, "uri" + linkUri);
-    if (linkUri != null)
-      setStatus (linkUri.toString());
-    Logger.out();
-    }
-
-/*=========================================================================
-  
-   handleLinkUnhover
-
-   // TODO: do we actually need this? Messages in the status area
-   // time out automatically
-
-=========================================================================*/
-  private void handleLinkUnhover (URL linkUri)
-    {
-    if (Logger.isDebug())
-      Logger.log (getClass().getName(), Logger.DEBUG, "uri=" + linkUri);
-    if (linkUri != null)
-      clearStatus();
-    }
-
-/*=========================================================================
-  
   applyStylesFromStream
 
 =========================================================================*/
@@ -1621,164 +1928,6 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     Logger.out();
     }
 
-
-/*=========================================================================
-  
-  applyInitialStyles 
-
-  Read the CSS styles from the Config class, and apply them to
-  the HTML editor
-
-=========================================================================*/
-  private void applyInitialStyles ()
-    {
-    Logger.in();
-    try
-      {
-      InputStream is = null; 
-      String theme = config.getTheme();
-      if (Logger.isDebug())
-	Logger.log (getClass().getName(), Logger.DEBUG, "Theme is " + theme);
-      if ("dark".equals (theme))
-	is = getClass().getClassLoader().getResourceAsStream ("css/dark.css");
-      else if ("custom".equals (theme))
-	{ 
-	String cssFile = config.getCustomCSSFile();
-	if (Logger.isDebug())
-	  Logger.log (getClass().getName(), Logger.DEBUG, "Using custom theme" + cssFile);
-	if (cssFile != null)
-	  is = new FileInputStream (new File (cssFile));
-	else
-          {
-	  Logger.log (getClass().getName(), Logger.WARNING, 
-             "Config file set custom theme, but no CSS file in configuration"); 
-	  throw new IOException ("No CSS file specified for custom theme");
-          }
-	} 
-      else
-	is = getClass().getClassLoader().getResourceAsStream ("css/light.css");
-
-      if (is != null)
-	{
-	applyStylesFromStream (is);
-	try {is.close(); } catch (Exception e){};
-	}
-      else
-	{
-	throw new IOException ("Can't open stream for CSS stylesheet"); 
-	}
-      if (is != null) is.close();
-      }
-    catch (Exception e)
-      {
-      JOptionPane.showMessageDialog (this, e.toString(), 
-         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
-      }
-
-    Logger.out();
-    }
-
-/*=========================================================================
-  
-  fiddleWithKeyMap 
-
-  Make the HTML editor stop grabbing the backspace and ctrl+H keys, which
-  it seems to want, and accept the up/down keys, which it doesn't.
-
-  Honestly, I have next to no idea what I'm doing here -- I got this
-  working by trial and error.
-
-=========================================================================*/
-  void fiddleWithKeyMap (HTMLEditorKit kit)
-    {
-    Logger.in();
-
-    InputMap inputMap = jEditorPane.getInputMap();
-    inputMap.put (KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0),
-      "none");
-    inputMap.put (KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK),
-      "none");
-
-    KeyStroke keyUp = KeyStroke.getKeyStroke (KeyEvent.VK_UP, 0); 
-    inputMap.put (keyUp, kit.upAction);
-    KeyStroke keyDown = KeyStroke.getKeyStroke (KeyEvent.VK_DOWN, 0); 
-    inputMap.put (keyDown, kit.downAction);
-
-    String keyStrokeAndKey = "UP";
-    KeyStroke keyStroke = KeyStroke.getKeyStroke (keyStrokeAndKey);
-    jEditorPane.getInputMap().put(keyStroke, keyStrokeAndKey);
-    keyStrokeAndKey = "DOWN";
-    keyStroke = KeyStroke.getKeyStroke (keyStrokeAndKey);
-    jEditorPane.getInputMap().put(keyStroke, keyStrokeAndKey);
-
-    Logger.out();
-    }
-
-/*=========================================================================
-  
-  downloadURI 
-
-  Download a URL to the specified file. This takes place in a background
-  thread and, at present, there's no control over it when it's started
-  (except by quitting the program).
-
-=========================================================================*/
-  void downloadURI (String href, File file)
-    {
-    Logger.in();
-    Logger.log (getClass().getName(), Logger.INFO, 
-        "Downloading " + href + " to " + file);
-
-    SwingWorker dlWorker = new SwingWorker()  
-      { 
-      byte[] b = null;
-      Exception e = null;
-      @Override
-      protected String doInBackground() 
-        { 
-        Logger.log (getClass().getName(), Logger.DEBUG, "Download worker doInBackground()");
-        try
-          {
-          e = null;
-          b = FileUtil.urlToByteArray (new URL (href)); 
-          }
-        catch (Exception e1)
-          {
-          e = e1;
-          }
-        return "foo"; // Meaningless return
-        } 
-
-      @Override
-      protected void process (java.util.List chunks) { } 
-
-      @Override
-      protected void done()  
-        { 
-        Logger.log (getClass().getName(), Logger.DEBUG, "Download worker done()");
-        if (b != null)
-          {
-          try
-            {
-            FileUtil.byteArrayToFile (file, b);
-	    setStatus (messagesBundle.getString ("saved_file") 
-              + " '"  + file + "'");
-            } 
-          catch (Exception e)
-            {
-            reportException (href, e);
-            }
-          }
-        else if (e != null)
-          {
-          reportException (href, e);
-          }
-        }
-      }; 
-
-    dlWorker.execute();  
-    Logger.out();
-    }
 
 /*=========================================================================
   
@@ -1865,77 +2014,6 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 
 /*=========================================================================
   
-  find
-
-=========================================================================*/
-  public void find()
-    {
-    Logger.in();
-    String text = JOptionPane.showInputDialog (this, 
-      dialogsBundle.getString ("enter_search_text") + ":", DIALOG_CAPTION, 1);
-    if (text != null)
-      {
-      searchPos = 0;
-      searchText = text.toLowerCase();
-      findNext();
-      }
-    Logger.out();
-    }
-
-/*=========================================================================
-  
-  findNext 
-
-=========================================================================*/
-  public void findNext ()
-    {
-    Logger.in();
-    Logger.log (getClass().getName(), Logger.DEBUG, 
-       "text=" + searchText);
-    if (searchText != null)
-      {
-      Document doc = jEditorPane.getDocument();
-      int findLength = searchText.length();
-      if (searchPos + findLength > doc.getLength()) 
-        {
-        searchPos = 0; // Wrap around to beginning
-        setStatus (messagesBundle.getString ("search_wrapped_around"));
-        }
-      try
-        {
-        boolean found = false;
-        while (searchPos + findLength <= doc.getLength()) 
-          {
-          String match = doc.getText (searchPos, findLength).toLowerCase();
-          if (match.equals (searchText)) 
-             {
-             found = true;
-             break;
-             }
-           searchPos++;
-           }
-         if (found) 
-           {
-           Rectangle viewRect = jEditorPane.modelToView (searchPos);
-           jEditorPane.scrollRectToVisible (viewRect);
-           jEditorPane.setCaretPosition (searchPos + findLength);
-           jEditorPane.moveCaretPosition (searchPos);
-           searchPos += findLength;
-           }
-        else
-          setStatus (messagesBundle.getString ("not_found"));
-         }
-       catch (BadLocationException e)
-         {
-         e.printStackTrace();
-         }
-      }
-    Logger.out();
-    }
-
-
-/*=========================================================================
-  
   newWindow 
 
   Open a new window with the specified URL in String form
@@ -1975,23 +2053,6 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 
 /*=========================================================================
   
-  newWindow 
-
-  Open a new window home page window 
-
-=========================================================================*/
-  public static void newWindow ()
-    {
-    Logger.in();
-    MainWindow viewer = new MainWindow();
-    viewer.setVisible (true);
-    if (Config.getConfig().getNewWindowMode() == 0)
-      viewer.goHome();
-    Logger.out();
-    }
-
-/*=========================================================================
-  
   reloadSettings 
 
 =========================================================================*/
@@ -1999,46 +2060,6 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     {
     Logger.in();
     Config.getConfig().load();
-    Logger.out();
-    }
-
-/*=========================================================================
-  
-  save 
-
-=========================================================================*/
-  public void save()
-    {
-    Logger.in();
-    if (lastContent != null)
-      {
-      String ext = FileUtil.getDefaultExtension (lastContent.getMime());
-      JFileChooser fc = new JFileChooser();
-      javax.swing.filechooser.FileFilter filter = 
-        new FileNameExtensionFilter (lastContent.getMime(), ext);
-      fc.addChoosableFileFilter (filter);
-      if (fc.showSaveDialog (this) == JFileChooser.APPROVE_OPTION)
-        {
-	Logger.log (getClass().getName(), Logger.DEBUG, "Save file " + fc.getSelectedFile());
-	try
-	  {
-	  FileUtil.byteArrayToFile 
-	     (fc.getSelectedFile(), lastContent.getContent());
-	  setStatus (messagesBundle.getString ("wrote_file") 
-             + " " + fc.getSelectedFile());
-	  }
-	catch (IOException e)
-	  {
-	  reportException (fc.getSelectedFile().toString(), e);
-	  }
-	}
-      }
-    else
-      {
-      JOptionPane.showMessageDialog (this, 
-        messagesBundle.getString ("save_only_text_message"),
-        Constants.APP_NAME, JOptionPane.ERROR_MESSAGE);
-      }
     Logger.out();
     }
 
@@ -2058,7 +2079,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       try
         {
 	String stringForm;
-	Logger.log (getClass().getName(), Logger.DEBUG, "renderToHtml(), Encoding is " + encoding);
+	Logger.log (getClass().getName(), Logger.DEBUG, 
+          "renderToHtml(), Encoding is " + encoding);
 	if (encoding != null && encoding.length() > 0)
 	  stringForm = new String (content, encoding);
 	else
@@ -2070,7 +2092,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 	Logger.log (getClass().getName(), Logger.WARNING, 
           "renderToHtml(), Encoding is " + encoding);
         Logger.out();
-        return messagesBundle.getString ("unsup_encoding_resp") + ": " + encoding;
+        return messagesBundle.getString ("unsup_encoding_resp") 
+          + ": " + encoding;
         }
       }
     else
@@ -2147,7 +2170,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   private void renderGophermap (byte[] content, String encoding)
     {
     Logger.in();
-    setHtml (renderToHtml (new GophermapConverter (baseUri), content, encoding));
+    setHtml (renderToHtml (new GophermapConverter (baseUri), 
+      content, encoding));
     Logger.out();
     }
 
@@ -2161,25 +2185,96 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   private void renderMarkdown (byte[] content, String encoding)
     {
     Logger.in();
-    setHtml (renderToHtml (new MarkdownConverter (baseUri), content, encoding));
+    setHtml (renderToHtml (new MarkdownConverter (baseUri), 
+      content, encoding));
     Logger.out();
     }
 
 /*=========================================================================
   
-  setAsHome
+  reportException
+
+  Do something vaguely useful with exceptions
 
 =========================================================================*/
-void setAsHome ()
-  {
-  Logger.in();
-  if (baseUri != null)
+  private void reportException (String url, Exception e)
     {
-    config.setHomePage (baseUri.toString());
-    config.save();
+    Logger.log (getClass().getName(), Logger.WARNING, e.getMessage()); 
+    String messageFromServer = e.getMessage();
+    if (e instanceof UnknownHostException)
+      {
+      reportGenError (url, messagesBundle.getString ("unknown_host") 
+        + ": " + e.getMessage());
+      }
+    else
+      reportGenError (url, e.getMessage());
     }
-  Logger.out();
-  }
+
+/*=========================================================================
+  
+  reportErrorResponseException
+
+  Do something vaguely useful with server error responses 
+
+=========================================================================*/
+  private void reportErrorResponseException (String url, 
+           ErrorResponseException e)
+    {
+    String messageFromServer = e.getMessage();
+    String message = "Error response " + e.getStatus() + " from server";
+    if (messageFromServer != null && messageFromServer.length() > 0)
+      message += ": " + messageFromServer;
+    Logger.log (getClass().getName(), Logger.WARNING, message); 
+    reportGenError (url, message);
+    }
+
+/*=========================================================================
+  
+  reportGenError
+
+  Do something vaguely useful with error messages
+
+=========================================================================*/
+  protected void reportGenError (String message)
+    {
+    reportGenError (null, message);
+    }
+
+/*=========================================================================
+  
+  reportGenError
+
+  Do something vaguely useful with error messages
+
+=========================================================================*/
+  protected void reportGenError (String url, String message)
+    {
+    DialogHelper.errorDialog (this, url, message);
+    }
+
+/*=========================================================================
+  
+  reportGenInfo
+
+  Do something vaguely useful with information messages
+
+=========================================================================*/
+  protected void reportGenInfo (String url, String message)
+    {
+    DialogHelper.infoDialog (this, url, message);
+    }
+
+/*=========================================================================
+  
+  reportGenInfo
+
+  Do something vaguely useful with information messages
+
+=========================================================================*/
+  protected void reportGenInfo (String message)
+    {
+    reportGenInfo (null, message);
+    }
 
 /*=========================================================================
   
@@ -2261,9 +2356,20 @@ void setCaptionFromResponse (URL uri, ResponseContent gc)
       }
     catch (Exception e)
       {
-      JOptionPane.showMessageDialog (this, e.getMessage(), 
-         DIALOG_CAPTION, JOptionPane.ERROR_MESSAGE); 
+      reportGenError (e.getMessage());
       }
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   stop
+
+=========================================================================*/
+  public void stop()
+    {
+    Logger.in();
+    cancelLoad();
     Logger.out();
     }
 

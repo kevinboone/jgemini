@@ -210,16 +210,14 @@ private void handleSubmit()
     }
   catch (Exception e)
     {
-    JOptionPane.showMessageDialog (this, e.getMessage(), 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenException (e);
     idName.requestFocus();
     return;
     }
   if (_cn.length() == 0)
     {
     String cnEmpty = dialogsBundle.getString ("newidentitydialog_cn_empty"); 
-    JOptionPane.showMessageDialog (this, cnEmpty, 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenError (cnEmpty);
     cn.requestFocus();
     return;
     }
@@ -227,8 +225,7 @@ private void handleSubmit()
     {
     String passwordEmpty = dialogsBundle.getString 
       ("newidentitydialog_password_empty");
-    JOptionPane.showMessageDialog (this, passwordEmpty, 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenError (passwordEmpty);
     password.requestFocus();
     return;
     }
@@ -237,11 +234,10 @@ private void handleSubmit()
   File keyStoreFile = new File (keyStoreFilename);
   if (keyStoreFile.exists())
     {
-    String passwordEmpty = keyStoreFilename + ": " 
+    String keystoreExists = keyStoreFilename + ": " 
       + dialogsBundle.getString 
         ("newidentitydialog_keystore_exists");
-    JOptionPane.showMessageDialog (this, passwordEmpty, 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenError (keystoreExists);
     return;
     }
 
@@ -254,8 +250,7 @@ private void handleSubmit()
     }
   catch (Exception e)
     {
-    JOptionPane.showMessageDialog (this, e.getMessage(), 
-           caption, JOptionPane.ERROR_MESSAGE); 
+    reportGenException (e);
     return;
     }
 

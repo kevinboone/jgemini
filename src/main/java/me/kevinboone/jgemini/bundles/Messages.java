@@ -13,11 +13,11 @@ import java.util.*;
 public class Messages extends ListResourceBundle 
   {
   private final static String ABOUT_MESSAGE 
-    = "<p></p><p>A browser for 'Small Net' protocols."
-    + "</p><p></p><p>Maintained by Kevin Boone, and distributed under the terms "
-    + "of the GNU PUblic Licence, v3.0.</p>"
-    + "<p></p><p>For more information, see "
-    +  "<b>https://kevinboone.me/jgemini.html</b>";
+    = "A browser for 'small net' protocols.\n\n"
+    + "Maintained by Kevin Boone, and distributed under the terms "
+    + "of the GNU PUblic Licence, v3.0. "
+    + "For more information, see "
+    +  "https://kevinboone.me/jgemini.html.\n";
 
   private Object[][] contents = 
     {
@@ -35,7 +35,9 @@ public class Messages extends ListResourceBundle
     {"loading", "Loading..."},
     {"not_found", "Not found"},
     {"name_empty", "'Name' field cannot be empty"},
+    {"no_certinfo", "No certificate information is available for this page"},
     {"password_empty", "'Password' field cannot be empty"},
+    {"page_not_remote", "This page is not from a remote server"},
     {"protocol_no_ident", "This protocol does not support identity"},
     {"save_only_text_message", "'Save' can only be used on text documents"},
     {"search_wrapped_around", "Search wrapped around to top"},

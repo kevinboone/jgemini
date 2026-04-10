@@ -43,9 +43,6 @@ public class Main
     {
     Security.addProvider (new BouncyCastleProvider());  
 
-    me.kevinboone.utils.ssl.CertUtil.makeSelfSignedCertKeystore ("JKS", "foo.jks", "CN=test",
-      "myclient", "changeit");
-
     if (System.getProperty ("jgemini.dumpfonts") != null)
       {
       String fonts[] = 

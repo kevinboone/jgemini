@@ -20,13 +20,10 @@ for server administrators to collude to track you. There's no reason to
 think this is happening, or ever will. However, if it's a concern, you should
 use a different client certificate for each site that requires one.
 
-Please see [this page](client_certs.md) for more information on using
-client certificates.
-
 ## Saving local state
 
-JGemini does not cache incoming data -- there's no point, since none of the
-protocols it supports carry any time-stamp information. In fact, it 
+JGemini does not cache incoming documents -- there's no point, since none of
+the protocols it supports carry any time-stamp information. In fact, it
 deliberately stores very little state.
 
 JGemini might store the following on disk.
@@ -40,6 +37,7 @@ JGemini might store the following on disk.
 - Your URL history, but only if you have explicitly enabled this. 
   Otherwise, history is only stored in memory, for the duration of the session.
 - Bookmarks you explicitly save.
+- User interface settings, like the window size.
 
 By default, all local state is saved in the `$HOME/.jgemini` directory.
 

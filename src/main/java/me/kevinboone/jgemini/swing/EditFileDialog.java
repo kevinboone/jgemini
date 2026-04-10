@@ -161,8 +161,7 @@ public void save()
     }
   catch (Exception e)
     {
-    JOptionPane.showMessageDialog (this, e.getMessage(), // TODO -- expand
-      Constants.APP_NAME, JOptionPane.ERROR_MESSAGE); 
+    reportGenException (e);
     }
   }
 

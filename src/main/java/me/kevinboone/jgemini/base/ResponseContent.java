@@ -19,6 +19,7 @@ public class ResponseContent
   private String mime;
   private Exception exception;
   private URL url;
+  private String certinfo;
 
   public ResponseContent (URL url)
     {
@@ -28,13 +29,15 @@ public class ResponseContent
     content = null;
     }
 
-  public URL getURL() { return url; }
-  public String getMime() { return mime; }
-  public Exception getException() { return exception; }
+  public String getCertinfo() { return certinfo; } // Might validly by null
   public byte[] getContent() { return content; }
+  public Exception getException() { return exception; }
+  public String getMime() { return mime; }
+  public URL getURL() { return url; }
 
+  public void setCertinfo (String certinfo) { this.certinfo = certinfo; }
+  public void setContent (byte[] content) { this.content= content; }
   public void setMime (String mime) { this.mime = mime; }
   public void setException (Exception exception) { this.exception = exception; }
-  public void setContent (byte[] content) { this.content= content; }
 
   }

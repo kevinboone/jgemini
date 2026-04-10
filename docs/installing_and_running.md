@@ -2,11 +2,9 @@
 
 ## Installation
 
-JGemini is supplied as a single Java JAR file. It requires no specific installation:
-just copy the JAR file to any convenient directory. You may want to create a 
-[configuration file](config_file.md), but there are reasonable defaults.
-
-The only additional set-up that might be necessary is to 
+JGemini is supplied as a single Java JAR file. It requires no specific
+installation: just copy the JAR file to any convenient directory.  The only
+additional set-up that might be necessary is to 
 [install emoji fonts](emoji_support.md).
 
 ## Running JGemini without installing
@@ -19,19 +17,19 @@ like this:
 where x.y is the version number (currently 2.0).
 
 If your desktop associates Java JAR files with the `.jar` extension, you might
-be able to launch JGemini from a file manager or program manager,
-just by clicking the JAR.
+be able to launch JGemini from a file manager or program manager, just by
+clicking the JAR.
 
-If you're running from a prompt line, you can specify a URL or file to load:
+If you're running from a command line, you can specify a URL or file to load:
 
     java -jar /path/to/jgemini-2.0.jar gemini://larsthebear.me/ 
 
 For convenience, local filenames don't need a full URL -- just the filename
 will do. JGemini will expand it to a URL internally. If the name of a local
 file ends in `.gmi`, it is treated as Gemtext, otherwise as plain text in the
-platform's default encoding. The filename doesn't matter so much for content fetched
-from a server, as the server will usually indicate the type of the content
-along with its response.
+platform's default character encoding. The filename doesn't matter so much for
+content fetched from a server, as the server will usually indicate the type of
+the content along with its response.
 
 ## Installing with Linux desktop integration 
 

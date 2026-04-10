@@ -11,7 +11,10 @@ package me.kevinboone.jgemini.base;
 
 public interface ConfigChangeListener
   {
-  public void configChanged();
+  public static final int CCMODE_NOUPDATE = 0;
+  public static final int CCMODE_REFRESH = 1;
+  public static final int CCMODE_RELOAD = 2;
+  public void configChanged (int ccMode);
   }
 
 

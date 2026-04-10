@@ -59,6 +59,9 @@ public class Menus extends ListResourceBundle
     {"edit_select_all_accel", (KeyStroke.getKeyStroke
       (KeyEvent.VK_A, ActionEvent.CTRL_MASK))},
 
+    {"edit_settings", "Settings..."},
+    {"edit_settings_mnemonic", KeyEvent.VK_S},
+
     {"file_close", "Close"},
     {"file_close_mnemonic", KeyEvent.VK_C},
     {"file_close_accel", (KeyStroke.getKeyStroke
@@ -83,9 +86,6 @@ public class Menus extends ListResourceBundle
     {"file_save_mnemonic", KeyEvent.VK_S},
     {"file_save_accel", (KeyStroke.getKeyStroke
       (KeyEvent.VK_S, ActionEvent.CTRL_MASK))},
-
-    {"file_set_as_home", "Set as home page"},
-    {"file_set_as_home_mnemonic", KeyEvent.VK_H},
 
     {"go", "Go"},
     {"go_mnemonic", KeyEvent.VK_G},
@@ -117,20 +117,25 @@ public class Menus extends ListResourceBundle
     {"help_about", "About JGemini..."},
     {"help_about_mnemonic", KeyEvent.VK_A},
 
-    {"settings", "Settings"},
-    {"settings_mnemonic", KeyEvent.VK_E},
+    {"help_release_notes", "Release notes"},
+    {"help_release_notes_mnemonic", KeyEvent.VK_R},
 
-    {"settings_edit", "Edit..."},
+    {"settings", "Settings"},
+    {"settings_mnemonic", KeyEvent.VK_T},
+
+    {"settings_edit", "Settings editor..."},
     {"settings_edit_mnemonic", KeyEvent.VK_E},
 
-    {"settings_reload", "Reload"},
+    {"settings_reload", "Reload settings"},
     {"settings_reload_mnemonic", KeyEvent.VK_R},
 
     {"tools", "Tools"},
     {"tools_mnemonic", KeyEvent.VK_T},
 
     {"tools_identity", "Set/manage idenity..."},
-    {"tools_identity_mnemonic", KeyEvent.VK_I},
+    {"tools_identity_mnemonic", KeyEvent.VK_S},
+    {"tools_server_cert", "Server certificate info..."},
+    {"tools_server_cert_mnemonic", KeyEvent.VK_E},
 
     {"view", "View"},
     {"view_mnemonic", KeyEvent.VK_V},
@@ -139,7 +144,8 @@ public class Menus extends ListResourceBundle
     {"view_refresh_mnemonic", KeyEvent.VK_R},
     {"view_refresh_accel", (KeyStroke.getKeyStroke
       (KeyEvent.VK_R, ActionEvent.CTRL_MASK))},
-
+    {"view_theme", "Theme..."},
+    {"view_theme_mnemonic", KeyEvent.VK_T},
     {"view_zoom_in", "Zoom in"},
     {"view_zoom_in_mnemonic", KeyEvent.VK_I},
     {"view_zoom_in_accel", (KeyStroke.getKeyStroke

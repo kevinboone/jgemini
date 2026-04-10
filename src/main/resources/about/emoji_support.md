@@ -11,7 +11,7 @@ you might need to install additional fonts.
 Suitable fonts are Noto Emoji (Google) and Segoe UI Emoji (Microsoft).
 Noto Emoji is redistributable; you can get the TTF file 
 [from Google](https://fonts.google.com/noto/specimen/Noto+Emoji).
-Segoe UI Emoji is not redistributable, but is nevertheless
+Segoe UI Emoji is not legally redistributable, but is nevertheless
 widely available, for example 
 from [online-fonts](https://online-fonts.com/fonts/segoe-ui-emoji).
 

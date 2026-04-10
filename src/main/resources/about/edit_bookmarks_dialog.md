@@ -1,13 +1,14 @@
 # "Edit bookmarks" dialog
 
-JGemini's bookmarks file is an ordinary Gemtext document, and you can format it
-as you wish. Every time you bookmark a page, JGemini appends a Gemtext link to
-the bookmarks file. You can re-order the links, and add headings and
-explanatory text if you wish.
+JGemini's bookmarks file is an ordinary Gemtext document, and you can re-format
+it (mostly) as you like. Every time you bookmark a page, JGemini appends a
+Gemtext link to the bookmarks file. You can re-order the links, and add
+headings and explanatory text if you wish.
 
 The only stipulation is that the bookmarks file remain a valid Gemtext
 document, and ends with an end-of-line character, so JGemini can add new
-bookmarks links to the file.
+bookmarks links to the file. When you select _Bookmarks|Show all_, JGemini
+simply renders the bookmarks file as if it were a Gemtext document.
 
 If you prefer, you can edit the bookmarks file (usually
 `$HOME/.jgemini/bookmarks.gmi`) with an ordinary text editor. It's advisable to

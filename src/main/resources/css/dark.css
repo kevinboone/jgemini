@@ -31,21 +31,24 @@ code
 h1 
   {
   color: #C0F0; 
-  font: %%h1_font_size%%px Liberation Sans; 
+  background: #030e18;
+  font: %%h1_font_size%%px sans-serif; 
   font-weight: bold 
   }
 
 h2 
   {
   color: #B0E0;  
-  font: %%h2_font_size%%px Liberation Sans;
+  background: #030e18;
+  font: %%h2_font_size%%px sans-serif;
   padding-top: 10px;
   }
 
 h3 
   {
+  background: #030e18;
   color: #C0F0; 
-  font: %%h3_font_size%%px Liberation Sans;
+  font: %%h3_font_size%%px sans-serif;
   padding-top: 10px;
   }
 
@@ -56,8 +59,10 @@ p
 
 pre 
   {
+  background: #030e18; 
   font: %%base_font_size%%px monospace; 
   margin-top: 16px;
+  padding: 8px;
   }
 
 ul 

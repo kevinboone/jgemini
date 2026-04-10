@@ -1,32 +1,27 @@
 # Configuration file
 
 > *Note*  
-> You can manage most of JGemini's functionality using the main user interface,
-> and there's not usually much need to hack on the configuration file manually.
-> However, it's still exposed and documented, for more complex usage scenarios.
-> Be aware, though, that careless hacking on the configuration file can break
-> things in non-obvious ways.
+> You can manage most of JGemini's configuration using the main user interface,
+> so there's not much need to hack on the configuration file manually.
+> However, it's still exposed and documented, for more complex usage scenarios,
+> and for editing settings that are deliberately not exposed to the user.  Be
+> aware that careless hacking on the configuration file can break things in
+> non-obvious ways.
 
-Although you can use any text editor to edit the configuration file, there is
-a built-in editor: use the File|Settings|Edit menu. When you exit the
-editor by selecting "Save" (ctrl+S), JGemini saves the contents of the
-editor to the configuration file, and then reloads the settings. 
+Although you can use any text editor to edit the configuration file, there is a
+built-in editor: use the _File|Settings|Edit_ menu to see it. When you exit the
+editor by selecting "Save" (ctrl+S), JGemini saves the contents of the editor
+to the configuration file, and then reloads the settings. 
 
 Please note that not all settings take effect immediately -- some need a
 restart.
 
 If you prefer to edit the configuration using a text editor, you can use
-File|Settings|Reload to activate your changes.
+_File|Settings|Reload_ to activate your changes.
 
-However you edit the settings file, it might be a good idea to have this
-page open in a separate window, so you can see what settings to change.
-
-If you have no configuration file at all -- which will be the case the first
-time you run JGemini -- the program will create a template that you can edit.
-Please be aware, however, that the comments in the template don't get saved
-when you save the configuration from within JGemini -- only the actual settings
-get changed.  If you want to leave the comments intact, it might be better to
-locate the configuration file on disk, and edit it using a text editor.
+However you edit the settings file, it might be a good idea to have this page
+of the documentation open in a separate window, so you can see what settings to
+change.
 
 If you use Notepad to edit the configuration on Windows, be aware that Notepad
 likes to add `.txt` to all filenames, so you might need to rename the file
@@ -43,7 +38,7 @@ The name of the user configuration file is `jgemini.properties`, in the
 directory `.jgemini`, in the location that the Java JVM recognizes as the
 "home" directory. On Linux, that's whatever is stored in the `$HOME`
 environment variable. On Windows, it's typically `C:\users\{username}`. So the
-configuration file will be
+configuration file will usually be
 
     $HOME/.jgemini/jgemini.properties
 
@@ -74,9 +69,12 @@ See also the entry for `ident`.
 For more information, see the page on [client certificates](client_certs.md).
 
 `emoji.strip.bookmarks`  
-If set to 'yes', JGemini strips Unicode emojis from bookmarks
-before storing them. The default is not to strip emojis, which 
-might require the installation of additional fonts. 
+If set to 'yes', JGemini strips Unicode emojis from new bookmarks before
+storing them. It also prevents emojis being displayed in the Bookmarks menu in
+the main user interface. 
+
+The default is to leave emojis as they are, which might require the
+installation of additional fonts. 
 
 `gemtext.inline.images`  
 Controls whether to display images in-line in Gemtext documents.  Note that
@@ -143,8 +141,10 @@ The URL to which the search expression is appended. Default is
 `gemini://tlgs.one/search`.
 
 `window.w`  
-Width of the main window, in pixels. Default: 1200 pixels.
+Width of the main window, in pixels. Default: 1200 pixels. Please be aware that
+this will be overwritten if you resize the window at runtime.
 
 `window.h`   
-Height of the main window, in pixels.  Default: 900 pixels.
+Height of the main window, in pixels.  Default: 900 pixels.  Please be aware
+that this will be overwritten if you resize the window at runtime.
 
