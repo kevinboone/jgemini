@@ -15,6 +15,11 @@ import java.net.URL;
 import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 
+/** A few helper methods for managing user identity names, and
+    mapping them to filenames. We'll use the identity name supplied
+    by the user as part of the filename for a Java keystore, so 
+    we have to place restrictions on the name. 
+*/
 public class IdentUtil 
 {
 private final static ResourceBundle messagesBundle = 
@@ -26,11 +31,11 @@ private final static Config config = Config.getConfig();
   
   checkIdentName
 
-  Check that a putative identity name consists only of sensible
+=========================================================================*/
+/** Check that a putative identity name consists only of sensible
     characters. It's going to be the key in a Java propsfile, and part
     of a filename, so there are limitations.
-
-=========================================================================*/
+*/
 public static void checkIdentName (String name)
     throws IdentException
   {
@@ -55,7 +60,10 @@ public static void checkIdentName (String name)
   identNameToFilename
 
 =========================================================================*/
-
+/** Given the name of a user identity -- which we've already checked for
+    validity -- form the full pathname of the PKCS12 file we will use
+    as the keystore for that identity. 
+*/
 public static String identToFilename (String identName)
   {
   return config.getIdentsDir() + File.separator 

@@ -22,14 +22,8 @@ gophermaps don't (so far as I know) provide any protocol information.
 All these things would be quite easy to support, but I'm not sure there are
 enough users to make it worthwhile.
 
-## Media support
+## feeds
 
-Currently JGemini has no support for streaming media or, in fact, any kind of
-media other than images. It can't even stream data into an external player --
-mostly because I can't think of a workable cross-platform way to do that.
-
-There are Java media playback libraries, but they all seem to have external
-dependencies, which are platform dependent.
-
-I'm really not sure it's worth the effort.
+I'm unsure whether I want to put the hours into implementing a full feed
+aggregator.
 

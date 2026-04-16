@@ -17,6 +17,8 @@ import java.awt.event.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** Implements the Home tab of the Settings dialog.
+*/
 public class HomeSettingsPane extends SettingsPane
   {
   private JTextField homeTextField;

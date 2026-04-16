@@ -4,10 +4,6 @@
 
   TextLikeConverter
 
-  Base class for converters that basically handle text, but have a 
-  specific "=>" syntax for links. Gemtext and the Nex variety of plain
-  text both use this format.
-
   Copyright (c)2026 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -18,6 +14,11 @@ import java.util.regex.Pattern;
 import me.kevinboone.jgemini.base.*;
 import net.fellbaum.jemoji.*;
 
+/** Base class for converters that basically handle text, but have a 
+    specific "=&gt;" syntax for links. Gemtext and the Nex variety of plain
+    text both use this format. Using this base class avoids a little
+    code duplication.
+*/
 public class TextLikeConverter
   {
   protected URL baseURL;
@@ -35,7 +36,7 @@ public class TextLikeConverter
     return false;
     }
 
-  /** Convert common punctuation like & into HTML-friendly forms. */
+  /** Convert common punctuation like &amp; into HTML-friendly forms. */
   protected static String escapeHtml (String gem)
     {
     String s = gem.replace (">", "£££gt;");

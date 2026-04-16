@@ -10,6 +10,7 @@
 package me.kevinboone.jgemini.bundles;
 import java.util.*;
 import java.awt.event.*;
+import javax.swing.*;
 
 public class Dialogs extends ListResourceBundle 
   {
@@ -36,6 +37,15 @@ public class Dialogs extends ListResourceBundle
     {"attachidentitydialog_password_empty", "Keystore password is blank"},
     {"attachidentitydialog_submit", "Submit"},
     {"attachidentitydialog_submit_mnemonic", KeyEvent.VK_S},
+
+    {"downloads_no_file", "<No file>"},
+    {"downloads_clear", "Clear"},
+    {"downloads_clear_mnemonic", KeyEvent.VK_C},
+    {"downloads_close", "Close"},
+    {"downloads_close_accel", (KeyStroke.getKeyStroke
+      (KeyEvent.VK_W, ActionEvent.CTRL_MASK))},
+    {"downloads_help", "Help"},
+    {"downloads_help_mnemonic", KeyEvent.VK_H},
 
     {"editfiledialog_cancel", "Cancel"},
     {"editfiledialog_save", "Save"},
@@ -84,6 +94,14 @@ public class Dialogs extends ListResourceBundle
     {"images_settings_pane_gemtext_inline_mnemonic", KeyEvent.VK_M},
     {"images_settings_pane_name", "Images"},
     {"images_settings_pane_mnemonic", KeyEvent.VK_I},
+
+    {"media_settings_pane_media_clear", "Clear handling defaults"},
+    {"media_settings_pane_media_clear_mnemonic", KeyEvent.VK_C},
+    {"media_settings_pane_media_player", "Player"},
+    {"media_settings_pane_media_player_mnemonic", KeyEvent.VK_P},
+    {"media_settings_pane_name", "Media"},
+    {"media_settings_pane_mnemonic", KeyEvent.VK_M},
+    {"media_settings_pane_player_help", "Use full pathname of player application on Windows"},
     
     {"newidentitydialog_cancel", "Cancel"},
     {"newidentitydialog_created_identity", "Created identity"},
@@ -113,6 +131,27 @@ public class Dialogs extends ListResourceBundle
     {"settingsdialog_docs_mnemonic", KeyEvent.VK_H},
     {"settingsdialog_submit", "Submit"},
     {"settingsdialog_submit_mnemonic", KeyEvent.VK_S},
+
+    {"select_action_dialog_always", "Always handle this content this way"},
+    {"select_action_dialog_always_mnemonic", KeyEvent.VK_L}, 
+    {"select_action_dialog_cancel", "Cancel"},
+    {"select_action_dialog_choice_desktop", "Hand off to desktop"},
+    {"select_action_dialog_choice_desktop_mnemonic", KeyEvent.VK_A},
+    {"select_action_dialog_choice_prompt_save", 
+      "Prompt for a filename and save"},
+    {"select_action_dialog_choice_prompt_save_mnemonic", KeyEvent.VK_P}, 
+    {"select_action_dialog_choice_save", "Save without prompting"},
+    {"select_action_dialog_choice_save_mnemonic", KeyEvent.VK_S},
+    {"select_action_dialog_choice_stream", "Stream to player"},
+    {"select_action_dialog_choice_stream_mnemonic", KeyEvent.VK_S},
+    {"select_action_dialog_docs", "Help"},
+    {"select_action_dialog_docs_mnemonic", KeyEvent.VK_H},
+    {"select_action_dialog_filename_label", "Application"},
+    {"select_action_dialog_filename_label_mnemonic", KeyEvent.VK_A},
+    {"select_action_dialog_how_question", 
+      "How should JGemini handle content of this type?"},
+    {"select_action_dialog_submit", "Submit"},
+    {"select_action_dialog_submit_mnemonic", KeyEvent.VK_S},
 
     {"textentrydialog_cancel", "Cancel"},
     {"textentrydialog_enter_text", "Enter text"},

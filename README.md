@@ -2,7 +2,15 @@
 
 A Java-based graphical browser for Gemini and other 'small net' protocols
 
-Version 2.0.4, Kevin Boone, April 2026
+Version 3.0.0, Kevin Boone, April 2026
+
+**Note**  
+Version 3.0 is radically different from earlier releases. I've added a lot of
+code in a relatively short time, as well as refactoring a lot of the original
+code. Version 3.0 is, I hope, a better application by far than it predecessors,
+but adding new features this quickly comes with risks.  Although JGemini is
+stable enough for my own purposes, it's plausible that I've broken features
+that worked before. If that's the case, do please report the bugs. Thank you.
 
 ## What is JGemini?
 
@@ -22,7 +30,7 @@ experiments -- I doubt it would be much use to anybody else. It has the small,
 putative advantage over other clients that it natively supports Markdown
 documents as well as Gemtext.
 
-## Pre-requisites
+## Prerequisites
 
 To run JGemini you'll need a computer with some kind of graphical desktop, and
 a Java JVM. JGemini should work with any Java version 11.0 or later.
@@ -37,6 +45,10 @@ If you're looking at Gemini/Spartan capsules that use Unicode emojis -- and
 many do -- you'll probably need to ensure that your computer has fonts that
 contain the relevant glyphs; see `docs/emoji_support.md` for more information.
 
+If you want to stream Gemini radio and similar content, you'll need a media
+player that JGemini can send a data stream to; VLC and `ffmpeg` both seem to
+work.
+
 ## Features
 
 - No specific installation procedure (if you have a Java JVM) -- JGemini is
@@ -50,14 +62,15 @@ contain the relevant glyphs; see `docs/emoji_support.md` for more information.
 - Text styling can be configured to suit the display and user preference
 - Uses anti-aliased font rendering for a smoother text appearance
 - Fetches documents asynchronously to improve user interface responsiveness
+- Download manager
 - Text selection with cut-and-paste
 - Search in document
-- Downloaded documents can be saved to file
 - Supports multiple windows
 - Search directly from the URL bar
 - Saves little state by default, for privacy
 - Reasonably comprehensive documentation with built-in viewer
 - Rudimentary bookmark support, with built-in editor
+- Rudimentary media streaming support, using an external player
 - Parses and displays Atom feeds
 
 ## Installing and running JGemini
@@ -70,54 +83,29 @@ Java JVM.
 
 ## Configuration
 
-The only method of configuration (at present) is by hacking on configuration
-files.  On Linux, JGemini will read a system-level properties file, if it exists, at
-`/etc/jgemini/jgemini.properties`, and then a user properties file at
-$HOME/.jgemini/jgemini.properties. On Windows, JGemini will read a user configuration
-file with the same name in the JVM's `user.home` directory.  
-
-The interpretation of `user.home` on Windows can be a little variable. It's
-often `c:\users\{username}`, so the configuration file will be
-`c:\users\{username}\.jgemini\jgemini.properties`.
-
-To mitigate the awkwardness of editing the configuration this way, JGemini since 2.0.1
-has a built-in settings editor. All it does is open the configuration file --
-creating a sample one if necessary -- in a text file editor. Use the File|Settings|Edit
-menu command to use this feature.
-
-There is a sample configuration file in the source code
-bundle, in the `samples` directory. I hope the settings in that file are pretty
-self-explanatory but, if they are not, there is a full listing in 
-`docs/config_file.md`.
-
-If you want to change the default home page, add an entry `url.home` to either
-of the configuration files.
-
-Run-time configuration of JGemini's appearance is not possible at present,
-other than zoom in/out. However, as Gemini provides no way for an author to
-control the text appearance (that's one of its strengths), text size and font,
-etc., should be a one-time setting, even if it takes a bit of trial and error.
-Once you have the settings that suit you, there should be no need to change
-them again.
-
-For more information on configuring the appearance of the document window,
-please see `README.styling`.
+Nearly all JGemini's features can be configured using the Settings dialog in
+the main user interface. It should no longer be necessary to edit the
+configuration file very often, if at all. However, it's still possible, it's
+still documented, and JGemini has a built-in file editor for doing it, should
+the need arise.
 
 ## Image support
 
-JGemini supports JPEG, PNG, and GIF images internally. Other types can still be
-downloaded, but will be handed off to the platform for viewing. For Gemini and
-Spartan, supported images will be displayed in-line in the document by default.
-Links to other types will just be displayed as a link to a new document. 
+JGemini supports JPEG, PNG, and GIF images internally, including animated
+versions.
+
+For Gemini and Spartan, supported images will be displayed in-line in the
+document by default.  Links to other types -- and to other types of document
+entirely -- will just be displayed as a link.
 
 For compatibility with other Gemini browsers, JGemini can be configured _not_
-to in-line images from a document into the text if preferred.  The
+to in-line images from a Gemtext document into the text if preferred.  The
 configuration property is `gemtext.inline.images=1|0`. If images are not
 in-lined, they will be rendered as links, just as for unsupported image types.
 
-Images referenced from gophermaps (directories) will never be in-lined.
-It's common to find gophermaps with huge numbers of huge images, because
-Gopher authors don't expect images to be in-lined.
+Images referenced from gophermaps (directories) will never be in-lined.  It's
+common to find gophermaps with huge numbers of huge images, because Gopher
+authors don't expect images to be in-lined.
 
 Images in-lined into a document are all displayed with the same (configurable)
 size. This is because none of the document formats which JGemini supports allow
@@ -151,8 +139,8 @@ handed off to the platform to handle.
 
 JGemini remembers URLs you visit, either by entering them in the URL bar,
 or by following links. By default the history is _not_ saved anywhere,
-because it's potentially a privacy risk. If you want to save the
-history, give the full path to a file in the `history.file` setting.
+because it's potentially a privacy risk. You can change this behaviour
+using the Settings dialog box. 
 
 ## URL bar search
 
@@ -173,10 +161,10 @@ using ctrl+Home/End. Zoom in/out with ctrlr+[ and ctrl+].
 
 ## Text input
 
-When a server prompts for input, JGemini raises a text-entry dialog box.
-Since it's legitimate -- and commonplace -- for input to contain
-newline characters, the 'Enter' key does not submit the input, but
-enters a new line. To submit, hit ctrl+S.
+When a server prompts for input, JGemini raises a text-entry dialog box.  Since
+it's legitimate -- and commonplace -- for input to contain newline characters,
+the 'Enter' key does not submit the input, but enters a new line. To submit,
+hit ctrl+S.
 
 Since a Gemini URL is limited to a total of 1024 bytes, and that has to include
 the `gemini://host/port/path` part, the text input dialog box shows the number
@@ -186,7 +174,7 @@ consequence of the way non-alphanumeric characters have to be encoded, and the
 fact that UTF-8 -- which Gemini expects -- is a multi-byte encoding. 
 
 JGemini uses the same text input box for Gemini and Gopher. Some Gopher servers
-may behave properly with non-ASCII input, I suspect that many will not. 
+may behave properly with non-ASCII input, but I suspect that many will not. 
 
 ## Protocol notes
 
@@ -219,7 +207,7 @@ server. The server never sees the '/0' part of the URI, so it always sends the
 same thing. This odd convention came about because we needed a way to
 incorporate the type information from a gophermap into a URI.
 
-JGemini always display text files from Gopher as pre-formatted lines.  Gopher
+JGemini always displays text files from Gopher as pre-formatted lines.  Gopher
 dates from a time when everybody used 80-column screens, and documents are
 generally formatted on that basis.
 
@@ -292,12 +280,10 @@ This will generate the compiled JARs in `target/`.
 ## Author and legal
 
 JGemini is maintained by Kevin Boone, and distributed under the terms of the
-GNU Public Licence, v3.0. The binary distribution contains the 
-[jemoji](https://github.com/felldo/jemoji) library, maintained by
-Dominic Fellbaum and others, along with 
-[commonmark-java](https://github.com/commonmark/commonmark-java), which has 
-many contributors. To the best of my knowledge, all open-source components used
-by JGemini are released under terms compatible with the GPL.
+GNU Public Licence, v3.0. 
+
+The binary distribution includes a number of open-source libraries and
+media items. For full details, please see `docs/author_and_legal.md`.
 
 There is, of course, no warranty of any kind.
 
@@ -377,4 +363,28 @@ Version 2.0.4 -- April 2026
 - Window size is now saved when closing a window
 - Fixed a number of stupid bugs
 - Added a "useful links" page
+
+Version 2.0.5 -- April 2026
+- Tidied up the connection logic
+- Intercepted requests for unhandled content types, and pop up a 'file save'
+  dialog box
+
+Version 3.0.0 -- April 2026
+
+- Download code completely rewritten
+- Download manager implemented
+- Rudimentary media streaming support: JGemini can launch a media player like VLC,
+  and stream data into it retrieved using any of the protocols it supports
+- URL bar now filters the URL history as the user types. This was surprisingly 
+  nasty to implement, and might be buggy
+- Started to move comments to proper javadocs, and added a javadoc goal to the
+  Maven `pom.xml`. The `javadocs.sh` script runs the Maven
+  goal, and moves the generated documentation to `javadocs/`
+- Toolbar icon size is now configurable: setting `ui.icon.size`
+- Toolbar icons can be colour/mono, using the setting `ui.icons.mono`. Colour
+  is the default
+- JGemini now does a proper "System.exit()" when it detects that no top-level windows are 
+  open. This should prevent the program hanging on exit because Swing leaves 
+  dangling threads that can't easily be closed. When exiting, JGemini cleans up
+  incomplete file transfers
 

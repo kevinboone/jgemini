@@ -16,6 +16,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 import me.kevinboone.jgemini.base.*;
 
+/** Implements the status bar at the bottom of each window, along
+    with the logic to clear messages from it periodically. */ 
 public class StatusBar extends JPanel implements StatusListener
   {
   private JLabel label;

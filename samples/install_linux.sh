@@ -9,7 +9,7 @@
 #DESTDIR=/
 SHAREDIR=/usr/share
 BINDIR=/usr/bin
-VERSION=2.0
+VERSION=3.0
 ICONDIR=${SHAREDIR}/icons/hicolor
 
 APPDIR=$SHAREDIR/applications

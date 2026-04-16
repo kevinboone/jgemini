@@ -19,6 +19,12 @@ import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.ssl.*;
 import me.kevinboone.jgemini.Constants;
 
+/** Implements the main user interface to the user identity manager,
+    for a specific remote URL. The identity manager UI is 
+    just an instance of the SetIdentity dialog. The only other thing
+    we do in this class, beyond raising the dialog, is checking that
+    the remote URL corresponds to a Gemini server.
+*/
 public class DefaultClientCertHandler 
     implements ClientCertHandler
   {

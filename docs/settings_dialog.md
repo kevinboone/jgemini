@@ -57,5 +57,22 @@ This tab allows you to specify whether you want to be able to carry out
 searches directly from the URL bar. You'll need to enter a search provider, if
 you want to search this way.
 
+## Media tab
+
+Here you can specify the application that will receive the media data stream,
+when you tell JGemini to stream content rather than downloading it. You should
+include any command-line arguments you need, to make the player read from its
+standard input, rather than from a file or URL. On both `vlc` and `ffplay`, use
+the `-` command-line switch for this.
+
+On Windows, you'll almost certainly need to give the full path of the `.exe`
+file.
+
+The button "Clear handling defaults" resets any choice you may previously
+have made about how specific types of content should be handled.
+
+For more information on media support in JGemini, see the 
+[Media and streaming](media_and_streaming.md) page.
+
 [Documentation index](index.md)
 

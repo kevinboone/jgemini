@@ -14,6 +14,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
+/** A URLStreamHandler that instantiates GeminiConnection. 
+*/
 public class GeminiURLStreamHandler extends URLStreamHandler
   {
   @Override

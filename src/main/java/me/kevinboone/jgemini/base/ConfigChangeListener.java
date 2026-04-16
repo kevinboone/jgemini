@@ -9,6 +9,10 @@
 =========================================================================*/
 package me.kevinboone.jgemini.base;
 
+/** This interface is implemented by any class that can respond to
+    configuration changes. It also defines constants that  
+    control the action that should be taken after making a configuration 
+    change using the UI. */
 public interface ConfigChangeListener
   {
   public static final int CCMODE_NOUPDATE = 0;

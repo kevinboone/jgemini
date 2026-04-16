@@ -4,8 +4,6 @@
 
   Clipboard
 
-  Clipboard utilities
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -14,6 +12,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.Toolkit;
 import java.awt.datatransfer.*;
 
+/** A simple helper class for clipboad operations. 
+*/
 public class Clipboard 
   {
   public static void copyTextToClipboard (String text)

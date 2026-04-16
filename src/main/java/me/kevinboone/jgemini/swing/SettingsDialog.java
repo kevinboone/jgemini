@@ -17,6 +17,13 @@ import java.awt.event.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** Implements the Settings dialog. This is a hugely complicated chunk
+    of code, so I've split each tab of the dialog into its own class,
+    like SearchSettingsPane. When the user clicks Submit, this class
+    will enumerate all the individual tabs, and check whether its
+    safe to close the dialog. It will also find out from the tabs
+    what kind of action needs to be taken -- refresh the screen,
+    reload settings, etc. */
 public class SettingsDialog extends JGeminiDialog
 {
 private boolean didChange = false;
@@ -75,6 +82,11 @@ public SettingsDialog (MainWindow mainWindow)
   tabbedPane.addTab (searchSettingsPane.getTabName(), null, 
      searchSettingsPane, searchSettingsPane.getTabName());
   tabbedPane.setMnemonicAt (5, searchSettingsPane.getMnemonic());
+
+  MediaSettingsPane mediaSettingsPane = new MediaSettingsPane (mainWindow);
+  tabbedPane.addTab (mediaSettingsPane.getTabName(), null, 
+     mediaSettingsPane, mediaSettingsPane.getTabName());
+  tabbedPane.setMnemonicAt (6, mediaSettingsPane.getMnemonic());
 
   JButton docsButton = createButton ("settingsdialog_docs"); 
   JButton submitButton = createButton ("settingsdialog_submit");
@@ -142,6 +154,8 @@ public SettingsDialog (MainWindow mainWindow)
   didChange
 
 =========================================================================*/
+/** Returns true if anything changed in any tab. 
+*/
 public boolean didChange() { return didChange; }
 
 /*=========================================================================
@@ -160,7 +174,7 @@ private void docs()
   submit 
 
 =========================================================================*/
-public void submit()
+private void submit()
   {
   int l = tabbedPane.getTabCount();
   boolean error = false;

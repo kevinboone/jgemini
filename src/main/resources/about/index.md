@@ -1,6 +1,6 @@
 # JGemini help and documentation
 
-This is the built-in documentation for JGemini version 2.0. 
+This is the built-in documentation for JGemini version 3.0. 
 
 ## What JGemini is, and what it does
 
@@ -21,6 +21,8 @@ This is the built-in documentation for JGemini version 2.0.
 [Bookmark support](bookmarks.md)
 
 [Identity](identity.md)
+
+[Media and streaming support](media_and_streaming.md)
 
 [Things to watch out for](gotchas.md)
 

@@ -13,7 +13,7 @@ There is, of course, no warranty of any kind.
 ## Open-source licences
 
 The binary distribution of JGemini contains the following open-source
-libraries.
+libraries and media.
 
 * [jemoji](https://github.com/felldo/jemoji) library, maintained by
 Dominic Fellbaum and others ([licence](about:/LICENCE_jemoji.txt)). 
@@ -24,6 +24,8 @@ Dominic Fellbaum and others ([licence](about:/LICENCE_jemoji.txt)).
 * [Bouncy Castle](https://www.bouncycastle.org) 
   ([licence](about:/LICENCE_bouncy_castle.txt)).
 
+* [Tango desktop icons](https://tango.freedesktop.org/), distributed
+  under the terms of the Create Commons Attribution-ShareAlike licence.
 
 [Documentation index](index.md)
 

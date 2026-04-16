@@ -15,6 +15,8 @@ public class Tooltips extends ListResourceBundle
   private Object[][] contents = 
     {
     {"back", "Go back"},
+    {"download_cancel", "Cancel download"},
+    {"download_folder", "Open download folder"},
     {"home", "Go home"},
     {"identity", "Manage identity"},
     {"refresh", "Refresh page"},

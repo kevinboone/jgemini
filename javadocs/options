@@ -1,0 +1,26 @@
+-classpath
+'/home/kevin/.m2/repository/org/commonmark/commonmark/0.27.1/commonmark-0.27.1.jar:/home/kevin/.m2/repository/org/commonmark/commonmark-ext-gfm-tables/0.27.1/commonmark-ext-gfm-tables-0.27.1.jar:/home/kevin/.m2/repository/net/fellbaum/jemoji/1.7.6/jemoji-1.7.6.jar:/home/kevin/.m2/repository/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar:/home/kevin/.m2/repository/org/bouncycastle/bcpkix-jdk18on/1.83/bcpkix-jdk18on-1.83.jar:/home/kevin/.m2/repository/org/bouncycastle/bcutil-jdk18on/1.83/bcutil-jdk18on-1.83.jar:/home/kevin/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.83/bcprov-jdk18on-1.83.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'1.8'
+-sourcepath
+'/home/kevin/source/jgemini/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2026. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/home/kevin/source/jgemini/target/reports/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'jgemini 3.0 API'
+-linkoffline
+'https://docs.oracle.com/javase/8/docs/api' '/home/kevin/source/jgemini/target/javadoc-bundle-options'
+-use
+-version
+-windowtitle
+'jgemini 3.0 API'

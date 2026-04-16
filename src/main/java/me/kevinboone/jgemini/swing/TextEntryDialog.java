@@ -4,11 +4,6 @@
 
   TextEntryDialog 
 
-  A text entry dialog specifically for entering text that will be
-  encoded into the 'query' part of a URL. The caller must set the maximum
-  size of the response _in bytes_, since the Gemini specification 
-  stipulates a query size in bytes.
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -21,6 +16,12 @@ import java.net.URLEncoder;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/**
+  A text entry dialog specifically for entering text that will be
+  encoded into the 'query' part of a URL. The caller must set the maximum
+  size of the response _in bytes_, since the Gemini specification 
+  stipulates a query size in bytes.
+*/
 public class TextEntryDialog extends JGeminiDialog
 {
 private String input;

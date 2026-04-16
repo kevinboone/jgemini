@@ -8,7 +8,13 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-
+/** The base class for anything that handles right mouse-clicks in
+    the main document viewer. It's used to separate out some ugly
+    logic for working out exactly what was clicked. At present,
+    this class is only used by a single handler, which is an anonymous 
+    inner in MainWindow, but at least it takes a little code
+    out of the vast MainWindow class.
+    */
 abstract class RightMouseLinkListener extends MouseAdapter 
   {
   public abstract void clicked (String href, int x, int y);

@@ -18,6 +18,8 @@ import javax.swing.text.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** Implements the History tab of the Settings dialog. 
+*/
 public class HistorySettingsPane extends SettingsPane
   {
   private MainWindow mainWindow;

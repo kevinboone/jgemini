@@ -16,10 +16,16 @@ import java.awt.event.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** The base class for all the individual tabs of the
+    Settings dialog. */
 public abstract class SettingsPane extends JPanel
   {
-  protected final static ResourceBundle dialogsBundle = 
-    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Dialogs");
+  protected final static ResourceBundle dialogsBundle
+    = ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Dialogs");
+  protected final static ResourceBundle messagesBundle
+    = ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
+  protected static StatusHandler statusHandler 
+    = StatusHandler.getInstance();
   protected String tabKey;
   protected Config config = Config.getConfig();
   protected boolean error = false;

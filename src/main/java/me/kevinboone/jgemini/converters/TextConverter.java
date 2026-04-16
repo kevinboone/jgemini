@@ -4,8 +4,6 @@
 
   TextConverter
 
-  A class for converting plain text to HTML 
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -14,9 +12,13 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 
+/** A class for converting plain text to HTML. Mostly we just wrap up the
+    whole thing in a pre-formatted block, but we have to convert characters
+    that would mess up the HTML. 
+*/
 public class TextConverter implements Converter
   {
-  /** Convert common punctuation like & into HTML-friendly forms. */
+  /** Convert common punctuation like &amp; into HTML-friendly forms. */
   public static String escapeHtml (String gem)
     {
     String s = gem.replace (">", "£££gt;");

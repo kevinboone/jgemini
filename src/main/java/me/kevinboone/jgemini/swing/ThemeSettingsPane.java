@@ -17,6 +17,7 @@ import java.awt.event.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** Implements the Theme tab of the Settings dialog. */
 public class ThemeSettingsPane extends SettingsPane
   {
   private JList themeList;
@@ -35,6 +36,7 @@ public class ThemeSettingsPane extends SettingsPane
     super ("theme_settings_pane");
 
     setLayout(new BorderLayout());
+    int iconSize = config.getIconSize();
 
     themeList = new JList<String>();
     themeList.setVisibleRowCount (5);
@@ -54,6 +56,8 @@ public class ThemeSettingsPane extends SettingsPane
 
     java.net.URL fileUrl = getClass().getResource("/images/folder.png");
     ImageIcon fileIcon = new ImageIcon (fileUrl);
+    fileIcon = new ImageIcon (fileIcon.getImage().getScaledInstance 
+      (iconSize, iconSize, Image.SCALE_DEFAULT));
     JButton fileButton = new JButton(fileIcon);
 
     filenameField = new JTextField(20);

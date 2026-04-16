@@ -14,6 +14,9 @@ import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.net.*;
 
+/** An Exception that represents an error response received from a
+    remote server, after establishing a connection successfully. 
+*/
 public class ErrorResponseException extends IOException 
   {
   URL url;

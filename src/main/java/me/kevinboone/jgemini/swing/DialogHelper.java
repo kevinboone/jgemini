@@ -20,6 +20,9 @@ import java.util.*;
 import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 
+/** A helper class for raising error and information dialogs, to reduce
+    the duplication of code each of the many times this happens in the
+    rest of the application. */
 public class DialogHelper 
   {
 /*=========================================================================
@@ -66,7 +69,7 @@ public class DialogHelper
   public static void exceptionDialog (Container parent, 
       String url, Exception e)
     {
-    errorDialog (parent, url, e.toString());
+    errorDialog (parent, url, e.getMessage());
     // TODO -- something useful with the exception
     }
 

@@ -20,8 +20,9 @@ import java.net.URLEncoder;
 import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.ssl.*;
-import me.kevinboone.utils.ssl.*;
 
+/** Implements the "New identity" dialog.
+*/
 public class NewIdentityDialog extends JGeminiDialog 
 {
 private ClientCertManager clientCertManager = 
@@ -53,8 +54,9 @@ public NewIdentityDialog (Window parent, MainWindow mainWindow)
   super (parent, caption, Dialog.ModalityType.DOCUMENT_MODAL);
 
   this.mainWindow = mainWindow;
+  int iconSize = config.getIconSize();
 
-  java.net.URL iconUrl = getClass().getResource("/images/person_128.png");
+  java.net.URL iconUrl = getClass().getResource("/images/person.png");
   ImageIcon icon = new ImageIcon (iconUrl);
   JLabel iconLabel = new JLabel (icon);
 
@@ -103,6 +105,8 @@ public NewIdentityDialog (Window parent, MainWindow mainWindow)
   gbc23.gridy = 1;
   java.net.URL fileUrl = getClass().getResource("/images/folder.png");
   ImageIcon fileIcon = new ImageIcon (fileUrl);
+  fileIcon = new ImageIcon (fileIcon.getImage().getScaledInstance 
+      (iconSize, iconSize, Image.SCALE_DEFAULT));
   JDialog myself = this;
 
   GridBagConstraints gbc31 = new GridBagConstraints();

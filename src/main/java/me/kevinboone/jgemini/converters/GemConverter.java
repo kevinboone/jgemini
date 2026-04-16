@@ -4,8 +4,6 @@
 
   GemConverter
 
-  A class for converting GemText to HTML 
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -16,6 +14,10 @@ import java.util.regex.Pattern;
 import me.kevinboone.jgemini.base.*;
 import net.fellbaum.jemoji.*;
 
+/** A class for converting GemText to HTML. Most of the conversion is
+    done line-by-line using regular expressions. It's not elegant,
+    but it mostly seems to work.
+*/
 public class GemConverter extends TextLikeConverter implements Converter
   {
   private boolean verbatim;

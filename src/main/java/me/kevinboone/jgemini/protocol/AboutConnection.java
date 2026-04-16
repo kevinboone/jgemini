@@ -13,8 +13,14 @@ import java.io.*;
 import java.net.*;
 import java.util.Collections;
 import me.kevinboone.jgemini.base.*;
-import me.kevinboone.utils.file.ContentGuesser;
 
+/** A subclass of URLConnection that handles URLs of the form
+    "about:/xxx". The data is just retrieved from the classloader,
+    under the "about/" directory. At the source level, this content
+    starts in "docs/", but the build script copies it to 
+    "src/main/resources/about", where Maven puts it into "about/" in the
+    JAR.
+*/
 public class AboutConnection extends URLConnection
   {
   private String contentType = null;

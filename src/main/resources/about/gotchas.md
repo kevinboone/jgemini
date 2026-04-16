@@ -19,13 +19,6 @@ In order to keep the user interface moving, JGemini does all content-fetching
 asynchronously in background threads. It's not always easy to see if a
 download is still in progress, and this can cause problems with slow servers.
 
-If you try to download something else while an existing download is ongoing,
-JGemini will try to cancel the previous transfer.  It probably won't succeed,
-Java being what it is, and the old transfer will likely continue to run in the
-background until it completes, and then do nothing. This doesn't affect how
-JGemini looks to the user -- it just means that a bunch of moribund network
-operations can be going on invisibly.
-
 To make things worse, there is no caching of any kind, either on disk or in
 memory.  The protocols JGemini supports do not allow content to be timestamped,
 so there is no robust way to implement a cache.  This means that JGemini makes
@@ -146,15 +139,15 @@ multiple URLs for the same entry.
 Most significantly, JGemini is not a feed aggregator -- it doesn't provide a
 way to subscribe to multiple feeds.
 
-## There is no streaming support
+## Streaming and media issues 
 
 None of the protocols that JGemini supports provide any information about
 the length of the data the server is sending. A stream (audio, video) by
 its very nature has no end; but JGemini can't distinguish a stream from a
 file it could, in principle, download to completion.
 
-As a result, if you follow a link to a stream, JGemini will download it until
-you get bored waiting, or it runs out of memory.
+Consequently, the user has to choose whether to download the file/stream,
+or stream it out to an external player. 
 
 ## Styling issues
 
@@ -164,11 +157,22 @@ not all themes apply all possible styles to all elements. If you do change
 themes at runtime, the results might not be _exactly_ as they would be if you
 started JGemini from scratch. They should be similar, though.
 
-## Missing features
+## Issues with XML documents
 
-_There is no download manager_. JGemini will download multiple files concurrently,
-but there's no way to see which transfers are active and which completed. Nor
-is there a way to stop a particular transfer.
+In general, JGemini knows which kinds of document it can handle, and which it
+can't. If a server says a document is Markdown, for example, or the URL ends in
+`.md`, JGemini will handle it. The same isn't true for XML: JGemini can handle
+Atom feeds in XML format, but it can't do much with other XML documents.
+
+Since JGemini doesn't know whether an XML file is one it can handle or not, it
+has to download it to find out.  If it's not a feed, JGemini writes the XML to
+a temporary file and hands it off to the desktop. 
+
+This specific handling subverts JGemini's usual method of dealing with
+documents it can't handle, which is to prompt the user what to do with them.
+The difference arises from the fact that, other than for XML documents, JGemini
+knows whether it can handle the document as soon as the server responds with a
+content type.  For XML, though, JGemini has to read the response.
 
 
 [Documentation index](index.md)

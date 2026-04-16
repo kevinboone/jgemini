@@ -4,10 +4,6 @@
 
   MarkdownConverter
 
-  A class for converting Markdown to HTML. This is based on the
-  commonmark-java library, but with some modifications to handle
-  things like link rewriting. 
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -28,7 +24,7 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 
 
 /** LinkAttributeProvider is a helper class that rewrites relative links to
-    absolute links, based on the base URL of the page. Java's built-in rendered
+    absolute links, based on the base URL of the page. Java's built-in renderer
     will not do this itself. */
 class LinkAttributeProvider implements AttributeProvider 
   {
@@ -39,7 +35,8 @@ class LinkAttributeProvider implements AttributeProvider
     }
 
   @Override
-  public void setAttributes (Node node, String tagName, Map<String, String> attributes) 
+  public void setAttributes (Node node, String tagName, 
+       Map<String, String> attributes) 
     {
     if (node instanceof Image) 
       {
@@ -72,6 +69,9 @@ class LinkAttributeProvider implements AttributeProvider
     }
   }
 
+/** A class for converting Markdown to HTML. This is based on the
+    commonmark-java library, but with some modifications to handle
+    things like link rewriting. */
 public class MarkdownConverter implements Converter
   {
   private boolean verbatim;

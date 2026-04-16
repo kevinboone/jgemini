@@ -11,6 +11,8 @@
 =========================================================================*/
 package me.kevinboone.jgemini.base;
 
+/** The base class for user interfaces. In practice, only the Swing
+    UI is implemented so far. */
 public interface UI 
   {
   public void start();

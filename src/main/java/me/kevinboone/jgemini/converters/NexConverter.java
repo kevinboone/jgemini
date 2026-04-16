@@ -4,9 +4,6 @@
 
   TextConverter
 
-  A class for converting nex-flavoured plain text to HTML. It's just
-  plain text, but with link lines starting with "=>"
-
   Copyright (c)2026 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -15,6 +12,9 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 
+/** A class for converting nex-flavoured plain text to HTML. It's just
+    plain text, but with link lines starting with "=&gt;"
+*/
 public class NexConverter extends TextLikeConverter implements Converter
   {
   public NexConverter (URL baseURL)
@@ -22,7 +22,6 @@ public class NexConverter extends TextLikeConverter implements Converter
     super (baseURL);
     }
 
-  /** Foo. */
   private String formatLineAsHtml (String line)
     {
     return line; 

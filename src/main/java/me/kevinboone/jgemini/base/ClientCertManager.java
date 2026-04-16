@@ -14,6 +14,7 @@ import java.io.*;
 import java.util.*;
 import javax.net.ssl.*;
 
+/** The interface that governs client certificate management. */
 public interface ClientCertManager 
   {
   /* Adds a new identity; that is, adds a mappingg between the identity

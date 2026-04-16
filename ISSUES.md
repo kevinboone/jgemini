@@ -1,24 +1,5 @@
 # Issues, bugs, and limitations
 
-## BUG: Occasional hangs on exit
-
-Occasionally, JGemini will not exit properly, and will continue to run 
-when all its windows are closed. I can see from the debug logging that the
-background loading thread is still running, even though all the loads seem
-to have completed. 
-
-So far, the problem has only affected Gopher. I speculate that Gopher
-servers tend to be slow-ish, and tend to continue long-ish documents.
-I think the problem is associated with the interaction between the
-thread that keeps the "Loading..." message on the display, and the
-thread that clears the status bar.
-
-Unfortunately, I can't reproduce the problem at will.
-
-It's not a big deal when running JGemini from a prompt, because you can
-just hit ctrl+C. I've not seen it on Windows which is good, I guess, 
-because you probably don't have a prompt to kill the program from.
-
 ## BUG : JGemini will break on a redirection loop
 
 JGemini follows redirections. Although the "best practices" guide for Gemini
@@ -90,19 +71,6 @@ end in `.md` as Markdown.
 Again, this is an assumption, and it may be a bad one; but it's difficult to
 know what else to do.
 
-## LIMITATION : Java can't handle unknown protocols
-
-JGemini itself only supports the Gemini, Spartan, Gopher, and nex protocols, using
-URLs that begin `gemini://`, `spartan://`, `gopher://`, or `nex://`.  If a
-Gemtext document contains links to URLs with other protocols _that Java understands_
-(`file:`, `http:...`) then JGemini delegates to the desktop. If you follow an
-`http` link, for example, that should invoke a Web browser; but, again, this is
-not under the control of JGemini. If the URL is not one that Java understands
-(e.g., `gophers:`) then JGemini will not even attempt to follow the link, not even
-by invoking the desktop. The reason is somewhat technical but, in essence, Java
-can't even construct an instance of `java.net.URL` containing the URI to pass
-to the desktop.
-
 ## LIMITATION : No caching
 
 There is no caching of any kind, either on disk or in memory.  The Gemini
@@ -135,11 +103,23 @@ This is because it appears only to be possible to change elements of the Swing
 kluges that are supposed to work around this, but none of them worked when I
 tried.
 
-## LIMITATION : No download manager
+## LIMITATION: Irritating UI gremlins
 
-JGemini is happy to download multiple documents concurrently. However, there's
-no way to know which transfers are ongoing, and which have completed. In the
-long term, we need a separate download manager.
+Java Swing has some odd limitations, which result in the UI not looking as 
+nice as it could. For example, if you put a Box layout in a JScrollPane, 
+and there aren't enough components in the Box to engage the vertical scroll,
+then Swing spaces the components vertically, rather than stacking them. 
+
+It's not a logical problem -- it's just not what we're used to seeing. This
+particularly limitation is well-known, and there's no easy solution to it
+except for writing your own layout manager.
+
+There are other places where the UI layout is not as orderly as it could be.
+Message dialog boxes don't wrap their text unless you make them a fixed size,
+in which case you might end up with scroll bars.  And so on. 
+
+None of this is catastrophic -- it just makes the UI look a bit amateurish
+in places.
 
 ## LIMITATION : Necessary JVM version is unclear
 

@@ -32,6 +32,7 @@ public class Menus extends ListResourceBundle
     {"context_download", "Download..."},
     {"context_open", "Open"},
     {"context_open_in_new_window", "Open in new window"},
+    {"context_stream", "Stream to player"},
 
     {"file", "File"},
     {"file_mnemonic", KeyEvent.VK_F},
@@ -70,7 +71,7 @@ public class Menus extends ListResourceBundle
     {"file_exit", "Exit"},
     {"file_exit_mnemonic", KeyEvent.VK_X},
     {"file_exit_accel", (KeyStroke.getKeyStroke
-      (KeyEvent.VK_S, ActionEvent.CTRL_MASK))},
+      (KeyEvent.VK_Q, ActionEvent.CTRL_MASK))},
 
     {"file_new", "New"},
     {"file_new_mnemonic", KeyEvent.VK_N},
@@ -132,6 +133,8 @@ public class Menus extends ListResourceBundle
     {"tools", "Tools"},
     {"tools_mnemonic", KeyEvent.VK_T},
 
+    {"tools_downloads", "Downloads..."},
+    {"tools_downloads_mnemonic", KeyEvent.VK_D},
     {"tools_identity", "Set/manage idenity..."},
     {"tools_identity_mnemonic", KeyEvent.VK_S},
     {"tools_server_cert", "Server certificate info..."},

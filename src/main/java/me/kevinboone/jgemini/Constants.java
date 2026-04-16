@@ -24,7 +24,7 @@ public interface Constants
   // General
 
   public final static String APP_NAME = "JGemini";
-  public final static String VERSION = "2.0.4";
+  public final static String VERSION = "3.0.0";
   // Header of user properties file
   public final static String PROPS_COMMENTS = "JGemini user configuration"; 
   // Header of bookmarks file
@@ -35,6 +35,7 @@ public interface Constants
   public final static String CLIENTCERT_TAG = "clientcert.";
   public final static String IDENT_TAG = "ident.";
   public final static String NONE_IDENT_TAG = "none";
+  public final static String CONTENT_HANDLER_TAG = "handler.";
 
   // Settings file keys
 
@@ -47,12 +48,15 @@ public interface Constants
   public final static String HISTORY_SIZE = "history.size";
   public final static String HISTORY_ENABLED = "history.enabled";
   public final static String INLINE_IMAGE_WIDTH = "inline.image.width";
+  public final static String STREAM_PLAYER = "stream.player";
   public final static String UI_CONTROL_FONT = "ui.control_font"; 
   public final static String UI_DOCUMENT_CUSTOM_CSS = "ui.document.custom.css";
   public final static String UI_DOCUMENT_THEME = "ui.document.theme";
   public final static String UI_USER_FONT = "ui.user_font"; 
   public final static String UI_DOCUMENT_FONT_SIZE = "ui.document.font.size";
-  public final static String UI_NEW_WINDOW_MODE = "ui,new_window";
+  public final static String UI_ICON_SIZE = "ui.icon.size";
+  public final static String UI_ICONS_MONO = "ui.icons.mono";
+  public final static String UI_NEW_WINDOW_MODE = "ui.new_window";
   public final static String URLBAR_SEARCH_ENABLED = "urlbar.search.enabled";
   public final static String URLBAR_SEARCH_URL = "urlbar.search.url";
   public final static String URL_HOME = "url.home";
@@ -68,13 +72,16 @@ public interface Constants
   public final static String DEFLT_UI_USER_FONT = "Sans 20; Emoji 20";
   public final static String DEFLT_UI_DOCUMENT_FONT_SIZE = "16";
   public final static String DEFLT_UI_NEW_WINDOW_MODE = "0";
+  public final static String DEFLT_UI_ICON_SIZE = "24";
   public final static String DEFLT_URLBAR_SEARCH_URL = "gemini://tlgs.one/search";
   public final static String DEFLT_WINDOW_H = "900";
   public final static String DEFLT_WINDOW_W = "1200";
+  public final static String DEFLT_STREAM_PLAYER = "vlc -";
 
   // File and directory names
 
   public final static String BOOKMARK_FILENAME = "bookmarks.gmi"; 
+  public final static String DOWNLOADS_DIRNAME = "downloads"; 
   public final static String HISTORY_FILENAME = "jgemini.history";
   public final static String IDENTS_DIRNAME = "idents"; 
   public final static String PREFS_FILE = "jgemini.properties"; 
@@ -101,10 +108,14 @@ public interface Constants
     "about:/attach_identity_dialog.md"; 
   public final static String DOC_SET_IDENT_DIALOG = 
     "about:/set_identity_dialog.md"; 
+  public final static String DOC_SELECT_ACTION_DIALOG = 
+    "about:/select_action_dialog.md"; 
   public final static String DOC_THEME_DIALOG = 
     "about:/theme_dialog.md"; 
   public final static String DOC_SETTINGS_DIALOG = 
     "about:/settings_dialog.md"; 
+  public final static String DOC_DOWNLOADS_DIALOG = 
+    "about:/downloads_dialog.md"; 
 
   // Sizes
 

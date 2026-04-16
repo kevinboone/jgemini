@@ -27,9 +27,13 @@ import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.protocol.*;
 import me.kevinboone.jgemini.converters.*;
-import me.kevinboone.utils.mime.MimeUtil;
 import net.fellbaum.jemoji.*;
 
+/** MainWindow is where most of the work of the Swing UI happens. This
+    class maintains the user interface, and handles all the remote
+    loading and content rendering. Note that throughout this class I've
+    used the terms URI and URL as if they were interchangeable. Sorry. 
+*/
 public class MainWindow extends JFrame implements ConfigChangeListener
   {
   private final static String DIALOG_CAPTION = Constants.APP_NAME;
@@ -62,6 +66,8 @@ public class MainWindow extends JFrame implements ConfigChangeListener
     = new DefaultBookmarkHandler (this);
   private ClientCertHandler clientCertHandler
     = new DefaultClientCertHandler (this);
+  private DownloadMonitor downloadMonitor
+    = DefaultDownloadMonitor.getInstance(); // Application-wide reference
 
 
 /*=========================================================================
@@ -132,8 +138,20 @@ public class MainWindow extends JFrame implements ConfigChangeListener
            "Request focus on editor");
         jEditorPane.requestFocus();
         }
+
       public void windowClosing (WindowEvent e) 
         {
+        boolean exit = false;
+
+        if (Main.closingWouldExit())
+          {
+          exit = true;
+          if (!Main.okToExit())
+            {
+            return; 
+            }
+          }
+
         config.removeConfigChangeListener (mainWindow); 
 
         // I'm reluctant to save the config unless something's
@@ -151,7 +169,9 @@ public class MainWindow extends JFrame implements ConfigChangeListener
           config.save();
           }
         
+        cancelLoad();
         dispose();
+        if (exit) Main.exit();
         }
       });
 
@@ -199,10 +219,10 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   
   applyInitialStyles 
 
-  Read the CSS styles from the Config class, and apply them to
-  the HTML editor
-
 =========================================================================*/
+  /** Read the CSS styles from the Config class, and apply them to
+      the HTML editor.
+  */
   private void applyInitialStyles ()
     {
     Logger.in();
@@ -257,9 +277,9 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   
    back
 
-   Go back to the previous page, if there was one.
-
 =========================================================================*/
+  /** Go back to the previous page, if there was one.
+  */
   public void back()
     {
     Logger.in();
@@ -291,6 +311,10 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   bookmarkPage
 
 =========================================================================*/
+  /** Set a bookmark for the current page. We'll need to figure out a 
+      name for the bookmark, and optionally strip emoji characters from
+      the name. Then we'll just use the current BookmarkHandler to set
+      the bookmark. */
   public void bookmarkPage() 
     {
     if (displayName == null)
@@ -322,14 +346,18 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   cancelLoad
 
 =========================================================================*/
+  /** Cancel any asynchronous transfer that is in progress. Note that 
+      this does not apply to media-streaming transfers, nor to transfers
+      of embedded images in documents -- these are handled using 
+      completely different mechanisms. */
   private void cancelLoad ()
     {
     Logger.in();
     if (loadWorker != null)
       {
-      System.out.println ("Debug message: loadworker not null. If this");
-      System.out.println (" wasn't the result of cancelling a request,");
-      System.out.println (" please log a bug!");
+      //System.out.println ("Debug message: loadworker not null. If this");
+      //System.out.println (" wasn't the result of cancelling a request,");
+      //System.out.println (" please log a bug!");
       Logger.log (getClass().getName(), Logger.DEBUG, 
          "Cancelling loadWorker");
       loadWorker.cancel (true);
@@ -345,9 +373,59 @@ public class MainWindow extends JFrame implements ConfigChangeListener
 
 /*=========================================================================
   
+  chooseAndDownloadURI 
+
+=========================================================================*/
+  /** Prompt the user for a filename, then download the URI to that file
+  */
+  private void chooseAndDownloadURI (URL uri)
+    {
+    JFileChooser fc = new JFileChooser();
+    String path = uri.getPath();
+    File p = new File (path);
+    fc.setSelectedFile (new File(p.getName()));
+    fc.setCurrentDirectory (new File(config.getDownloadsDir()));
+    if (fc.showSaveDialog (this) == JFileChooser.APPROVE_OPTION)
+      {
+      File file = fc.getSelectedFile();
+      if (file.exists())
+        {
+        String message = messagesBundle.getString ("query_overwrite_file");
+        if (JOptionPane.showConfirmDialog (null, message, Constants.APP_NAME,
+          JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+            != JOptionPane.YES_OPTION)
+          return;
+        }
+      downloadURI (uri.toString(), file, null);
+      }
+    }
+
+/*=========================================================================
+  
+  chooseAndDownloadURI 
+
+=========================================================================*/
+  /** Prompt the user for a filename, then download the URI to that file
+  */
+  private void chooseAndDownloadURI (String uri)
+    {
+    try
+      {
+      chooseAndDownloadURI (new URL(uri)); 
+      } 
+    catch (MalformedURLException e) {}
+    }
+
+/*=========================================================================
+  
   configChanged 
 
 =========================================================================*/
+  /** MainWindow acts as a ConfigChangeListener, so must implement
+      configChanged(). This method is called by the Config class when
+      anybody asks it to fire its change listeners. This mechanism allows
+      us to propagate configuration changes (e.g., themese) made in
+      one window across all open windows. */
   public void configChanged (int ccMode) 
     {
     Logger.in();
@@ -372,6 +450,8 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   createMenuItem
 
 =========================================================================*/
+  /** A helper class for creating a menu item with translatable text,
+      an optional mnemonic, and an optional accelerator. */
   private JMenuItem createMenuItem (String menu_name)
     {
     String mnemonicKey = menu_name + "_mnemonic";
@@ -396,6 +476,8 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   createTopLevelMenu
 
 =========================================================================*/
+  /** A helper class for creating a menu with translatable text,
+      and an optional mnemonic. */
   private JMenu createTopLevelMenu (String menu_name)
     {
     String mnemonicKey = menu_name + "_mnemonic";
@@ -410,6 +492,8 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   createMenuBar
 
 =========================================================================*/
+  /** Create the main menu.
+  */
   private void createMenuBar ()
     {
     menuBar = new JMenuBar();
@@ -444,7 +528,7 @@ public class MainWindow extends JFrame implements ConfigChangeListener
       dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
     fileMenu.add (closeMenuItem);
     JMenuItem exitMenuItem = createMenuItem ("file_exit"); 
-    exitMenuItem.addActionListener((event) -> System.exit(0));
+    exitMenuItem.addActionListener((event) -> menuCommandExit());
     fileMenu.add (exitMenuItem);
 
     // Edit menu
@@ -558,6 +642,10 @@ public class MainWindow extends JFrame implements ConfigChangeListener
     toolsMenu.add (serverCertMenuItem);
     toolsMenu.add (new JSeparator());
     toolsMenu.add (settingsSubMenu);
+    toolsMenu.add (new JSeparator());
+    JMenuItem downloadsMenuItem = createMenuItem ("tools_downloads"); 
+    downloadsMenuItem.addActionListener((event) -> menuCommandDownloads());
+    toolsMenu.add (downloadsMenuItem);
 
     // Help menu
     JMenu helpMenu = createTopLevelMenu ("help");
@@ -606,75 +694,113 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   
   downloadURI 
 
+=========================================================================*/
+  /**
   Download a URL to the specified file. This takes place in a background
   thread and, at present, there's no control over it when it's started
-  (except by quitting the program).
-
-=========================================================================*/
-  void downloadURI (String href, File file)
+  (except by quitting the program). However, if "ch" is non-null, the
+  background thread will run the completion handler once the download
+  is finished. This will take place on the user interface thread, so
+  it should be safe to update the UI.
+  */
+  void downloadURI (String href, File file, CompletionHandler ch)
     {
     Logger.in();
-    Logger.log (getClass().getName(), Logger.INFO, 
-        "Downloading " + href + " to " + file);
-
-    SwingWorker dlWorker = new SwingWorker()  
-      { 
-      byte[] b = null;
-      Exception e = null;
-      @Override
-      protected String doInBackground() 
-        { 
-        Logger.log (getClass().getName(), 
-          Logger.DEBUG, "Download worker doInBackground()");
-        try
-          {
-          e = null;
-          b = FileUtil.urlToByteArray (new URL (href)); 
-          }
-        catch (Exception e1)
-          {
-          e = e1;
-          }
-        return "foo"; // Meaningless return
-        } 
-
-      @Override
-      protected void process (java.util.List chunks) { } 
-
-      @Override
-      protected void done()  
-        { 
-        Logger.log (getClass().getName(), Logger.DEBUG, 
-          "Download worker done()");
-        if (b != null)
-          {
-          try
-            {
-            FileUtil.byteArrayToFile (file, b);
-	    setStatus (messagesBundle.getString ("saved_file") 
-              + " '"  + file + "'");
-            } 
-          catch (Exception e)
-            {
-            reportException (href, e);
-            }
-          }
-        else if (e != null)
-          {
-          reportException (href, e);
-          }
-        }
-      }; 
-
-    dlWorker.execute();  
+    SwingFileDownload sfd = new SwingFileDownload (this, href, 
+      new FileDownloadTarget (file), ch);
+    setStatus (messagesBundle.getString ("downloading"));
+    sfd.start();
     Logger.out();
     }
+
+/*=========================================================================
+  
+  downloadURIToDownloads 
+
+=========================================================================*/
+/** Get a sensible filename in the Downloads directory, and then
+    call downloadURI.
+*/
+void downloadURIToDownloads (URL url)
+  {
+  String path = url.getPath();
+  File p = new File (path);
+  String name = p.getName();
+  String extension = "";
+  int i = name.lastIndexOf('.');
+  if (i > 0) 
+    {
+    extension = name.substring (i);
+    name = name.substring (0, i);
+    }
+  
+  i = 0; 
+  String tryFilename;
+  do
+    {
+    tryFilename = config.getDownloadsDir() + File.separator + 
+       name + ((i == 0) ? "" : "(" + i + ")") + extension;
+    i++;
+    } while (new File(tryFilename).exists());
+
+  downloadURI (url.toString(), new File(tryFilename), null);
+  }
+
+/*=========================================================================
+  
+  downloadAndInvokeDesktop 
+
+=========================================================================*/
+/** Download the URL to a temporary file, and then invoke the
+    desktop on it. Because the download is asynchronous, we'll use
+    a completion handler to do the actual desktop operation once
+    it's finished. 
+*/
+private void downloadAndInvokeDesktop (URL url)
+  {
+  String path = url.getPath();
+  String extension = null;
+  int i = path.lastIndexOf('.');
+  if (i > 0) 
+    {
+    extension = path.substring (i);
+    }
+  if (extension == null) extension = ".tmp";
+
+  try
+    {
+    File tempFile = File.createTempFile ("gemini-", extension);
+    tempFile.deleteOnExit();
+    downloadURI (url.toString(), tempFile, new CompletionHandler()
+      {
+      public void complete()
+        {
+        try
+          {
+          Desktop.getDesktop().browse (java.net.URI.create 
+            ("file://" + tempFile));
+          }
+        catch (Exception e)
+          {
+          reportException (url.toString(), e);
+          }
+        }
+      });
+    }
+  catch (IOException e)
+    {
+    reportException (null, e);
+    }
+
+  }
 
 /*=========================================================================
   
   editBookmarks 
 
 =========================================================================*/
+  /** Raise the bookmark editor UI. 
+  */
   private void editBookmarks()
     {
     try
@@ -691,11 +817,12 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   
   enableTopBar
 
-  Call once initial set-up is done. Otherwise the act of populating
+=========================================================================*/
+  /** 
+  Call this once initial set-up is done. Otherwise the act of populating
   the history combobox makes it fire an event, which makes it load
   the first thing in the history. Sigh. Bloody Swing.
-
-=========================================================================*/
+  */
   public void enableTopBar ()
     {
     Logger.in();
@@ -708,6 +835,8 @@ public class MainWindow extends JFrame implements ConfigChangeListener
    editSettings 
 
 =========================================================================*/
+  /** Raise the settings editor UI. 
+  */
   protected void editSettings()
     {
     Logger.in();
@@ -733,15 +862,30 @@ public class MainWindow extends JFrame implements ConfigChangeListener
 
 /*=========================================================================
   
-  fiddleWithKeyMap 
-
-  Make the HTML editor stop grabbing the backspace and ctrl+H keys, which
-  it seems to want, and accept the up/down keys, which it doesn't.
-
-  Honestly, I have next to no idea what I'm doing here -- I got this
-  working by trial and error.
+  ensureDownloadsDialogVisible 
 
 =========================================================================*/
+/** Create the application-wide downloads dialog if necessary, or 
+    bring it to the top if it already exists. */
+void ensureDownloadsDialogVisible()
+  {
+  Logger.in();
+  DownloadsDialog downloadsDialog = DownloadsDialog.getInstance();
+  downloadsDialog.setVisible (true); // TODO raise
+  Logger.out();
+  }
+
+/*=========================================================================
+  
+  fiddleWithKeyMap 
+
+=========================================================================*/
+  /**
+  Make the HTML editor stop grabbing the backspace and ctrl+H keys, which
+  it seems to want, and accept the up/down keys, which it doesn't.
+  Honestly, I have next to no idea what I'm doing here -- I got this
+  working by trial and error.
+  */
   void fiddleWithKeyMap (HTMLEditorKit kit)
     {
     Logger.in();
@@ -772,6 +916,9 @@ public class MainWindow extends JFrame implements ConfigChangeListener
    getCurrentURI 
 
 =========================================================================*/
+  /** This method gets the URL that is currently in the display. It's
+      used by other classes in this package. 
+  */
   protected URL getCurrentURI()
     {
     return baseUri;
@@ -781,9 +928,11 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   
    home
 
-   Go back to the home page
-
 =========================================================================*/
+  /**
+  Go to the home page. "protected" because this method is used
+  by TopBar.
+  */
   protected void home()
     {
     Logger.in();
@@ -796,7 +945,7 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   find
 
 =========================================================================*/
-  public void find()
+  private void find()
     {
     Logger.in();
     String text = JOptionPane.showInputDialog (this, 
@@ -815,7 +964,7 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   findNext 
 
 =========================================================================*/
-  public void findNext ()
+  private void findNext ()
     {
     Logger.in();
     Logger.log (getClass().getName(), Logger.DEBUG, 
@@ -866,73 +1015,76 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   getDisplayNameFromURI 
 
 =========================================================================*/
-public String getDisplayNameFromURI (URL uri)
-  {
-  String displayName = null;
-  String path = uri.getPath();
-  if (path.startsWith ("/~"))
+  private String getDisplayNameFromURI (URL uri)
     {
-    String temp = path.substring (2);
-    int i = temp.indexOf ("/"); 
-    if (i >= 0)
-      temp = temp.substring (0, i);
-    displayName = temp;
-    }
-  else
-    {
-    displayName = uri.getHost();
-    if (displayName.length() == 0) displayName = null;
-    }
-
-  int i = path.lastIndexOf ("/"); 
-  if (i >= 0)
-    {
-    String temp = path.substring (i);
-    if (temp.startsWith("/")) temp = temp.substring(1);
-    if (displayName == null)
+    String displayName = null;
+    String path = uri.getPath();
+    if (path.startsWith ("/~"))
+      {
+      String temp = path.substring (2);
+      int i = temp.indexOf ("/"); 
+      if (i >= 0)
+	temp = temp.substring (0, i);
       displayName = temp;
-    else if (!temp.equals ("/") && temp.length() > 0)
-      displayName = displayName + ": " + temp; 
-    }
+      }
+    else
+      {
+      displayName = uri.getHost();
+      if (displayName.length() == 0) displayName = null;
+      }
 
-  return displayName;
-  }
+    int i = path.lastIndexOf ("/"); 
+    if (i >= 0)
+      {
+      String temp = path.substring (i);
+      if (temp.startsWith("/")) temp = temp.substring(1);
+      if (displayName == null)
+	displayName = temp;
+      else if (!temp.equals ("/") && temp.length() > 0)
+	displayName = displayName + ": " + temp; 
+      }
+
+    return displayName;
+    }
 
 /*=========================================================================
   
    getRootUri 
 
+=========================================================================*/
+  /**
    Get the site root. What that means depends on the URI. In particular,
    URIs containing a username (host:port/~fred) have their root at the
    user's top-level directory, not the server's top-level directory. 
-=========================================================================*/
-URL getRootUri (URL baseUri) throws MalformedURLException
-  {
-  String path = baseUri.getPath();
-  if (path.startsWith ("/~"))
+  */
+  private URL getRootUri (URL baseUri) throws MalformedURLException
     {
-    String temp = path.substring (2);
-    int i = temp.indexOf ("/"); 
-    temp = temp.substring (0, i >= 0 ? i : 0);
-    java.net.URL newUrl = new URL (baseUri, "/~" + temp + "/");
-    return newUrl;
+    String path = baseUri.getPath();
+    if (path.startsWith ("/~"))
+      {
+      String temp = path.substring (2);
+      int i = temp.indexOf ("/"); 
+      temp = temp.substring (0, i >= 0 ? i : 0);
+      java.net.URL newUrl = new URL (baseUri, "/~" + temp + "/");
+      return newUrl;
+      }
+    else
+      {
+      java.net.URL newUrl = new URL (baseUri, "/"); 
+      return newUrl;
+      }
     }
-  else
-    {
-    java.net.URL newUrl = new URL (baseUri, "/"); 
-    return newUrl;
-    }
-  }
 
 /*=========================================================================
   
   handleStatus10 
 
+=========================================================================*/
+  /**
   Deal with "Status 10" responses, that require further input.
   We just prompt the user for a string, and then repeat the
   original request.
-
-=========================================================================*/
+  */
   private void handleStatus10 (boolean hide, String prompt, URL retryUrl)
     {
     Logger.in();
@@ -988,6 +1140,9 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 =========================================================================*/
   private void handleUnsupportedMime (URL url, String mime, byte[] content)
     {
+    // TODO remove this function -- it should never get called and,
+    //   if it does, there's not much useful that JGemini can do
+    //   with the data. We should just put up an error message.
     Logger.in();
     if (Logger.isDebug())
       Logger.log (getClass().getName(), Logger.DEBUG, "mime=" + mime);
@@ -1019,24 +1174,24 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   method itself must not throw any exception
 
 =========================================================================*/
-  private ResponseContent loadResponseContent (URL url)
+  private ResponseContent loadResponseContent (URL url, URLConnection conn)
     {
     Logger.in();
-    if (Logger.isDebug())
-      Logger.log (getClass().getName(), Logger.DEBUG, "url=" + url);
     ResponseContent gc = new ResponseContent (url);
     try
       {
-      URLConnection conn = url.openConnection();
       Object o = conn.getContent();
       byte[] content;
       if (o instanceof BufferedInputStream)
         {
         BufferedInputStream bis = (BufferedInputStream)o;
-        content = bis.readAllBytes(); 
+        content = FileUtil.readBufferedInputStreamFully (bis);
+        bis.close();
         }
       else
+        {
         content = (byte[]) o; 
+        }
       String mime = conn.getContentType();
       gc.setMime (mime);
       gc.setContent (content);
@@ -1079,12 +1234,12 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   
   handleResponseContent 
 
-  We call this when a request has been completed successfully, and we
-    have a ResponseContent instance that reflects the response from
-    the server. We'll use the MIME type and/or filename to decide what
-    to do with the response.
-
 =========================================================================*/
+  /** We call this when a request has been completed successfully, and we
+  have a ResponseContent instance that reflects the response from
+  the server. We'll use the MIME type and/or filename to decide what
+  to do with the response.
+  */
   private void handleResponseContent (URL fullUrl, ResponseContent gc)
     {
     Logger.in();
@@ -1097,7 +1252,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     if (mime.startsWith ("text/gemini") || urlStr.endsWith (".gmi"))
       {
       baseUri = fullUrl; 
-      String encoding = MimeUtil.getEncodingFromMime (mime);
+      String encoding = FileUtil.getEncodingFromMime (mime);
       renderGemtext (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       backlinks.push (fullUrl);
@@ -1107,7 +1262,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
         urlStr.endsWith (".gopher")) // Not a real MIME
       {
       baseUri = fullUrl; 
-      String encoding = MimeUtil.getEncodingFromMime (mime);
+      String encoding = FileUtil.getEncodingFromMime (mime);
       renderGophermap (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       setLastContent (gc);
@@ -1116,7 +1271,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     else if (mime.startsWith ("text/plain") || urlStr.endsWith (".txt"))
       {
       baseUri = fullUrl; 
-      String encoding = MimeUtil.getEncodingFromMime (mime);
+      String encoding = FileUtil.getEncodingFromMime (mime);
       renderPlain (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       backlinks.push (fullUrl);
@@ -1125,7 +1280,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     else if (mime.startsWith ("text/nex")) // Not a real MIME
       {
       baseUri = fullUrl; 
-      String encoding = MimeUtil.getEncodingFromMime (mime);
+      String encoding = FileUtil.getEncodingFromMime (mime);
       renderNex (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       setLastContent (gc);
@@ -1134,7 +1289,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     else if (mime.startsWith ("text/markdown") || urlStr.endsWith (".md"))
       {
       baseUri = fullUrl; 
-      String encoding = MimeUtil.getEncodingFromMime (mime);
+      String encoding = FileUtil.getEncodingFromMime (mime);
       renderMarkdown (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       setLastContent (gc);
@@ -1145,7 +1300,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       // MIME types for Atom feeds are often ambiguous, but this
       //   one is not. Just invoke the converter.
       baseUri = fullUrl; 
-      String encoding = MimeUtil.getEncodingFromMime (mime);
+      String encoding = FileUtil.getEncodingFromMime (mime);
       renderAtom (gc.getContent(), encoding);
       topBar.showUrl (fullUrl.toString());
       setLastContent (gc);
@@ -1154,7 +1309,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     else if (mime.startsWith ("text/xml") 
          || mime.startsWith ("application/xml"))
       {
-      String encoding = MimeUtil.getEncodingFromMime (mime);
+      String encoding = FileUtil.getEncodingFromMime (mime);
 
       // We'll have to look inside the XML, to figure out whether
       //   it's a feed or not
@@ -1179,6 +1334,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
         }
       else
         {
+        // We'll only get here if the remote file is XML,
+        //   but isn't a supported feed.
         handleUnsupportedMime (fullUrl, mime, gc.getContent());
         }
       }
@@ -1188,6 +1345,9 @@ URL getRootUri (URL baseUri) throws MalformedURLException
       }
     else
       {
+      // We should never get here, because we've checked the mime type
+      //   after establishing the connection, and prompted the
+      //   user how to proceed.
       handleUnsupportedMime (fullUrl, mime, gc.getContent());
       }
     Logger.out();
@@ -1197,24 +1357,23 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   
   loadFromUri
   
-  We have a gemini:// or spartan:// URL. Load it through its 
-    content handler.
-
-  If the qparam arg is non-null, it is appended as a query parameter 
-  _as is_.  
-
 =========================================================================*/
+  /** We have a gemini:// or spartan:// URL. Load it through its 
+      content handler.
+      If the qparam arg is non-null, it is appended as a query parameter 
+      after URL-encoding (which is fussy in Gemini).  
+  */
   private void loadFromUri (URL url, String qparam)
     {
     Logger.in();
     if (Logger.isDebug())
-      Logger.log (getClass().getName(), Logger.DEBUG, "loadFromUri(), " + url);
+      Logger.log (getClass().getName(), Logger.DEBUG, 
+         "loadFromUri(), " + url);
 
     ActionListener loadTimerListener = new ActionListener() 
       {
       public void actionPerformed (ActionEvent evt) 
         {
-        //System.out.println ("loadtimer action performed" + loadTimer);
 	setStatus (messagesBundle.getString ("loading"));
         }
       };
@@ -1230,16 +1389,10 @@ URL getRootUri (URL baseUri) throws MalformedURLException
         //   services like. They seem to prefer "$20" to "+" for plain spaces.
         //   Since %20 will always work, munge the encoded string to use 
         //   this format.
-        URL tempUrl = new URL (url.toString() + "?" + URLEncoder.encode (qparam));
+        URL tempUrl = new URL (url.toString() + "?" 
+          + URLEncoder.encode (qparam));
         String sURL = tempUrl.toString().replace("+","%20");
         url = new URL (sURL);
-        }
-
-      if (url.getPath().length() == 0)
-        {
-        //Logger.log (getClass().getName(), Logger.DEBUG, 
-        //  "Adding path to URL that lacks one");
-        //url = new URL (url.toString() + "/");
         }
       }
     catch (Exception e)
@@ -1251,82 +1404,110 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 
     final URL fullUrl = url;
 
-    // Now set up a SwingWorker to do the load in the background
-
     loadWorker = new SwingWorker()  
       { 
       ResponseContent gc = null;
-
       @Override
       protected String doInBackground() throws Exception  
-        { 
-        Logger.log (getClass().getName(), Logger.DEBUG, 
-          "Load worker thread doInBackground()");
-        loadTimer = new javax.swing.Timer (1000, loadTimerListener);
-        loadTimer.setRepeats (true);
-        loadTimer.start(); // TODO
-        //System.out.println ("loadtimer start" + loadTimer);
-        setStatus (messagesBundle.getString ("loading") + " " + fullUrl);
-        gc = loadResponseContent (fullUrl); 
-        return "foo"; // Meaningless return
-        } 
-
-      @Override
-      protected void process (java.util.List chunks) 
-        { 
-        // Do nothing here (but must be implemented)
-        } 
+	{ 
+	Logger.log (getClass().getName(), Logger.DEBUG, 
+	  "Load worker thread doInBackground()");
+	try
+	  {
+	  loadTimer = new javax.swing.Timer (1000, loadTimerListener);
+	  loadTimer.setRepeats (true);
+	  loadTimer.start(); 
+	  setStatus (messagesBundle.getString ("loading") + " " + fullUrl);
+	  URLConnection conn = fullUrl.openConnection();
+	  conn.connect();
+          String contentType = conn.getContentType();
+          String sUrl = fullUrl.toString();
+          if (!FileUtil.canHandleContent (sUrl, contentType))
+            {
+            int action = promptGetAction (contentType);
+            throw new HandleDifferentlyException (action); 
+            }
+	  gc = loadResponseContent (fullUrl, conn); 
+	  }
+        catch (Exception e)
+          {
+          gc = new ResponseContent (fullUrl);
+          gc.setException (e);
+          }
+	return ""; // Meaningless return
+	} 
 
       @Override
       protected void done()  
-        { 
-        Logger.log (getClass().getName(), Logger.DEBUG, 
-          "Load worker thread done()");
+	{ 
+	Logger.log (getClass().getName(), Logger.DEBUG, 
+	  "Load worker thread done()");
 	if (loadTimer != null) 
-          {
-          loadTimer.stop();
-          //System.out.println ("loadtimer stop" + loadTimer);
-          }
+	  {
+	  loadTimer.stop();
+	  }
 	loadTimer = null;
-        clearStatus ();
-        if (!isCancelled())
-          {
-          Exception e = gc.getException();
-          if (e == null)
-            {
-            handleResponseContent (fullUrl, gc);
-            setCaptionFromResponse (fullUrl, gc);
-            }
-         else
-            {
-            if (e instanceof RetryWithInputException)
-              {
-              // Load worked must have finished, if we get this far
-              loadWorker = null;
-              RetryWithInputException e2 = (RetryWithInputException)e;
-              handleStatus10 (e2.getHide(), e2.getPrompt(), e2.getURL());
-              }
-            else if (e instanceof RedirectedException)
-              {
-              loadWorker = null;
-              handleRedirect (((RedirectedException)e).getURL());
-              }
-            else if (e instanceof ErrorResponseException)
-              {
-              reportErrorResponseException (fullUrl.toString(), 
-                 (ErrorResponseException)e); 
-              }
-            else 
-              {
-              reportException (fullUrl.toString(), e); 
-              }
-            }
-          }
-        loadWorker = null;
-        }
-      }; 
-
+	clearStatus ();
+	if (!isCancelled())
+	  {
+	  Exception e = gc.getException();
+	  if (e == null)
+	    {
+	    handleResponseContent (fullUrl, gc);
+	    setCaptionFromResponse (fullUrl, gc);
+	    }
+	 else
+	    {
+	    if (e instanceof RetryWithInputException)
+	      {
+	      // Load worked must have finished, if we get this far
+	      loadWorker = null;
+	      RetryWithInputException e2 = (RetryWithInputException)e;
+	      handleStatus10 (e2.getHide(), e2.getPrompt(), e2.getURL());
+	      }
+	    else if (e instanceof RedirectedException)
+	      {
+	      loadWorker = null;
+	      handleRedirect (((RedirectedException)e).getURL());
+	      }
+	    else if (e instanceof ErrorResponseException)
+	      {
+	      reportErrorResponseException (fullUrl.toString(), 
+		 (ErrorResponseException)e); 
+	      }
+	    else if (e instanceof HandleDifferentlyException)
+	      {
+              HandleDifferentlyException e2 = (HandleDifferentlyException)e;
+              int a = e2.getAction();
+              switch (a)
+                {
+                case ContentHandlerAction.CHA_NONE:
+                  break;
+                case ContentHandlerAction.CHA_PROMPTSAVE:
+                  chooseAndDownloadURI (fullUrl);
+                  break;
+                case ContentHandlerAction.CHA_SAVE:
+                  downloadURIToDownloads (fullUrl);
+                  break;
+                case ContentHandlerAction.CHA_DESKTOP:
+                  downloadAndInvokeDesktop (fullUrl); 
+                  break;
+                case ContentHandlerAction.CHA_STREAM:
+                  streamOut (fullUrl);
+                  break;
+                }
+	      }
+	    else 
+	      {
+	      reportException (fullUrl.toString(), e); 
+	      }
+	    }
+	  }
+	loadWorker = null;
+	}
+      };
     loadWorker.execute();  
+
     Logger.out();
     }
 
@@ -1334,10 +1515,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   
    handleLinkClick 
 
-   Easy -- just load the URL
-
 =========================================================================*/
-  public void handleLinkClick (URL uri)
+  private void handleLinkClick (URL uri)
     {
     Logger.in();
     Logger.log (getClass().getName(), Logger.DEBUG, "uri=" + uri);
@@ -1353,10 +1532,11 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   
    handleLinkHover
 
-   Write the link as a status message when the mouse moves over a 
-   link in the HTML editor
-
 =========================================================================*/
+  /**
+  Write the link as a status message when the mouse moves over a 
+  link in the HTML editor
+  */
   private void handleLinkHover (URL linkUri)
     {
     Logger.in();
@@ -1386,11 +1566,11 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   
    loadForeignURI 
 
-   Any attempt to load a URI that does not start with a supported protocol
+=========================================================================*/
+  /** Any attempt to load a URI that does not start with a supported protocol
    ends up here.  At present, we just use the Java desktop support to try to 
    invoke a handler for it.
-
-=========================================================================*/
+  */
   private void loadForeignURL (URL uri)
     {
     Logger.in();
@@ -1406,14 +1586,15 @@ URL getRootUri (URL baseUri) throws MalformedURLException
     Logger.out();
     }
 
-
 /*=========================================================================
   
    loadURIEmbedImage
 
-
 =========================================================================*/
-  public void loadURIEmbedImage (URL url)
+  /** Given the URL of an image, generate an HTML document that loads
+      that image. We'll use this when the user asks to open an image
+      in a new window. */
+  private void loadURIEmbedImage (URL url)
     {
     Logger.in();
     if (Logger.isDebug())
@@ -1432,10 +1613,13 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   
    loadURI
 
-   Load any kind of URL. If it doesn't start with gemini://, treat is
-   as external, which means invoking the desktop on it.
-
 =========================================================================*/
+  /** Load any kind of URL that we support into this viewer window. If
+      it's not a protocol we support, save the file and invoke the desktop.
+      However, this should rarely happen, because the user will already
+      have been prompted how to handle the file, unless its a tricky
+      format like XML -- only some of which we handle. 
+  */
   public void loadURI (URL uri)
     {
     Logger.in();
@@ -1507,12 +1691,9 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   
    loadURI (String)
 
-   Load any kind of URL. If it doesn't start with gemini://, treat it
-   as external, which means invoking the desktop on it.
-
-   Mostly delegates to loadURI (URL)
-
 =========================================================================*/
+  /** Load any kind of URL that we support into this viewer window. 
+  */
   public void loadURI (String url)
     {
     // We need to do something if what the user enters doesn't seem
@@ -1545,6 +1726,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   manageIdentity 
 
 =========================================================================*/
+  /** This method is "protected" because TopBar calls it from a 
+      button handler. */
   protected void manageIdentity()
     {
     Logger.in();
@@ -1557,7 +1740,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   menuCommandAbout 
 
 =========================================================================*/
-  public void menuCommandAbout()
+  private void menuCommandAbout()
     {
     String aboutMessage = messagesBundle.getString ("about"); 
     String versionText = generalBundle.getString ("version_uc"); 
@@ -1583,10 +1766,8 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   
    menuCommandBack
 
-   Go back to the previous page, if there was one.
-
 =========================================================================*/
-  protected void menuCommandBack()
+  private void menuCommandBack()
     {
     Logger.in();
     back();
@@ -1606,6 +1787,29 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 
 /*=========================================================================
   
+   menuCommandDownloads
+
+=========================================================================*/
+  private void menuCommandDownloads()
+    {
+    ensureDownloadsDialogVisible();
+    }
+
+/*=========================================================================
+  
+   menuCommandExit
+
+=========================================================================*/
+  private void menuCommandExit()
+    {
+    if (Main.okToExit())
+      {
+      Main.exit(); 
+      }
+    }
+
+/*=========================================================================
+  
    menuCommandReleaseNotes
 
 =========================================================================*/
@@ -1620,7 +1824,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
    menuCommandIdent
 
 =========================================================================*/
-  protected void menuCommandIdent()
+  private void menuCommandIdent()
     {
     Logger.in();
     manageIdentity();
@@ -1632,7 +1836,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
    menuCommandHome 
 
 =========================================================================*/
-  protected void menuCommandHome()
+  private void menuCommandHome()
     {
     Logger.in();
     home();
@@ -1645,7 +1849,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   menuCommandNewWindow 
 
 =========================================================================*/
-  protected static void menuCommandNewWindow ()
+  private static void menuCommandNewWindow ()
     {
     Logger.in();
     MainWindow viewer = new MainWindow();
@@ -1662,7 +1866,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
    Prompt the user for a URL, and try to open it
 
 =========================================================================*/
-  protected void menuCommandOpenLink ()
+  private void menuCommandOpenLink ()
     {
     Logger.in();
     String url = JOptionPane.showInputDialog (this, 
@@ -1691,7 +1895,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
    Reload the current URL
 
 =========================================================================*/
-  protected void menuCommandReload()
+  private void menuCommandReload()
     {
     Logger.in();
     applyInitialStyles ();
@@ -1716,7 +1920,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
    menuCommandRoot
 
 =========================================================================*/
-  protected void menuCommandRoot()
+  private void menuCommandRoot()
     {
     Logger.in();
     try
@@ -1735,7 +1939,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
    menuCommandStop
 
 =========================================================================*/
-  protected void menuCommandStop()
+  private void menuCommandStop()
     {
     Logger.in();
     stop();
@@ -1747,7 +1951,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
   menuCommandSave 
 
 =========================================================================*/
-  public void menuCommandSave()
+  private void menuCommandSave()
     {
     Logger.in();
     if (lastContent != null)
@@ -1786,7 +1990,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
    menuCommandSettings
 
 =========================================================================*/
-  protected void menuCommandSettings()
+  private void menuCommandSettings()
     {
     Logger.in();
     SettingsDialog d = new SettingsDialog (this);
@@ -1799,7 +2003,7 @@ URL getRootUri (URL baseUri) throws MalformedURLException
    menuCommandServerCert
 
 =========================================================================*/
-  protected void menuCommandServerCert()
+  private void menuCommandServerCert()
     {
     Logger.in();
     if (lastContent == null)
@@ -1823,26 +2027,10 @@ URL getRootUri (URL baseUri) throws MalformedURLException
 
 /*=========================================================================
   
-  menuCommandSetAsHome
-
-=========================================================================*/
-void menuCommandSetAsHome ()
-  {
-  Logger.in();
-  if (baseUri != null)
-    {
-    config.setHomePage (baseUri.toString());
-    config.save();
-    }
-  Logger.out();
-  }
-
-/*=========================================================================
-  
    menuCommandZoomIn 
 
 =========================================================================*/
-  protected void menuCommandZoomIn()
+  private void menuCommandZoomIn()
     {
     Logger.in();
     int n = config.getDocumentBaseFontSize();
@@ -1858,7 +2046,7 @@ void menuCommandSetAsHome ()
    menuCommandZoomOut
 
 =========================================================================*/
-  protected void menuCommandZoomOut()
+  private void menuCommandZoomOut()
     {
     Logger.in();
     int n = config.getDocumentBaseFontSize();
@@ -1877,11 +2065,45 @@ void menuCommandSetAsHome ()
 
 /*=========================================================================
   
-   refresh 
-
-   Reload the current URL
+  promptGetHandler
 
 =========================================================================*/
+  private int promptGetAction (String contentType)
+    {
+    //ContentHandlerAction handler = 
+    //   ContentHandlerAction.getHandler (contentType);
+    // Remove anything after the first space in the content type;
+    //   we don't want different handlers for different 
+    //   charsets (probably)
+    int p = contentType.indexOf (' ');
+    if (p >= 0)
+      contentType = contentType.substring (0, p).trim();
+
+    int action = config.getContentHandlerAction (contentType);
+
+    if (action < 0)
+      {
+      SelectActionDialog d = new SelectActionDialog (this, contentType);
+      d.setVisible (true);
+      action = d.getAction(); 
+      if (action >= 0 && d.getAlways())
+        {
+        config.setContentHandlerAction (contentType, action);
+        config.save();
+        }
+      }
+    
+    return action;
+    }
+
+/*=========================================================================
+  
+   refresh 
+
+=========================================================================*/
+  /** Reload the current URL. That is, fetch the data from the server
+      again, and render it in the viewer again.
+  */
   public void refresh()
     {
     Logger.in();
@@ -1931,40 +2153,12 @@ void menuCommandSetAsHome ()
 
 /*=========================================================================
   
-  promptDownloadURI 
-
-  Prompt the user for a filename, then start the download process
-  for the specified link. 
-
-=========================================================================*/
-  void promptDownloadURI (String href)
-    {
-    Logger.in();
-    JFileChooser fc = new JFileChooser();
-    int p = href.lastIndexOf ('/');
-    String saveFilename;
-    if (p >= 0)
-      saveFilename = href.substring (p + 1);
-    else
-      saveFilename = "download";
-
-    fc.setSelectedFile (new File (saveFilename));
-    // TODO extract filename
-    if (fc.showSaveDialog (this) == JFileChooser.APPROVE_OPTION)
-      {
-      downloadURI (href, fc.getSelectedFile());
-      }
-    Logger.out();
-    }
-
-/*=========================================================================
-  
   handleRightClick 
 
-  Handle right-clicks on links by popping up the link menu.
-
 =========================================================================*/
-  void handleRightClick (String href, int x, int y)
+  /** Handle right-clicks on links by popping up the link context menu.
+  */
+  private void handleRightClick (String href, int x, int y)
     {
     Logger.in();
 
@@ -1985,12 +2179,22 @@ void menuCommandSetAsHome ()
 
     JMenuItem downloadMenuItem = 
       new JMenuItem (menusBundle.getString ("context_download"));
-    downloadMenuItem.addActionListener((event) -> promptDownloadURI (href));
+    downloadMenuItem.addActionListener((event) -> chooseAndDownloadURI (href));
 
     linkMenu.add (openMenuItem);
     linkMenu.add (openNewMenuItem);
     linkMenu.add (copyLinkMenuItem);
     linkMenu.add (downloadMenuItem);
+
+    String contentType = FileUtil.guessMimeTypeFromFilename (href); 
+    if (contentType.startsWith ("audio") || contentType.startsWith ("video"))
+      {
+      JMenuItem streamMenuItem = 
+	new JMenuItem (menusBundle.getString ("context_stream"));
+      streamMenuItem.addActionListener((event) -> streamOut (href));
+      linkMenu.add (streamMenuItem);
+      }
+
     linkMenu.show (jEditorPane, x, y); 
 
     Logger.out();
@@ -2000,10 +2204,11 @@ void menuCommandSetAsHome ()
   
   setHtml
 
+=========================================================================*/
+  /**
   Set the HTML shown by this viewer to the supplied text. Scroll to
   the top.
-
-=========================================================================*/
+  */
   public void setHtml (String s)
     {
     Logger.in();
@@ -2016,9 +2221,10 @@ void menuCommandSetAsHome ()
   
   newWindow 
 
-  Open a new window with the specified URL in String form
-
 =========================================================================*/
+  /**
+  Open a new window with the specified URL.
+  */
   public static void newWindow (String uri, String caption)
     {
     Logger.in();
@@ -2035,9 +2241,10 @@ void menuCommandSetAsHome ()
   
   newWindow 
 
-  Open a new window with the specified URL in URL form
-
 =========================================================================*/
+  /**
+  Open a new window with the specified URL.
+  */
   public static void newWindow (URL uri, String caption)
     {
     Logger.in();
@@ -2056,6 +2263,8 @@ void menuCommandSetAsHome ()
   reloadSettings 
 
 =========================================================================*/
+  /** Tell the config class to reload its file and update itself. 
+  */ 
   public void reloadSettings()
     {
     Logger.in();
@@ -2179,8 +2388,6 @@ void menuCommandSetAsHome ()
   
   renderMarkdown
 
-  Convert the markdown text to HTML and display it
-
 =========================================================================*/
   private void renderMarkdown (byte[] content, String encoding)
     {
@@ -2194,9 +2401,9 @@ void menuCommandSetAsHome ()
   
   reportException
 
-  Do something vaguely useful with exceptions
-
 =========================================================================*/
+  /** Do something vaguely useful with exceptions. 
+  */
   private void reportException (String url, Exception e)
     {
     Logger.log (getClass().getName(), Logger.WARNING, e.getMessage()); 
@@ -2214,9 +2421,9 @@ void menuCommandSetAsHome ()
   
   reportErrorResponseException
 
-  Do something vaguely useful with server error responses 
-
 =========================================================================*/
+  /** Do something vaguely useful with error messages that were returned
+      by the remote server. */ 
   private void reportErrorResponseException (String url, 
            ErrorResponseException e)
     {
@@ -2232,9 +2439,9 @@ void menuCommandSetAsHome ()
   
   reportGenError
 
-  Do something vaguely useful with error messages
-
 =========================================================================*/
+  /** Do something vaguely useful with error messages
+  */
   protected void reportGenError (String message)
     {
     reportGenError (null, message);
@@ -2244,9 +2451,9 @@ void menuCommandSetAsHome ()
   
   reportGenError
 
-  Do something vaguely useful with error messages
-
 =========================================================================*/
+  /** Do something vaguely useful with error messages
+  */
   protected void reportGenError (String url, String message)
     {
     DialogHelper.errorDialog (this, url, message);
@@ -2256,9 +2463,10 @@ void menuCommandSetAsHome ()
   
   reportGenInfo
 
-  Do something vaguely useful with information messages
-
 =========================================================================*/
+  /**
+  Do something vaguely useful with information messages.
+  */
   protected void reportGenInfo (String url, String message)
     {
     DialogHelper.infoDialog (this, url, message);
@@ -2268,9 +2476,10 @@ void menuCommandSetAsHome ()
   
   reportGenInfo
 
-  Do something vaguely useful with information messages
-
 =========================================================================*/
+  /**
+  Do something vaguely useful with information messages.
+  */
   protected void reportGenInfo (String message)
     {
     reportGenInfo (null, message);
@@ -2280,61 +2489,64 @@ void menuCommandSetAsHome ()
   
   setCaptionFromHostname
 
+=========================================================================*/
+  /**
   Sets the window caption and the value of displayName. Uses the response
   if there is one, otherwise just bases the result on the URI.
-
-=========================================================================*/
-void setCaptionFromResponse (URL uri, ResponseContent gc)
-  {
-  Logger.in();
-  String caption = null;
-
-  if (gc != null)
+  */
+  void setCaptionFromResponse (URL uri, ResponseContent gc)
     {
-    // TODO: extract a caption from the response data
-    byte[] content = gc.getContent();
-    if (content != null && content.length > 0)
+    Logger.in();
+    String caption = null;
+
+    if (gc != null)
       {
-      String mime = gc.getMime();
-      String encoding = MimeUtil.getEncodingFromMime (mime);
-      byte[] start = Arrays.copyOfRange(content, 0, 512);
-      String s = "";
-      try
-        {
-        s = new String (start, encoding);
-        }
-      catch (UnsupportedEncodingException e) 
-        {
-        s = new String (start);
-        }
-      
-      displayName = GemUtil.getFirstHeading (s); 
-      if (displayName != null)
-        caption = WINDOW_CAPTION + ": " + displayName;
+      // TODO: extract a caption from the response data
+      byte[] content = gc.getContent();
+      if (content != null && content.length > 0)
+	{
+	String mime = gc.getMime();
+	String encoding = FileUtil.getEncodingFromMime (mime);
+	byte[] start = Arrays.copyOfRange(content, 0, 512);
+	String s = "";
+	try
+	  {
+	  s = new String (start, encoding);
+	  }
+	catch (UnsupportedEncodingException e) 
+	  {
+	  s = new String (start);
+	  }
+	
+	displayName = GemUtil.getFirstHeading (s); 
+	if (displayName != null)
+	  caption = WINDOW_CAPTION + ": " + displayName;
+	}
       }
+
+    if (caption == null)
+      {
+      displayName = getDisplayNameFromURI (uri);
+      if (displayName != null)
+	caption = WINDOW_CAPTION + ": " + displayName;
+      }  
+
+    if (caption == null)
+      {
+      caption = WINDOW_CAPTION; 
+      }  
+
+    setTitle (caption);
+    Logger.out();
     }
-
-  if (caption == null)
-    {
-    displayName = getDisplayNameFromURI (uri);
-    if (displayName != null)
-      caption = WINDOW_CAPTION + ": " + displayName;
-    }  
-
-  if (caption == null)
-    {
-    caption = WINDOW_CAPTION; 
-    }  
-
-  setTitle (caption);
-  Logger.out();
-  }
 
 /*=========================================================================
   
   setStatus    
 
 =========================================================================*/
+  /** Set a message to the status bar. It will automatically be
+      cleared after a time by the status-clearing timer. */
   protected void setStatus (String s)
     {
     Logger.in();
@@ -2347,6 +2559,8 @@ void setCaptionFromResponse (URL uri, ResponseContent gc)
   showBookmarks 
 
 =========================================================================*/
+  /** Raise the bookmark viewer. In practice we just show the bookmark
+      Gemtext file in a document viewer. */
   private void showBookmarks()
     {
     Logger.in();
@@ -2366,10 +2580,67 @@ void setCaptionFromResponse (URL uri, ResponseContent gc)
    stop
 
 =========================================================================*/
+  /** Stop the current transfer. In practice, right now we just call
+      cancelLoad, but I've used a separate method in case there's
+      additional, UI-related work to do in future. */
   public void stop()
     {
     Logger.in();
     cancelLoad();
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   streamOut 
+
+=========================================================================*/
+  /* Start a streaming operation to a media player for the specified
+     URL. We'll start the player process and gets its stdin channel;
+     then, on a background thread, we read from the URL and write to
+     the processes stdin. */ 
+  public void streamOut (URL url)
+    {
+    Logger.in();
+
+    String player = config.getStreamPlayer();
+    if (player == null)
+      {
+      reportGenError (messagesBundle.getString ("no_stream_player"));
+      return;
+      }
+
+    SwingFileDownload sfd = new SwingFileDownload (this, url.toString(), 
+      new ApplicationDownloadTarget (player), null);
+    setStatus (messagesBundle.getString ("streaming"));
+    sfd.start();
+    Logger.out();
+    }
+
+/*=========================================================================
+  
+   streamOut 
+
+=========================================================================*/
+  /* Start a streaming operation to a media player for the specified
+     URL. We'll start the player process and gets its stdin channel;
+     then, on a background thread, we read from the URL and write to
+     the processes stdin. */ 
+  public void streamOut (String url)
+    {
+    Logger.in();
+
+    String player = config.getStreamPlayer();
+    if (player == null)
+      {
+      reportGenError (messagesBundle.getString ("no_stream_player"));
+      return;
+      }
+
+    SwingFileDownload sfd = new SwingFileDownload (this, url, 
+      new ApplicationDownloadTarget (player), null);
+    setStatus (messagesBundle.getString ("streaming"));
+    sfd.start();
     Logger.out();
     }
 

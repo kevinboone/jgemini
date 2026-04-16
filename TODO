@@ -1,24 +1,19 @@
-gophers support.
+Improve the layout of the Downloads dialog.
 
-Pop up the URL history and have it respond to the URL bar.
+`gophers:` support.
 
-Fix the hang-on-exit problem with Gopher.
+Make downloads directory configurable.
 
-Handle media streams in some kind of useful way, rather than just downloading
-them endlessly until we run out of memory. 
-
-Find a way to indicate when page rendering is ongoing, and when it is complete.
+Find a way to indicate when page rendering is ongoing, and when it's complete.
 It's not usually a problem for text pages, but images sometimes take a while to
 transfer.
 
-Add clickable links to in-line images within Markdown documents.
+Add clickable links to in-line images within Markdown documents. At present,
+we just get the image, so no way to do anything with it.
 
-Catch redirect loops.
+Catch redirect loops. Easy to do, but I just haven't gotten to it.
 
-Implement a download manager. At least, find a way to prevent the program exiting whilst a 
-download is in progress.
-
-Find a way to supply emoji fonts internally. This isn't easy, unless I want to 
+? Find a way to supply emoji fonts internally. This isn't easy, unless I want to 
 apply a font to every single element of the document viewer.
 
 Subscribe to feeds? This would make JGemini a feed reader, and would take a lot of

@@ -14,6 +14,9 @@ import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.net.*;
 
+/** A URLConnection subclass throws this exception when it gets a response
+    indicating a redirection. The calling class is expected to catch the
+    exception, and make the request again on the new URL. */
 public class RedirectedException extends IOException 
   {
   URL url;
@@ -24,6 +27,8 @@ public class RedirectedException extends IOException
     this.url = url;
     }
 
+  /** Get the URL the calling class is expected to re-issue
+      the request on. */
   public URL getURL() { return url; }
   }
 

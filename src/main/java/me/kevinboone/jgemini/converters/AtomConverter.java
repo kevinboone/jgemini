@@ -4,8 +4,6 @@
 
   AtomConverter
 
-  A class for converting an Atom feed to HTML. 
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -19,6 +17,9 @@ import javax.xml.transform.stream.*;
 import me.kevinboone.jgemini.base.*;
 
 
+/** Converts and Atom XML feed to HTML, suitable for display in the 
+    document viewer window. The conversion uses an XSLT stylesheet, which
+    is embedded in the resources/ directory. */
 public class AtomConverter implements Converter
   {
   private URL baseUrl;
@@ -38,7 +39,8 @@ public class AtomConverter implements Converter
     try
       {
       TransformerFactory transformerFactory = TransformerFactory.newInstance();
-      InputStream isX = getClass().getClassLoader().getResourceAsStream ("xslt/atom.xslt");
+      InputStream isX = 
+        getClass().getClassLoader().getResourceAsStream ("xslt/atom.xslt");
       InputStream isT = new ByteArrayInputStream (xml.getBytes());
       Source xsltSource = new StreamSource (isX);
       Source xmlSource = new StreamSource (isT);

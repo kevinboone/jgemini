@@ -81,6 +81,19 @@ Controls whether to display images in-line in Gemtext documents.  Note that
 images are always displayed in-line in Markdown documents, and never in
 gophermaps. The default is  'yes', to display in-line images. 
 
+`handler`  
+Specifies how to handle content that JGemini does not natively support.
+The `handler.` prefix is followed by a MIME type, such as `handler.audio/mpeg`.
+The value is a number between -1 and 3, with the following meanings.
+
+~~~
+-1 prompt the user every time 
+0  save in the downloads directory without prompting
+1  prompt for a filename as save in that file
+2  stream the content out to the stream helper
+3  save a temporary file, and hand it off to the desktop
+~~~
+
 `history.enabled`  
 Determines whether the URL history is saved to a file between sessions. If it
 is saved, it will be to the file `$HOME/.jgemini/jgemini.history`, unless you
@@ -109,6 +122,21 @@ Controls debug logging. Takes values '0' (fatal errors) to '3' (copious
 debugging).  Default is "1". Bear in mind that you'll only see any of this
 logging if you run the program from a prompt. 
 
+`stream.player`  
+Command or path of the application that will receive the data stream, when you
+tell JGemini to stream a file, rather than download it. This setting is mostly
+used for media playback. On Windows, you'll almost certainly have to give the
+full pathname. 
+
+The application needs to be capable or receiving data on its standard input
+channel, and you need to give whatever command-line arguments will make it do
+that. Both `vlc -` and `ffplay -` work on Linux; `vlc.exe` works on Windows,
+but please be aware that some versions don't accept data on standard input.
+
+The application chosen really needs to have a graphical user interface.  It
+will work if it doesn't, but you'll have no way to control it once playback has
+started.
+
 `ui.control_font`  
 Sets the font for user interface elements like buttons and menus.  Default is
 `Sans 20; Emoji 20`. You can set multiple fonts like this:
@@ -124,6 +152,13 @@ Sets the base size for document fonts, in pixels. Other document elements, like
 headings, will have their sizes based on this setting. If you're using a custom
 stylesheet for the document display, this setting may have no effect, because
 you may have overridden it. Default: 16 pixels.
+
+`ui.icon.size`  
+The size of toolbar icons in pixels. You will need to restart JGemini
+for changes to this setting to take effect. Default: 24 pixels.
+
+`ui.icons.mono`  
+Sets whether toolbar icons are shown in monochrome. Default: false.
 
 `ui.user_font`  
 Sets the font for text entry boxes.  Default is `Sans 20; Emoji 20`. For the

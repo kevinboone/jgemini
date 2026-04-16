@@ -4,8 +4,6 @@
 
   GophermapConverter
 
-  A class for converting gophermaps to HTML 
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -14,6 +12,7 @@ import java.net.*;
 import java.io.*;
 import java.util.regex.Pattern;
 
+/** A class for converting a gophermap to HTML. */
 public class GophermapConverter extends TextLikeConverter implements Converter
   {
   public GophermapConverter (URL baseURL)
@@ -101,7 +100,8 @@ public class GophermapConverter extends TextLikeConverter implements Converter
           {
           String ret = "\n<a href=\"gopher://" + host + ":" 
             + port +  "/" + typeChar +  selector + "\">" 
-            + getIconForGopherType(typeChar) + " " +  escapeHtml (name) + "</a>\n";
+            + getIconForGopherType(typeChar) + " " 
+            +  escapeHtml (name) + "</a>\n";
           return ret;
           }
       }

@@ -10,6 +10,9 @@
 package me.kevinboone.jgemini.base;
 import java.io.*;
 
+/** A carrier class for parsing and storing Gemini links. 
+    Each link has a URL and some text. */
+    
 public class GemLink
   {
   private String uri;

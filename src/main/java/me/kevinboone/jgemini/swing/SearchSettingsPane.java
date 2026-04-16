@@ -18,6 +18,8 @@ import javax.swing.text.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** Implement the Search tab of the Settings dialog. 
+*/
 public class SearchSettingsPane extends SettingsPane
   {
   private MainWindow mainWindow;

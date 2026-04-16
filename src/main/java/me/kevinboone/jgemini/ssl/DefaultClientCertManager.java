@@ -4,9 +4,6 @@
 
   DefaultClientCertManager 
 
-  Methods for handling client certificates that are associated with
-  a specific remote resource.
-
   Copyright (c)2021-2026 Kevin Boone, GPLv3.0
 
 ============================================================================*/
@@ -22,6 +19,11 @@ import java.security.KeyStore;
 import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 
+/** Methods for handling client certificates that are associated with
+    Identity. In particular, this class manages the link between
+    named identities, and instances of KeyManagerFactory that can
+    be added to an SSLContext in TLS conversations.
+*/
 public class DefaultClientCertManager implements ClientCertManager
 {
 private Config config = Config.getConfig();
@@ -103,15 +105,19 @@ public String getIdentForURL (URL url)
 
   getKMFForURL
 
-  Given the URL of a remote resource, return a configure KeyManagerFactory,
-  that can be passed to SSLContext.init()
-
-  It's fine for the return value to be null, and it should be if the
-  remote resource does not have an assigned client certificate. We'll
-  throw an IOException if, for example, there is an assigned certificate
-  but it can't be loaded.
-
 ============================================================================*/
+/** 
+   <p>
+   Given the URL of a remote resource, return a configured KeyManagerFactory,
+   that can be passed to SSLContext.init()
+   </p>
+   <p>
+   It's fine for the return value to be null, and it should be if the
+   remote resource does not have an assigned client certificate. We'll
+   throw an IOException if, for example, there is an assigned certificate
+   but it can't be loaded.
+   </p>
+*/
 @Override
 public KeyManagerFactory getKMFForURL (URL url) throws IOException
   {

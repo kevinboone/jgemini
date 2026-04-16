@@ -31,7 +31,7 @@ You can run JGemini from the command prompt like this:
 
     java -jar /path/to/jgemini-x.y.jar
 
-where x.y is the version number (currently 2.0).
+where x.y is the version number (currently 3.0).
 
 If your system associates Java JAR files with the `.jar` extension, you might
 be able to launch JGemini from a file manager or program manager or whatever.

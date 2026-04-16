@@ -13,6 +13,11 @@
 package me.kevinboone.jgemini.base;
 import java.net.URL;
 
+/** Holds all the information that came from an asynchronous file transfer.
+    This includes the data and the MIME type, and any exception that was
+    thrown. Transfers are asynchronous, so the background thread that does
+    the transfer bundles up the content in single instance of this class,
+    and passes it to the user interface when completed. */ 
 public class ResponseContent 
   {
   private byte[] content;

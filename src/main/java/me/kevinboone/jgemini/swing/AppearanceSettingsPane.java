@@ -18,6 +18,8 @@ import javax.swing.text.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** Implements the "Appearance" tab of the SettingsDialog.
+*/
 public class AppearanceSettingsPane extends SettingsPane
   {
   private MainWindow mainWindow;

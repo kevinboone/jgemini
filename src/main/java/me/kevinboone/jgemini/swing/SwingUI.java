@@ -4,8 +4,6 @@
 
   UI 
 
-  The starting point for the Swing UI
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -16,6 +14,8 @@ import me.kevinboone.jgemini.base.*;
 import java.io.*;
 import java.awt.*;
 
+/** Start the Swing UI. This amounts, essentially, to instantiating
+    MainWindow. */
 public class SwingUI implements UI
   {
   private MainWindow mainWindow;

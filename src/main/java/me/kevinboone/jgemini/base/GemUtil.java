@@ -10,17 +10,16 @@
 package me.kevinboone.jgemini.base;
 import java.io.*;
 
+/** Various utilities for interpreting the contents of Gemtext files. */
 public class GemUtil
   {
-
 /*=========================================================================
   
   removeLeadingHashes 
 
-  removes all the # characters from the start of a line. The resut
-  might start with spaces, and might even be empty
-
 =========================================================================*/
+  /** Removes all the # characters from the start of a line. The resut
+  might start with spaces, and might even be empty. */
   static public String removeLeadingHashes (String s)
     {
     while (s.length() > 0 && s.charAt(0) == '#')
@@ -32,10 +31,9 @@ public class GemUtil
   
   getFirstHeading
 
-  Given a whole or partial Gemtext or Markdown document, return the
-  first heading -- that is, the first line beginning '#'.
-
 =========================================================================*/
+  /** Given a whole or partial Gemtext or Markdown document, return the
+  first heading -- that is, the first line beginning '#'.*/
   static public String getFirstHeading (String s)
     {
     String ret = null;

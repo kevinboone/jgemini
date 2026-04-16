@@ -22,6 +22,11 @@ import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.ssl.*;
 
+/** A base class for all the dialogs JGemini uses. It exists solely to
+    reduce code duplication, by including methods that all dialogs 
+    require, such as creating buttons and labels with mnemonics
+    and translatable text.
+*/
 public class JGeminiDialog extends JDialog
   {
   protected final static ResourceBundle dialogsBundle = 
@@ -45,7 +50,7 @@ public class JGeminiDialog extends JDialog
   createButton
 
 =========================================================================*/
-  protected JButton createButton (String key)
+  protected static JButton createButton (String key)
     {
     String label = dialogsBundle.getString (key);
     JButton button = new JButton (label);
@@ -60,10 +65,28 @@ public class JGeminiDialog extends JDialog
 
 /*=========================================================================
   
+  createRadioButton
+
+=========================================================================*/
+  protected static JRadioButton createRadioButton (String key)
+    {
+    String label = dialogsBundle.getString (key);
+    JRadioButton button = new JRadioButton (label);
+    String mKey = key + "_mnemonic";
+    if (dialogsBundle.containsKey (mKey))
+      {
+      Object o = dialogsBundle.getObject (mKey);
+      button.setMnemonic ((int)o);
+      }
+    return button;
+    }
+
+/*=========================================================================
+  
   createLabel
 
 =========================================================================*/
-  protected JLabel createLabel (String key)
+  protected static JLabel createLabel (String key)
     {
     String label = dialogsBundle.getString (key);
     JLabel l = new JLabel (label);

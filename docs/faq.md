@@ -5,8 +5,8 @@
 _How do I install JGemini?_
 
 You don't need to do anything in particular. Just copy the program's JAR file
-`jgemini-2.0.jar` to any convenient directory, and run it using `java -jar
-jgemini-2.0.jar`. Or, on Windows, just double-click the JAR file in the
+`jgemini-3.0.jar` to any convenient directory, and run it using `java -jar
+jgemini-3.0.jar`. Or, on Windows, just double-click the JAR file in the
 file manager.
 
 You may prefer a more integrated installation; for more information, see the
@@ -16,7 +16,8 @@ _What Java version do I need?_
 
 Any Java 11 or later should be fine. Because the Gemini protocol is based on
 TLS, you might find old, or cryptographically limited, JVMs don't work
-properly. 
+properly. JGemini does run under Java 8, but the limited TLS support 
+might be problematic. 
 
 _Why can't JGemini provide its own emoji fonts?_
 
@@ -42,10 +43,10 @@ file](config_file.md).
 _Why does JGemini not store my URL history between sessions?_
 
 People who use Gemini and similar systems are often quite concerned about
-matters related to privacy. Storing browsing history, etc., is a potential
-privacy hazard. Although there are ways to mitigate this hazard, I thought
-it would be easier, and safer, if JGemini simply didn't store it at all,
-unless expressly configured by the user.
+privacy. Storing browsing history, etc., is a potential privacy hazard.
+Although there are ways to mitigate this hazard, it's easier,
+and safer, if JGemini simply didn't store it at all, unless you 
+expressly ask it to. 
 
 To allow JGemini to store URL history, go to the _History_ tab in 
 the [Settings dialog](settings_dialog), and check the box. 
@@ -54,7 +55,7 @@ Alternatively add `history.enabled=1` to the
 
 _How do I clear my URL history?_
 
-Ggo to the _History_ tab in 
+Go to the _History_ tab in 
 the [Settings dialog](settings_dialog), and click "Clear history".
 Unless you disable the saving of URL history, JGemini will continue
 to add new URLs to the history after clearing existing ones. 
@@ -63,7 +64,7 @@ _How do I open a local .gmi file?_
 
 From the command line, just run
 
-    java -jar /path/to/jgemini-2.0.jar [filename]
+    java -jar /path/to/jgemini-3.0.jar [filename]
 
 Depending on how you installed JGemini, you might simply be able to click on
 a `.gmi` file in a file manager.
@@ -93,13 +94,16 @@ Right-click the caption or URI under the image, or the link to the image, and
 select _Download_.  The _File|Save_ menu won't work on a window that contains
 only an image, for tedious technical reasons.
 
+_How can I get back the monochrome toolbar icons from previous releases?_
+
+Set `ui.icons.mono=true` in the [configuration file](config_file.md). 
+
 _Why can't I see a progress indicator when downloading a large document or image?_
 
-None of the protocols JGemini supports provide any indication of the size of the
-file, so there's no way for JGemini to know how close the download is to
-being completed. JGemini does display the amount of data transferred so
-far in the status bar, but only every 16kB -- and many Gemini/Gopher/etc
-files are not even that large.
+The [Downloads dialog](downloads_dialog.md) shows the amount of data received
+from the server, but it doesn't show how close to complete the transfer is.
+None of the protocols JGemini supports provide any indication of the size of
+the file, so there's no way for JGemini to know this. 
 
 _What happens if I follow a non-Gemini link in a Gemtext page?_
 
@@ -137,6 +141,25 @@ _How do I disable the use of the URL bar for searching?_
 In the configuration file, set `urlbar.search.enabled=0`, or got to the
 _Search_ tab of the _Settings_ dialog.
 
+_Where does JGemini save downloaded documents?_
+
+If you use the _Download_ menu command from the right-click menu, JGemini will
+always prompt for a filename. If you left-click a link, JGemini will ask
+whether you want to specify a filename or not. If you choose not to, JGemini
+will store the file in the default downloads directory, which is usually
+`$HOME/.jgemini/downloads`.
+
+If you tell JGemini to hand off a file to the desktop, JGemini will download to
+a file in the platform's temporary directory. The location and naming of these
+files is, perhaps, unimportant, as JGemini will delete them when it exits.
+
+_Does JGemini include a media player?_
+
+No, but you can configure it to send media to an external player, either as a
+complete file, or as a stream that is never stored on disk. For more
+information, see the page on 
+[media and streaming](media_and_streaming.md).
+
 ## Configuration
 
 _How do I change the document fonts?_
@@ -146,15 +169,14 @@ page on [styling](styling.md).
 
 _How do I find out what fonts are available?_
  
-    java -jar jgemini-2.0.jar -Djgemini.dumpfonts 
+    java -jar jgemini-3.0.jar -Djgemini.dumpfonts 
 
 _The screen font is too small. What should I do?_
 
-You can increase or
-decrease the base font size at runtime using ctrl-[ and ctrl-]. 
-To make a permanent change, use the _Appearance_ tab of the _Settings_
-dialog, or edit the `ui.document.font.size` setting in the
-user configuration file.
+You can increase or decrease the base font size at runtime using ctrl-[ and
+ctrl-].  To make a permanent change, use the _Appearance_ tab of the _Settings_
+dialog, or edit the `ui.document.font.size` setting in the user configuration
+file.
 
 ## Bookmarks
 
@@ -177,9 +199,9 @@ file in the `$HOME/.jgemeni` directory called `bookmarks.gmi`.
 
 ## TLS and security
 
-_Can I see the server's certificate?_
+_How do I see information about the server's certificate?_
 
-Yes: use the menu command _Tools|Server certificate info_.
+Use the menu command _Tools|Server certificate info_.
 
 _How do I send a client certificate with my requests?_
 

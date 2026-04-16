@@ -9,6 +9,9 @@
 ============================================================================*/
 package me.kevinboone.jgemini.base;
 
+/** An interface that is implemented by anything that can add itself to the
+    status monitoring framework implemented by StatusHandler. 
+*/
 public interface StatusListener 
   {
   public void writeStatus (String message);

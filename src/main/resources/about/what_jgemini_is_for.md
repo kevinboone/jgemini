@@ -1,9 +1,9 @@
 # What JGemini is for 
 
-JGemini is a browser for "small net" protocols, that is, lightweight protocols
-intended for personal and non-commercial document and media retrieval over the
-Internet. These protocols include the archaic Gopher, as well as the relatively
-modern Gemini. 
+JGemini is a cross-platform browser for "small net" protocols, that is,
+lightweight protocols intended for personal and non-commercial document and
+media retrieval over the Internet. These protocols include the archaic Gopher,
+as well as the relatively modern Gemini. 
 
 Unlike the HTTP/HTML protocols used on the regular web, all these protocols are
 difficult to extend. In the case of Gemini, this non-extensibility is by

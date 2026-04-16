@@ -4,8 +4,6 @@
 
   Config 
 
-  Retrieves and manages application configuration
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -15,9 +13,9 @@ import java.util.stream.Collectors;
 import java.io.*;
 import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
-import me.kevinboone.utils.file.*;
 
-
+/** Retrieves and manages application configuration. Use getConfig() to
+    get the singleton instance of this class. */
 public class Config extends Properties
   {
   private int logLevel = Logger.ERROR;
@@ -31,6 +29,7 @@ public class Config extends Properties
   public final static boolean DEFLT_EMOJI_STRIP_BOOKMARKS = false;
   public final static boolean DEFLT_GEMTEXT_INLINE_IMAGES = true;
   public final static String DEFLT_UI_DOCUMENT_CUSTOM_CSS = null;
+  public final static boolean DEFLT_UI_ICONS_MONO = false;
   public final static String DEFLT_HISTORY_FILE = null;
   public final static String DEFLT_BOOKMARK_FILE = null;
   public final static int DEFLT_BOOKMARK_MAX_MENU = 10;
@@ -46,6 +45,10 @@ public class Config extends Properties
   addClientCert
 
 =========================================================================*/
+  /** Add a client certificate specification to the config file. Each
+      specification has a keystore name and a keystore password, and
+      is stored in the config file in the form 
+      "clientcert.name=file password". */
   public void addClientCert (String name, String keystoreFile,
       String keystorePassword) 
     {
@@ -62,6 +65,24 @@ public class Config extends Properties
   public void addConfigChangeListener (ConfigChangeListener l)
     {
     listeners.add (l);
+    }
+
+/*=========================================================================
+  
+  clearDefaultFileHandling 
+
+=========================================================================*/
+  public void clearDefaultFileHandling()
+    {
+    Enumeration keys = keys();
+    while (keys.hasMoreElements())
+      {
+      String key = (String)keys.nextElement();
+      if (key.startsWith (Constants.CONTENT_HANDLER_TAG))
+        {
+        remove (key);
+        }
+      }
     }
 
 /*=========================================================================
@@ -161,6 +182,31 @@ public class Config extends Properties
 
 /*=========================================================================
   
+  getContentHandlerAction
+
+=========================================================================*/
+  public int getContentHandlerAction (String mime)
+    {
+    String key = Constants.CONTENT_HANDLER_TAG + mime;
+    String v = getProperty (key, null);
+    if (v == null) return -1;
+    return Integer.parseInt (v);
+    }
+
+/*=========================================================================
+  
+  setContentHandlerAction
+
+=========================================================================*/
+  public void setContentHandlerAction (String mime, int action)
+    {
+    String key = Constants.CONTENT_HANDLER_TAG + mime;
+    setProperty (key, "" + action);
+    }
+
+
+/*=========================================================================
+  
   getHomePage 
 
 =========================================================================*/
@@ -254,6 +300,16 @@ public class Config extends Properties
     {
     return Integer.parseInt (getProperty 
         (Constants.UI_NEW_WINDOW_MODE, Constants.DEFLT_UI_NEW_WINDOW_MODE));
+    }
+
+/*=========================================================================
+  
+  getIconsMono
+
+=========================================================================*/
+  public boolean getIconsMono()
+    {
+    return getBooleanProperty (Constants.UI_ICONS_MONO, DEFLT_UI_ICONS_MONO);
     }
 
 /*=========================================================================
@@ -359,6 +415,18 @@ public class Config extends Properties
 
 /*=========================================================================
   
+  getIconSize
+
+=========================================================================*/
+  public int getIconSize()
+    {
+    String s = getProperty (Constants.UI_ICON_SIZE, 
+      Constants.DEFLT_UI_ICON_SIZE);
+    return Integer.parseInt (s);
+    }
+
+/*=========================================================================
+  
   getUrlbarSearchEnabled 
 
 =========================================================================*/
@@ -391,6 +459,18 @@ public class Config extends Properties
     if (val.equals ("true")) return true;
     if (val.equals ("on")) return true;
     return false;
+    }
+
+/*=========================================================================
+  
+  getStreamPlayer
+
+=========================================================================*/
+  public String getStreamPlayer()
+    {
+    String s = getProperty (Constants.STREAM_PLAYER, 
+      Constants.DEFLT_STREAM_PLAYER);
+    return s; 
     }
 
 /*=========================================================================
@@ -433,15 +513,30 @@ public class Config extends Properties
 
 /*=========================================================================
   
-  getIdentisDir
+  getIdentssDir
 
 =========================================================================*/
   public String getIdentsDir()
     {
     Logger.in();
-    String identsDir = getStateDir() + File.separator + Constants.IDENTS_DIRNAME; 
+    String identsDir = getStateDir() + File.separator 
+      + Constants.IDENTS_DIRNAME; 
     Logger.out();
     return identsDir;
+    }
+
+/*=========================================================================
+  
+  getDownloadsDir
+
+=========================================================================*/
+  public String getDownloadsDir()
+    {
+    Logger.in();
+    String downloadsDir = getStateDir() + File.separator 
+      + Constants.DOWNLOADS_DIRNAME; 
+    Logger.out();
+    return downloadsDir;
     }
 
 /*=========================================================================
@@ -531,6 +626,7 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
     Logger.in();
     new File (getStateDir()).mkdir();
     new File (getIdentsDir()).mkdir();
+    new File (getDownloadsDir()).mkdir();
 
     Logger.log (getClass().getName(), Logger.INFO, 
       "Loading system-wide configuration");
@@ -714,6 +810,27 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
 
 /*=========================================================================
   
+  setIconSize
+
+=========================================================================*/
+  public void setIconSize (int w)
+    {
+    setProperty (Constants.UI_ICON_SIZE, "" + w);
+    }
+
+
+/*=========================================================================
+  
+  setIconsMono
+
+=========================================================================*/
+  public void setIconsMono (boolean f)
+    {
+    setProperty (Constants.UI_ICONS_MONO, "" + f);
+    }
+
+/*=========================================================================
+  
   setInlineImageWidth 
 
 =========================================================================*/
@@ -724,13 +841,23 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
 
 /*=========================================================================
   
-  getUrlbarSearchEnabled 
+  setUrlbarSearchEnabled 
 
 =========================================================================*/
   public void setUrlbarSearchEnabled (boolean f)
     {
     urlbarSearchEnabled = f;
     setProperty (Constants.URLBAR_SEARCH_ENABLED, "" + f);
+    }
+
+/*=========================================================================
+  
+  setStreamPlayer 
+
+=========================================================================*/
+  public void setStreamPlayer (String s)
+    {
+    setProperty (Constants.STREAM_PLAYER, s);
     }
 
 /*=========================================================================

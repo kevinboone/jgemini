@@ -4,21 +4,19 @@
 
   Main 
 
-  Program execution starts here. All we do is create a MainWindow
-  object and have it load a page.
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
 
 package me.kevinboone.jgemini.swing;
 import  me.kevinboone.jgemini.protocol.*;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.net.*;
 import java.io.*;
-import java.awt.GraphicsEnvironment;
+import java.awt.*;
+import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 
 import java.security.*;
@@ -34,10 +32,19 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.jce.provider.*;
 
+/** Main contains methods for management of the application as 
+    a whole. 
+*/
 public class Main
   {
-  static MainWindow viewer;
+  private static MainWindow viewer;
+  private final static ResourceBundle messagesBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
 
+/**
+  Program execution starts here. Mostly what we do is create an instance of
+  the "UI" class, and have it load a page.
+*/
   public static void main (String[] args)
       throws Exception
     {
@@ -55,7 +62,7 @@ public class Main
       }
 
     // Tell the JVM about all the new URLs we support in this application
-    URL.setURLStreamHandlerFactory (new GeminiURLStreamHandlerFactory());
+    URL.setURLStreamHandlerFactory (new JGeminiURLStreamHandlerFactory());
 
     Logger.log (Main.class, Logger.INFO, "Starting up");
 
@@ -83,5 +90,55 @@ public class Main
 
     Logger.log (Main.class, Logger.INFO, "Initial set-up done");
     }
+
+  /** Returns true if closing a window now would (all being well)
+      lead to the application closing down. */
+  public static boolean closingWouldExit()
+    {
+    int topLevels = 0;
+    Frame[] frames = Frame.getFrames();
+    for (Frame frame : frames) 
+      {
+      if (frame instanceof JFrame && frame.isDisplayable()) 
+        {
+        JFrame jframe = (JFrame)frame;
+        topLevels++;
+        }
+      }
+    if (topLevels <= 1) return true;
+    return false;
+    }
+
+  /** Do a full exist, whether Swing wants to or not. It's more likely
+      to want to, if we can clean up all the background downloads, which
+      is more elegant than just shutting down the JVM.
+  */
+  public static void exit()
+    {
+    DownloadMonitor downloadMonitor = DefaultDownloadMonitor.getInstance();
+    downloadMonitor.cancelAll();
+    System.exit (0);
+    } 
+
+  /** Returns true either if there are no ongoing background transfers,
+      or the user is willing for them to be cancelled. */
+  public static boolean okToExit ()
+    {
+    DownloadMonitor downloadMonitor = DefaultDownloadMonitor.getInstance();
+    int active = downloadMonitor.getActiveDownloadCount();
+    if (active == 0) return true;
+    String message;
+    if (active == 1)
+      message = messagesBundle.getString ("query_cancel_download"); 
+    else
+      message = messagesBundle.getString ("query_cancel_downloads"); 
+
+    if (JOptionPane.showConfirmDialog (null, message, Constants.APP_NAME,
+      JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+        == JOptionPane.YES_OPTION)
+      return true;
+    return false;
+    } 
   }
+
 

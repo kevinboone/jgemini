@@ -3,7 +3,7 @@
 ## Network privacy issues
 
 All the "small net" protocols that JGemini supports, apart from Gemini,
-are entirely plain-text. Your requests and responses are visible to anybody
+are unencrypted. Your requests and responses are visible to anybody
 who can see your network traffic. 
 
 On the positive side, however, none of these protocols is very traceable,

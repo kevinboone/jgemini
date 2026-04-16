@@ -19,6 +19,8 @@ import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.ssl.*;
 
+/** Implements the Identity tag of the Settings dialog.
+*/
 public class IdentityDialog extends JGeminiDialog
 {
 private String hostname;
@@ -57,7 +59,7 @@ public IdentityDialog (JFrame parent, URL url, MainWindow mainWindow)
   this.hostname = url.getHost();
   this.mainWindow = mainWindow;
 
-  java.net.URL iconUrl = getClass().getResource("/images/person_128.png");
+  java.net.URL iconUrl = getClass().getResource("/images/person.png");
   ImageIcon icon = new ImageIcon (iconUrl);
   JLabel iconLabel = new JLabel (icon);
 
@@ -89,33 +91,26 @@ public IdentityDialog (JFrame parent, URL url, MainWindow mainWindow)
   cancelButton.addActionListener (new ActionListener() 
     {
     @Override
-    public void actionPerformed (ActionEvent e) {
-        dispose(); 
-    }});
+    public void actionPerformed (ActionEvent e) 
+      {
+      dispose(); 
+      }});
 
   newButton.addActionListener (new ActionListener() 
     {
     @Override
-    public void actionPerformed (ActionEvent e) {
-        handleNew(); 
-    }});
+    public void actionPerformed (ActionEvent e) 
+      {
+      handleNew(); 
+      }});
 
   submitButton.addActionListener (new ActionListener() 
     {
     @Override
-    public void actionPerformed (ActionEvent e) {
-          handleSubmit();
-    }});
-
-/*
-  Action performNew = new AbstractAction ("New") 
-    {  
-    public void actionPerformed(ActionEvent e) 
-      {     
-      handleNew();
-      }
-    };
-*/
+    public void actionPerformed (ActionEvent e) 
+      {
+      handleSubmit();
+      }});
 
   Action performCancel = new AbstractAction ("Cancel") 
     {  

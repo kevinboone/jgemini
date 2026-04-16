@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** A simple file editor, which JGemini uses to edit the bookmarks file,
+    settings file, and perhaps others in future. It's pretty rudimentary,
+    but functional for simple changes. */
 public class EditFileDialog extends JGeminiDialog
 {
 private JTextArea textArea;
@@ -127,6 +130,8 @@ public EditFileDialog (JFrame parent, MainWindow mainWindow, String caption,
   didSave 
 
 =========================================================================*/
+/** Returns true if the user made a change that needs to be saved.
+*/
 public boolean didSave() { return didSave; }
 
 /*=========================================================================
@@ -145,6 +150,10 @@ private void handleDocs()
   save 
 
 =========================================================================*/
+/** Save changes to the file, and set "didSave" so the calling class
+    can find out that the user made changes, and take the appropriate
+    action (e.g., reloading the bookmarks file.
+*/
 public void save()
   {
   try

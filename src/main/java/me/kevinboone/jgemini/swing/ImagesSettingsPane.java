@@ -18,6 +18,7 @@ import javax.swing.text.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/** Implements the Images tab of the Settings dialog. */
 public class ImagesSettingsPane extends SettingsPane
   {
   private MainWindow mainWindow;

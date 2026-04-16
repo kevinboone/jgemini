@@ -14,15 +14,17 @@ import java.io.*;
 import java.util.*;
 import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
-import me.kevinboone.utils.file.FileUtil;
 
+/** The main bookmark handler. This class is responsible for adding
+    bookmarks, checking whether a URL is already bookmarked, and
+    raising the bookmark editor, which is just a file editor. */
 public class DefaultBookmarkHandler implements BookmarkHandler 
   {
   private Config config;
   private MainWindow mainWindow;
-  // fileWasUpdated is set whenever a new line is written to the
-  //   bookmark file, and at start-up. When set, it causes calls like
-  //   getBookmarkCount to reload from file.
+  /** fileWasUpdated is set whenever a new line is written to the
+     bookmark file, and at start-up. When set, it causes calls like
+     getBookmarkCount to reload from file. */
   private boolean fileWasUpdated = true;
   private Vector<GemLink> bookmarks = new Vector<GemLink>();
 
@@ -36,7 +38,8 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     }
 
   /** isBookmark() returns true if the URI is definitely bookmarked, and
-      false if not, or uncertain. This method throws no exceptions. */
+      false if not, or uncertain. This method throws no exceptions, so
+      file-handling errors are quietly ignored. */
   @Override
   public boolean isBookmarked (URL uri)
     {
@@ -52,7 +55,7 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     }
 
   /** addBookmark() returns true if a new bookmark is added. The only
-      reason not to add the bookmark -- other than exception --
+      reason not to add the bookmark -- other than an exception --
       is that the URI is already bookmarked. */
   @Override
   public boolean addBookmark (String displayName, URL uri) throws IOException
@@ -69,6 +72,8 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     return true;
     }
 
+  /** Raise a file editor that targets the bookmarks file. 
+  */
   @Override
   public void editBookmarks() throws IOException
     {
@@ -91,10 +96,11 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     return bookmarks.size();
     }
 
-  /** This method will throw an exception if index < 0 or > the size
-      of the bookmark list. It should only called after a call to
-      getBookmarkCount(), which will also reload from file if
-      necessary. */
+  /** Get a specific bookmark by its index. This method will throw an exception 
+      if index &lt; 0 or &gt; the size of the bookmark list. It should only 
+      called after a call to getBookmarkCount(), which will also reload 
+      from file if necessary. 
+  */
   @Override
   public GemLink getBookmarkLink (int index)
     {
@@ -102,6 +108,10 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     return bookmarks.elementAt (index);
     }
 
+  /** Read all the bookmarks from file, if the "fileWasUpdated" attribute
+      is true, that is, if there is reason to think that we need to
+      reload. 
+  */
   public void readFromFile() 
     {
     // Just creating a new Vector and leaving the old one for GC is
@@ -135,6 +145,8 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     fileWasUpdated = false;
     }
 
+  /** Show all the bookmarks by opening the bookmarks file -- which is
+      just Gemtext -- in a new viewer window. */
   @Override
   public void showBookmarks() throws IOException
     {

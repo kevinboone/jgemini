@@ -4,8 +4,6 @@
 
   TopBar
 
-  The top bar contains the navigation buttons and URL combo box 
-
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
@@ -19,9 +17,12 @@ import javax.swing.*;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.Constants;
 
+/**
+The top bar contains the navigation buttons and URL combo box. 
+*/
 public class TopBar extends JPanel
   {
-  private JComboBox urlBox;
+  private FilteredComboBox urlBox;
   private MainWindow mainWindow;
   private boolean urlbarEnabled = true;
   private final static ResourceBundle tooltipsBundle = 
@@ -40,7 +41,9 @@ public class TopBar extends JPanel
     this.mainWindow = mainWindow;
     setLayout (new GridBagLayout());
 
-    urlBox = new JComboBox ();
+    int iconSize = config.getIconSize();
+
+    urlBox = new FilteredComboBox();
     urlBox.setEditable (true);
     //urlBox.setMargin (new Insets (5, 5, 5, 5));
     urlBox.addActionListener(new ActionListener() 
@@ -55,35 +58,53 @@ public class TopBar extends JPanel
          if (urlbarEnabled && e.getActionCommand().equals ("comboBoxChanged"))
            {
            Logger.log (getClass().getName(), Logger.DEBUG, "TopBar actionPerformed");
-	   String url = (String)urlBox.getEditor().getItem();
+	   //String url = (String)urlBox.getEditor().getItem();
+	   String url = urlBox.getItem();
 	   if (url.length() > 0)
 	     mainWindow.loadURI (url); 
            }
          }
       });
 
-    java.net.URL backImgURL = getClass().getResource("/images/back.png");
+    boolean mono = config.getIconsMono();
+
+    java.net.URL backImgURL = getClass().getResource
+      (mono ? "/images/back_mono.png" : "/images/back.png");
     ImageIcon backIcon = new ImageIcon (backImgURL);
+    backIcon = new ImageIcon (backIcon.getImage().getScaledInstance 
+      (iconSize, iconSize, Image.SCALE_DEFAULT));
     JButton backButton = new JButton (backIcon);
     backButton.addActionListener((event) -> mainWindow.back());
     backButton.setToolTipText (tooltipsBundle.getString("back"));
-    java.net.URL homeImgURL = getClass().getResource("/images/home.png");
+    java.net.URL homeImgURL = getClass().getResource
+      (mono ? "/images/home_mono.png" : "/images/home.png");
     ImageIcon homeIcon = new ImageIcon (homeImgURL);
+    homeIcon = new ImageIcon (homeIcon.getImage().getScaledInstance 
+      (iconSize, iconSize, Image.SCALE_DEFAULT));
     JButton homeButton = new JButton (homeIcon);
     homeButton.addActionListener((event) -> mainWindow.home());
     homeButton.setToolTipText (tooltipsBundle.getString("home"));
-    java.net.URL refreshImgURL = getClass().getResource("/images/refresh.png");
+    java.net.URL refreshImgURL = getClass().getResource
+      (mono ? "/images/refresh_mono.png" : "/images/refresh.png");
     ImageIcon refreshIcon = new ImageIcon (refreshImgURL);
+    refreshIcon = new ImageIcon (refreshIcon.getImage().getScaledInstance 
+      (iconSize, iconSize, Image.SCALE_DEFAULT));
     JButton refreshButton = new JButton (refreshIcon);
     refreshButton.addActionListener((event) -> mainWindow.refresh());
     refreshButton.setToolTipText (tooltipsBundle.getString("refresh"));
-    java.net.URL identImgURL = getClass().getResource("/images/person.png");
+    java.net.URL identImgURL = getClass().getResource
+      (mono ? "/images/person_mono.png" : "/images/person.png");
     ImageIcon identIcon = new ImageIcon (identImgURL);
+    identIcon = new ImageIcon (identIcon.getImage().getScaledInstance 
+      (iconSize, iconSize, Image.SCALE_DEFAULT));
     JButton identButton = new JButton (identIcon);
     identButton.addActionListener((event) -> mainWindow.manageIdentity());
     identButton.setToolTipText (tooltipsBundle.getString("identity"));
-    java.net.URL stopImgURL = getClass().getResource("/images/stop.png");
+    java.net.URL stopImgURL = getClass().getResource
+      (mono ? "/images/stop_mono.png" : "/images/stop.png");
     ImageIcon stopIcon = new ImageIcon (stopImgURL);
+    stopIcon = new ImageIcon (stopIcon.getImage().getScaledInstance 
+      (iconSize, iconSize, Image.SCALE_DEFAULT));
     JButton stopButton = new JButton (stopIcon);
     stopButton.addActionListener((event) -> mainWindow.stop());
     stopButton.setToolTipText (tooltipsBundle.getString("stop"));
@@ -148,6 +169,8 @@ public class TopBar extends JPanel
   clearHistory 
 
 =========================================================================*/
+  /** This method is called by MainWindow, and various dialog boxes. 
+  */
   protected void clearHistory() 
     {
     Logger.in();
@@ -172,12 +195,13 @@ public class TopBar extends JPanel
   
   loadHistoryFile
 
-  Loads the URL combo box from the history file, if there is one.
-  Not having a history file specified, or failing to load one that is,
-  will not be reported to the user as an error. 
-
 =========================================================================*/
-  public void loadHistoryFile()
+  /** Loads the URL combo box from the history file, if there is one.
+      Not having a history file specified, or failing to load one that is,
+      will not be reported to the user as an error. This method is called
+      by MainWindow.
+  */
+  protected void loadHistoryFile()
     {
     Logger.in();
 
@@ -253,12 +277,14 @@ public class TopBar extends JPanel
   
   showUrl 
 
+=========================================================================*/
+  /**
   showUrl Gets called from MainWindow whenever the user selects a new URL.
   This may not be the exact thing the user typed: the URL may have been
     sanitized. We will add the new URL to the combo box, provided it isn't
     already there, and provided we don't have too many entries already.
   I need to think about whether very similar URLs ought to be added. 
-=========================================================================*/
+  */
   public void showUrl (String url)
     {
     Logger.in();
@@ -272,7 +298,8 @@ public class TopBar extends JPanel
        saveHistoryFile();
        }
 
-    urlBox.getEditor().setItem (url);
+    //urlBox.getEditor().setItem (url);
+    urlBox.setItem (url);
     Logger.out();
     }
   }

@@ -20,8 +20,9 @@ import java.net.URLEncoder;
 import me.kevinboone.jgemini.Constants;
 import me.kevinboone.jgemini.base.*;
 import me.kevinboone.jgemini.ssl.*;
-import me.kevinboone.utils.ssl.*;
 
+/** The "Attach identity" dialog, that manages assigning a named identity
+    to an existing Java keystore. */
 public class AttachIdentityDialog extends JGeminiDialog
 {
 private ClientCertManager clientCertManager = 
@@ -51,8 +52,9 @@ public AttachIdentityDialog (Window parent, MainWindow mainWindow)
   super (parent, caption, Dialog.ModalityType.DOCUMENT_MODAL);
 
   this.mainWindow = mainWindow;
+  int iconSize = config.getIconSize();
 
-  java.net.URL iconUrl = getClass().getResource("/images/person_128.png");
+  java.net.URL iconUrl = getClass().getResource("/images/person.png");
   ImageIcon icon = new ImageIcon (iconUrl);
   JLabel iconLabel = new JLabel (icon);
 
@@ -100,6 +102,8 @@ public AttachIdentityDialog (Window parent, MainWindow mainWindow)
   gbc23.gridy = 1;
   java.net.URL fileUrl = getClass().getResource("/images/folder.png");
   ImageIcon fileIcon = new ImageIcon (fileUrl);
+  fileIcon = new ImageIcon (fileIcon.getImage().getScaledInstance 
+      (iconSize, iconSize, Image.SCALE_DEFAULT));
   JButton fileButton = new JButton(fileIcon);
   JDialog myself = this;
   fileButton.addActionListener (new ActionListener()

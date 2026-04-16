@@ -16,6 +16,8 @@ import java.io.*;
 import java.util.*;
 import javax.net.ssl.*;
 
+/** A simple carrier class for a keystore specification. This specification
+    consists for a keystore file, and the password that decodes it. */
 public class KeystoreSpec 
   {
   private String keystore;

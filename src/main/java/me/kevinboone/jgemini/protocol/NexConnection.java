@@ -13,15 +13,14 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import me.kevinboone.jgemini.base.*;
-import me.kevinboone.utils.file.ContentGuesser;
 
+/** A subclass of URLConnection that handles the nex: protocol.
+*/
 public class NexConnection extends URLConnection
   {
   private Socket s = null;
   private String contentType = null;
   private InputStream is = null;
-  private byte[] content = null;
-  private String meta = null;
   private static StatusHandler statusHandler = StatusHandler.getInstance();
   private final static ResourceBundle messagesBundle = 
     ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
@@ -49,6 +48,11 @@ public class NexConnection extends URLConnection
     pos.print (getURL().getPath().toString());
     pos.print ("\r\n"); 
     pos.flush();
+
+    contentType = FileUtil.guessMimeTypeFromFilename (url.getPath()); 
+    if (contentType == null) contentType = "text/nex";
+    else if ("application/octet-stream".equals (contentType)) contentType = "text/nex";
+    else if ("text/plain".equals (contentType)) contentType = "text/nex";
     }
 
   @Override
@@ -61,55 +65,11 @@ public class NexConnection extends URLConnection
   public Object getContent() 
       throws IOException 
     {
-    if (content != null) return content;
-    try
-      {
-      connect();
-
-      int totalRead = 0;
-
-      contentType = ContentGuesser.guessMimeTypeFromFilename (url.getPath()); 
-      if (contentType == null) contentType = "text/nex";
-      else if ("application/octet-stream".equals (contentType)) contentType = "text/nex";
-      else if ("text/plain".equals (contentType)) contentType = "text/nex";
-      ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
-
-      int nRead;
-      byte[] data = new byte[16384];
-
-      try
-	{
-	while (s.isConnected() && 
-	     (nRead = is.read (data, 0, data.length)) != -1) 
-	  {
-          Thread.sleep(1); // We need to get an InterruptedException if canceled
-	  content_buffer.write (data, 0, nRead);
-          totalRead += nRead;
-          if (totalRead > 1024)
-            statusHandler.writeMessage (messagesBundle.getString 
-              ("loaded") + " " + (totalRead / 1024) + " kb");
-	  }
-	}
-      catch (java.net.SocketException e)
-	{
-	}
-
-      content = content_buffer.toByteArray();
-
-      content_buffer.close();
-      s.close();
-      s = null;
-
-      return content;
-      }
-    catch (IOException e)
-     {
-     throw e; 
-     }
-    catch (Exception e2)
-     {
-     throw new IOException (e2);
-     }
+    Logger.in();
+    connect();
+    BufferedInputStream bis = new BufferedInputStream (getInputStream());
+    Logger.out();
+    return bis;
     }
 
   @Override

@@ -19,13 +19,14 @@ import java.security.KeyStore;
 import me.kevinboone.jgemini.ssl.*;
 import me.kevinboone.jgemini.base.*;
 
+/** A subclass of URLConnection that handles the Gemini protocol.
+*/
 public class GeminiConnection extends URLConnection
   {
   public static final int GEMINI_MAX_HEADER = 1024;
   private SSLSocket s = null;
   private String contentType = null;
   private InputStream is = null;
-  private byte[] content = null;
   private String meta = null;
   private static StatusHandler statusHandler = StatusHandler.getInstance();
   private ClientCertManager clientCertManager = 
@@ -34,6 +35,11 @@ public class GeminiConnection extends URLConnection
     ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
   private String certinfo = null;
 
+/*============================================================================
+
+  Constructor
+
+============================================================================*/
   public GeminiConnection (URL url) 
     {
     super (url);
@@ -41,6 +47,16 @@ public class GeminiConnection extends URLConnection
     Logger.out();
     }
 
+/*============================================================================
+
+  getRequestProperty
+
+  We override this method so client classes can retrieve certificate
+  information from this connection. It's a bit ugly, but there aren't
+  many alternatives, when we embed our protocol handling into the
+  JVM's infrastructure.  
+
+============================================================================*/
   @Override
   public String getRequestProperty (String key)
     {
@@ -48,6 +64,11 @@ public class GeminiConnection extends URLConnection
     return super.getRequestProperty (key);
     }
 
+/*============================================================================
+
+  parseStatus
+
+============================================================================*/
   private static int parseStatus (String line)
     {
     Logger.in();
@@ -65,6 +86,11 @@ public class GeminiConnection extends URLConnection
       }
     }
 
+/*============================================================================
+
+  parseMeta
+
+============================================================================*/
   private static String parseMeta (String line)
     {
     String[] args = line.split ("\\s+", 2); 
@@ -74,10 +100,11 @@ public class GeminiConnection extends URLConnection
       return "";
     }
 
-  private void readToData()
-    {
-    }
+/*============================================================================
 
+  connect 
+
+============================================================================*/
   @Override
   public void connect() 
       throws IOException 
@@ -173,6 +200,7 @@ public class GeminiConnection extends URLConnection
       int status = parseStatus (line);
       Logger.log (getClass().getName(), Logger.DEBUG, "Got status code " + status);
       meta = parseMeta (line);
+      contentType = meta;
       if (status >= 20 && status < 30)
         {
         // Nothing to do -- input stream is now positioned
@@ -213,75 +241,42 @@ public class GeminiConnection extends URLConnection
     Logger.out();
     }
 
+/*============================================================================
+
+  getContentType 
+
+============================================================================*/
   @Override
   public String getContentType()
     {
     return contentType;
     }
    
+/*============================================================================
+
+  getContent
+
+============================================================================*/
   @Override
   public Object getContent() 
       throws IOException 
     {
     Logger.in();
-    if (content != null) return content;
-    try
-      {
-      connect();
-
-      int totalRead = 0;
-      contentType = meta;
-      ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
-
-      int nRead;
-      byte[] data = new byte[16384];
-
-      try
-	{
-	while (s.isConnected() && 
-	     (nRead = is.read (data, 0, data.length)) != -1) 
-	  {
-          Thread.sleep(1); // We need to get an InterruptedException if canceled
-	  content_buffer.write (data, 0, nRead);
-          totalRead += nRead;
-          if (totalRead > 1024)
-            statusHandler.writeMessage (messagesBundle.getString ("loaded") + " " 
-              + (totalRead / 1024) + " kb");
-	  }
-	}
-      catch (java.net.SocketException e)
-	{
-	}
-      catch (javax.net.ssl.SSLException e)
-	{
-	// I think that sometimes the server closes its end of the
-	//  socket so abrubptly that isConnected() can say that the
-	//  connection is still open, but the following read() can
-	//  fail. We don't even get to a position where the read()
-	//  returns -1 to indicate EOT. But do we need to distinguish
-	//  this from "real" SSL errors? I really don't know. 
-	}
-
-      content = content_buffer.toByteArray();
-
-      content_buffer.close();
-      s.close();
-      s = null;
-
-      Logger.out();
-      return content;
-      }
-    catch (IOException e)
-     {
-     throw e; 
-     }
-    catch (Exception e2)
-     {
-     throw new IOException (e2);
-     }
-
+    connect();
+    BufferedInputStream bis = new BufferedInputStream (getInputStream());
+    Logger.out();
+    return bis;
     }
 
+/*============================================================================
+
+  getInputStream
+
+  This method forces a connection and the initital request. If the request
+    results in an "OK" response, the input stream should be positioned
+    at the start of the real content, ready to read.
+
+============================================================================*/
   @Override
   public InputStream getInputStream() 
       throws IOException 

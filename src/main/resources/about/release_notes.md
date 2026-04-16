@@ -1,5 +1,29 @@
 # JGemini release notes
 
+## Version 3.0.0
+
+Version 3 is radically different, both internally and externally,
+from previous releases. 
+
+The download logic has been rewritten completely, and there is a new download
+manager with its own user interface.  JGemini no longer assumes that every
+request will result in a response that will fit entirely in memory -- if you
+choose to save a file, JGemini will transfer it in the background, and you can
+follow the progress in the Downloads dialog box. The use of the download
+manager means that the user no longer has to guess when a transfer has
+completed, and JGemini will now resist being closed when there are ongoing
+transfers.
+
+There is also preliminary media streaming support in this version, using a
+selectable media player application as a helper. At present, VLC and FFMPEG are
+known to work (including on Windows). Streaming uses the same download logic as
+file downloads, and you can control streaming operations using the download
+manager.
+
+Less substantial changes include a new filtering URL bar, extended
+documentation, checks to prevent overwriting existing files when downloading,
+and a huge number of bug fixes.
+
 ## Version 2.0.4
 
 * Added a way to see some information from the server's TLS certificate.
