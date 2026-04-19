@@ -160,6 +160,13 @@ complete file, or as a stream that is never stored on disk. For more
 information, see the page on 
 [media and streaming](media_and_streaming.md).
 
+_Can I have feed subscriptions updated automatically,_ 
+_without having to start the process manually?_
+
+The relevant setting is in the _Feeds_ tab of the _Settings_ dialog box.  This
+feature is disabled by default, because it's best to ensure that feed
+aggregation is working properly, before letting it happen automatically. 
+
 ## Configuration
 
 _How do I change the document fonts?_

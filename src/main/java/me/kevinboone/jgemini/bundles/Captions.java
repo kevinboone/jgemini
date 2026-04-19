@@ -19,6 +19,8 @@ public class Captions extends ListResourceBundle
     {"documentation", "JGemini documentation"},
     {"downloads", "JGemini downloads"},
     {"edit_config_file", "Edit settings"},
+    {"feeds", "Subscriptions"},
+    {"feed_manager", "Feed aggregator"},
     {"new_identity", "New identity"},
     {"select_action", "Select action"},
     {"set_identity", "Set identity"},

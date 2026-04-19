@@ -24,6 +24,8 @@ This is the built-in documentation for JGemini version 3.0.
 
 [Media and streaming support](media_and_streaming.md)
 
+[Feeds and subscriptions](feeds_and_subscriptions.md)
+
 [Things to watch out for](gotchas.md)
 
 [Privacy issues](privacy.md)

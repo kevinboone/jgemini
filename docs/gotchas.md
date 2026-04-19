@@ -95,7 +95,7 @@ It should handle documents that it receives with other encodings, so long as
 the server indicates the encoding. However, it's less clear what will happen
 to transfers _from_ the client. 
 
-Even if the platform does use UTF-8, there's little to stop the user sending
+Even if the platform uses UTF-8, there's little to stop the user sending
 data to a server that can't cope with it. For example, the JVM will almost
 certainly let you enter multi-byte characters into the text entry dialog box,
 but that doesn't mean the server will understand them -- particularly Gopher.
@@ -123,22 +123,6 @@ between a `/` that is part of a Gopher selector, and one that just separates
 URL components. You might need to try a Gopher URL with, and without, the
 leading `/` to get a response.
 
-## Feed rendering is rudimentary
-
-JGemini supports only Atom feeds, and only to the extent of formatting them for
-display in the document viewer. Authoring tools for Atom aren't particularly
-consistent with one another. For example, some tools fill in the 'publication
-date' field, while others use the 'updated date'.  Some supply both. 
-
-Some feeds have multiple URLs for the same entry, and they aren't always easy
-to distinguish.
-
-JGemini doesn't distinguish the different dates, or try to disambiguate
-multiple URLs for the same entry.
-
-Most significantly, JGemini is not a feed aggregator -- it doesn't provide a
-way to subscribe to multiple feeds.
-
 ## Streaming and media issues 
 
 None of the protocols that JGemini supports provide any information about
@@ -154,7 +138,7 @@ or stream it out to an external player.
 You can switch themes at run-time, using the _Theme_ tab of the
 [Settings dialog](settings_dialog.md). However,
 not all themes apply all possible styles to all elements. If you do change
-themes at runtime, the results might not be _exactly_ as they would be if you
+themes at runtime, the results might not be exactly as they would be if you
 started JGemini from scratch. They should be similar, though.
 
 ## Issues with XML documents

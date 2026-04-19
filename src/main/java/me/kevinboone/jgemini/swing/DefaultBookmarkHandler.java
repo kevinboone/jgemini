@@ -79,7 +79,7 @@ public class DefaultBookmarkHandler implements BookmarkHandler
     {
     config.ensureBookmarksFileExists();
     String bookmarksFile = config.getBookmarksFile();
-    EditFileDialog d = new EditFileDialog (mainWindow, mainWindow, 
+    EditFileDialog d = new EditFileDialog (mainWindow, 
         captionsBundle.getString ("bookmarks"),
           bookmarksFile, Constants.DOC_EDIT_BOOKMARKS);
     d.setVisible (true);

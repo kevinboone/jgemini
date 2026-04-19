@@ -42,5 +42,15 @@ the [configuration file](config_file.md) page. For
 information on changing fonts in the main document viewer, see
 the [styling](styling.md) page.
 
+## If you don't want to install a font...
+
+If you prefer, for some reason, not to install a font with Emoji characters,
+you can configure JGemini so it strips emojis from the user interface.
+There's a setting in the "Bookmarks" tab of the [Settings](settings_dialog.md)
+dialog for this. Although it mentions bookmarks specifically, the change
+applies anywhere you might see emojis in the UI, such as in the subscription
+editor.
+
+
 [Documentation index](index.md)
 

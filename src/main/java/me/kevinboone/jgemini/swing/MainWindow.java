@@ -64,6 +64,8 @@ public class MainWindow extends JFrame implements ConfigChangeListener
   private String displayName = null; // Derived from URI or loaded content
   private BookmarkHandler bookmarkHandler 
     = new DefaultBookmarkHandler (this);
+  private FeedHandler feedHandler 
+    = DefaultFeedHandler.getInstance(); // Application-wide reference
   private ClientCertHandler clientCertHandler
     = new DefaultClientCertHandler (this);
   private DownloadMonitor downloadMonitor
@@ -614,6 +616,23 @@ public class MainWindow extends JFrame implements ConfigChangeListener
         }
       });
 
+    // Feeds menu
+    JMenu feedsMenu = createTopLevelMenu ("feeds");
+    JMenuItem viewAggregatedFeedsMenuItem = createMenuItem ("feeds_view_aggregated"); 
+    viewAggregatedFeedsMenuItem.addActionListener((event) -> menuCommandViewAggregatedFeeds());
+    feedsMenu.add (viewAggregatedFeedsMenuItem);
+    JMenuItem editFeedsMenuItem = createMenuItem ("feeds_edit"); 
+    editFeedsMenuItem.addActionListener((event) -> menuCommandEditFeeds());
+    feedsMenu.add (editFeedsMenuItem);
+    feedsMenu.add (new JSeparator());
+    JMenuItem subscribePageMenuItem = createMenuItem ("feeds_subscribe"); 
+    subscribePageMenuItem.addActionListener((event) -> menuCommandSubscribePage());
+    feedsMenu.add (subscribePageMenuItem);
+    feedsMenu.add (new JSeparator());
+    JMenuItem aggregateFeedsMenuItem = createMenuItem ("feeds_aggregate"); 
+    aggregateFeedsMenuItem.addActionListener((event) -> menuCommandAggregateFeeds());
+    feedsMenu.add (aggregateFeedsMenuItem);
+
     // Go menu
     JMenu goMenu = createTopLevelMenu ("go");
 
@@ -646,6 +665,9 @@ public class MainWindow extends JFrame implements ConfigChangeListener
     JMenuItem downloadsMenuItem = createMenuItem ("tools_downloads"); 
     downloadsMenuItem.addActionListener((event) -> menuCommandDownloads());
     toolsMenu.add (downloadsMenuItem);
+    JMenuItem feedManagerMenuItem = createMenuItem ("tools_feed_manager"); 
+    feedManagerMenuItem.addActionListener((event) -> menuCommandFeedManager());
+    toolsMenu.add (feedManagerMenuItem);
 
     // Help menu
     JMenu helpMenu = createTopLevelMenu ("help");
@@ -665,6 +687,7 @@ public class MainWindow extends JFrame implements ConfigChangeListener
     menuBar.add (editMenu);
     menuBar.add (viewMenu);
     menuBar.add (bookmarksMenu);
+    menuBar.add (feedsMenu);
     menuBar.add (goMenu);
     menuBar.add (toolsMenu);
     menuBar.add (helpMenu);
@@ -844,7 +867,7 @@ private void downloadAndInvokeDesktop (URL url)
     try
       {
       Config.getConfig().ensureUserConfigFileExists();
-      EditFileDialog d = new EditFileDialog (this, this, 
+      EditFileDialog d = new EditFileDialog (this, 
         captionsBundle.getString ("edit_config_file"), 
           Config.getConfig().getUserConfigFilename(), 
             Constants.DOC_EDIT_SETTINGS);
@@ -871,7 +894,22 @@ void ensureDownloadsDialogVisible()
   {
   Logger.in();
   DownloadsDialog downloadsDialog = DownloadsDialog.getInstance();
-  downloadsDialog.setVisible (true); // TODO raise
+  downloadsDialog.setVisible (true); 
+  Logger.out();
+  }
+
+/*=========================================================================
+  
+  ensureFeedManagerDialogVisible 
+
+=========================================================================*/
+/** Create the application-wide feeds manager dialog if necessary, or 
+    bring it to the top if it already exists. */
+void ensureFeedManagerDialogVisible()
+  {
+  Logger.in();
+  FeedManagerDialog feedManagerDialog = FeedManagerDialog.getInstance();
+  feedManagerDialog.setVisible (true); 
   Logger.out();
   }
 
@@ -1012,43 +1050,6 @@ void ensureDownloadsDialogVisible()
 
 /*=========================================================================
   
-  getDisplayNameFromURI 
-
-=========================================================================*/
-  private String getDisplayNameFromURI (URL uri)
-    {
-    String displayName = null;
-    String path = uri.getPath();
-    if (path.startsWith ("/~"))
-      {
-      String temp = path.substring (2);
-      int i = temp.indexOf ("/"); 
-      if (i >= 0)
-	temp = temp.substring (0, i);
-      displayName = temp;
-      }
-    else
-      {
-      displayName = uri.getHost();
-      if (displayName.length() == 0) displayName = null;
-      }
-
-    int i = path.lastIndexOf ("/"); 
-    if (i >= 0)
-      {
-      String temp = path.substring (i);
-      if (temp.startsWith("/")) temp = temp.substring(1);
-      if (displayName == null)
-	displayName = temp;
-      else if (!temp.equals ("/") && temp.length() > 0)
-	displayName = displayName + ": " + temp; 
-      }
-
-    return displayName;
-    }
-
-/*=========================================================================
-  
    getRootUri 
 
 =========================================================================*/
@@ -1182,11 +1183,11 @@ void ensureDownloadsDialogVisible()
       {
       Object o = conn.getContent();
       byte[] content;
-      if (o instanceof BufferedInputStream)
+      if (o instanceof InputStream)
         {
-        BufferedInputStream bis = (BufferedInputStream)o;
-        content = FileUtil.readBufferedInputStreamFully (bis);
-        bis.close();
+        InputStream is = (InputStream)o;
+        content = FileUtil.readInputStreamFully ("Page", is);
+        is.close();
         }
       else
         {
@@ -1195,8 +1196,10 @@ void ensureDownloadsDialogVisible()
       String mime = conn.getContentType();
       gc.setMime (mime);
       gc.setContent (content);
-      String proto = baseUri.getProtocol();
-      // getRequestProperty() fail in a weird way on file: URIs.
+      // Changed: we can't rely on baseUri at this point
+      //String proto = baseUri.getProtocol();
+      String proto = url.getProtocol();
+      // getRequestProperty() fails in a weird way on file: URIs.
       if (!"file".equals (proto))
         gc.setCertinfo (conn.getRequestProperty ("certinfo"));
       }
@@ -1350,6 +1353,7 @@ void ensureDownloadsDialogVisible()
       //   user how to proceed.
       handleUnsupportedMime (fullUrl, mime, gc.getContent());
       }
+    jEditorPane.requestFocus();
     Logger.out();
     }
   
@@ -1634,12 +1638,13 @@ void ensureDownloadsDialogVisible()
       if (uri.getProtocol().equals ("gemini"))
 	{
 	loadFromUri (uri, null);
-	baseUri = uri;
+        // Changed: don't set baseUri here, but when the response completes
+	//baseUri = uri;
 	}
       else if (uri.getProtocol().equals ("spartan"))
 	{
 	loadFromUri (uri, null);
-	baseUri = uri;
+	//baseUri = uri;
 	}
       else if (uri.getProtocol().equals ("gopher"))
 	{
@@ -1655,29 +1660,29 @@ void ensureDownloadsDialogVisible()
               {
 	      loadFromUri (uri, str); 
               } catch (Exception e){}
-	    baseUri = uri;
+	  //  baseUri = uri;
 	    }
           }
         else
           {
 	  loadFromUri (uri, null);
-	  baseUri = uri;
+	  //baseUri = uri;
           }
 	}
       else if (uri.getProtocol().equals ("nex"))
 	{
 	loadFromUri (uri, null);
-	baseUri = uri;
+	//baseUri = uri;
 	}
       else if (uri.getProtocol().equals ("about"))
 	{
 	loadFromUri (uri, null);
-	baseUri = uri;
+	//baseUri = uri;
 	}
       else if (uri.getProtocol().equals ("file"))
 	{
 	loadFromUri (uri, null);
-	baseUri = uri;
+	//baseUri = uri;
 	}
       else
 	{
@@ -1733,6 +1738,24 @@ void ensureDownloadsDialogVisible()
     Logger.in();
     clientCertHandler.manageIdentity (baseUri);
     Logger.out();
+    }
+
+/*=========================================================================
+  
+  menuCommandAggregateFeeds
+
+=========================================================================*/
+  private void menuCommandAggregateFeeds()
+    {
+    if (feedHandler.isRunning())
+      {
+      DialogHelper.infoDialog (this, null, 
+        dialogsBundle.getString ("feed_manager_already_running"));
+      }
+    else
+      {
+      feedHandler.start();
+      }
     }
 
 /*=========================================================================
@@ -1793,6 +1816,35 @@ void ensureDownloadsDialogVisible()
   private void menuCommandDownloads()
     {
     ensureDownloadsDialogVisible();
+    }
+
+/*=========================================================================
+  
+  menuCommandEditFeeds 
+
+=========================================================================*/
+  /** Raise the bookmark editor UI. 
+  */
+  private void menuCommandEditFeeds()
+    {
+    try
+      {
+      feedHandler.editFeeds();
+      }
+    catch (Exception e)
+      {
+      reportGenError (e.getMessage());
+      }
+    }
+
+/*=========================================================================
+  
+   menuCommandFeedManager
+
+=========================================================================*/
+  private void menuCommandFeedManager()
+    {
+    ensureFeedManagerDialogVisible();
     }
 
 /*=========================================================================
@@ -1936,6 +1988,33 @@ void ensureDownloadsDialogVisible()
 
 /*=========================================================================
   
+   menuCommandSubscribePage
+
+=========================================================================*/
+  private void menuCommandSubscribePage()
+    {
+    Logger.in();
+    if (displayName != null)
+      {
+      try
+        {
+        String feedName = displayName;
+        if (config.getEmojiStripBookmarks())
+          feedName = EmojiManager.removeAllEmojis (feedName);
+        if (feedHandler.addFeed (displayName, baseUri))
+          setStatus (messagesBundle.getString ("feed_added")); 
+        else
+          setStatus (messagesBundle.getString ("already_subscribed")); 
+        }
+      catch (IOException e)
+        {
+        reportGenError (e.getMessage());
+        }
+      }
+    }
+
+/*=========================================================================
+  
    menuCommandStop
 
 =========================================================================*/
@@ -2027,6 +2106,26 @@ void ensureDownloadsDialogVisible()
 
 /*=========================================================================
   
+  menuCommandViewAggregatedFeeds
+
+=========================================================================*/
+  private void menuCommandViewAggregatedFeeds()
+    {
+    String aggregatedFeedsFile = config.getAggregatedFeedsFile();
+    try
+      {
+      config.ensureAggregatedFeedsFileExists();
+      }
+    catch (Exception e)
+      {
+      DialogHelper.errorDialog (null, aggregatedFeedsFile, e.getMessage());
+      return;
+      }
+    loadURI ("file://" + config.getAggregatedFeedsFile()); 
+    }
+
+/*=========================================================================
+  
    menuCommandZoomIn 
 
 =========================================================================*/
@@ -2107,6 +2206,7 @@ void ensureDownloadsDialogVisible()
   public void refresh()
     {
     Logger.in();
+    // XXX System.out.println ("baseur=" + baseUri);
     applyInitialStyles ();
     if (baseUri != null)
       {
@@ -2487,7 +2587,7 @@ void ensureDownloadsDialogVisible()
 
 /*=========================================================================
   
-  setCaptionFromHostname
+  setCaptionFromResponse
 
 =========================================================================*/
   /**
@@ -2526,7 +2626,7 @@ void ensureDownloadsDialogVisible()
 
     if (caption == null)
       {
-      displayName = getDisplayNameFromURI (uri);
+      displayName = FileUtil.getDisplayNameFromURI (uri);
       if (displayName != null)
 	caption = WINDOW_CAPTION + ": " + displayName;
       }  

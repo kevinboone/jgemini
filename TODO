@@ -1,6 +1,6 @@
 Improve the layout of the Downloads dialog.
 
-`gophers:` support.
+? `gophers:` support.
 
 Make downloads directory configurable.
 
@@ -11,11 +11,8 @@ transfer.
 Add clickable links to in-line images within Markdown documents. At present,
 we just get the image, so no way to do anything with it.
 
-Catch redirect loops. Easy to do, but I just haven't gotten to it.
+Catch redirect loops. Easy-ish to do, but I just haven't gotten to it.
 
 ? Find a way to supply emoji fonts internally. This isn't easy, unless I want to 
 apply a font to every single element of the document viewer.
-
-Subscribe to feeds? This would make JGemini a feed reader, and would take a lot of
-work.
 

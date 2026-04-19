@@ -411,6 +411,43 @@ public class FileUtil
 
 /*=========================================================================
   
+  getDisplayNameFromURI 
+
+=========================================================================*/
+  public static String getDisplayNameFromURI (URL uri)
+    {
+    String displayName = null;
+    String path = uri.getPath();
+    if (path.startsWith ("/~"))
+      {
+      String temp = path.substring (2);
+      int i = temp.indexOf ("/"); 
+      if (i >= 0)
+	temp = temp.substring (0, i);
+      displayName = temp;
+      }
+    else
+      {
+      displayName = uri.getHost();
+      if (displayName.length() == 0) displayName = null;
+      }
+
+    int i = path.lastIndexOf ("/"); 
+    if (i >= 0)
+      {
+      String temp = path.substring (i);
+      if (temp.startsWith("/")) temp = temp.substring(1);
+      if (displayName == null)
+	displayName = temp;
+      else if (!temp.equals ("/") && temp.length() > 0)
+	displayName = displayName + ": " + temp; 
+      }
+
+    return displayName;
+    }
+
+/*=========================================================================
+  
   getEncodingFromMime
 
 =========================================================================*/
@@ -498,15 +535,56 @@ public class FileUtil
 
 /*============================================================================
 
-  readBufferedInputStreamFully 
-
-  TODO: some sort of user progress indication
+  readInputStreamFully 
 
 ============================================================================*/
-  /** Reads fully from the stream to a byte array
+  /** Reads fully from the stream to a byte array. The msg parameter 
+      relates to a simple text message, that will be displayed in
+      the progress indication along with the byte count.
   */
-  public static byte[] readBufferedInputStreamFully (BufferedInputStream bis)
-      throws IOException
+  public static byte[] readInputStreamFully (String msg, 
+      InputStream is) throws IOException
+    {
+    int totalRead = 0;
+    int nRead;
+    byte[] data = new byte[16384];
+    ByteArrayOutputStream content_buffer = new ByteArrayOutputStream();
+
+    while ((nRead = is.read (data, 0, data.length)) != -1) 
+      {
+      try
+        {
+        Thread.sleep (1); // We need to get an InterruptedException if canceled
+        }
+      catch (InterruptedException e)
+        {
+        throw new IOException ("Interrupted");
+        }
+      content_buffer.write (data, 0, nRead);
+      totalRead += nRead;
+      if (totalRead > 1024)
+        statusHandler.writeMessage (msg + " " + 
+          messagesBundle.getString ("loaded") + " " 
+            + (totalRead / 1024) + " kb");
+       }
+
+    byte[] ret = content_buffer.toByteArray();
+    content_buffer.close();
+    return ret;
+    }
+
+/*============================================================================
+
+  readBufferedInputStreamFully 
+
+============================================================================*/
+  /** Reads fully from the stream to a byte array. The msg parameter 
+      relates to a simple text message, that will be displayed in
+      the progress indication along with the byte count.
+  */
+/*
+  public static byte[] readBufferedInputStreamFully (String msg, 
+      BufferedInputStream bis) throws IOException
     {
     int totalRead = 0;
     int nRead;
@@ -526,14 +604,16 @@ public class FileUtil
       content_buffer.write (data, 0, nRead);
       totalRead += nRead;
       if (totalRead > 1024)
-        statusHandler.writeMessage (messagesBundle.getString ("loaded") + " " 
-          + (totalRead / 1024) + " kb");
+        statusHandler.writeMessage (msg + " " + 
+          messagesBundle.getString ("loaded") + " " 
+            + (totalRead / 1024) + " kb");
        }
 
     byte[] ret = content_buffer.toByteArray();
     content_buffer.close();
     return ret;
     }
+*/
 
 /*============================================================================
 

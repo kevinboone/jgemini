@@ -47,6 +47,27 @@ public class Dialogs extends ListResourceBundle
     {"downloads_help", "Help"},
     {"downloads_help_mnemonic", KeyEvent.VK_H},
 
+    {"feed_manager_close", "Close"},
+    {"feed_manager_close_accel", (KeyStroke.getKeyStroke
+      (KeyEvent.VK_W, ActionEvent.CTRL_MASK))},
+    {"feed_manager_help", "Help"},
+    {"feed_manager_help_mnemonic", KeyEvent.VK_H},
+    {"feed_manager_update", "Run"},
+    {"feed_manager_update_mnemonic", KeyEvent.VK_R},
+    {"feed_manager_stop", "Stop"},
+    {"feed_manager_stop_mnemonic", KeyEvent.VK_S},
+    {"feed_manager_already_running", 
+        "Feed aggregation is already in progress"},
+    {"feed_manager_not_running", 
+        "Feed aggregator is not running"},
+
+    {"feed_settings_pane_name", "Feeds"},
+    {"feed_settings_pane_mnemonic", KeyEvent.VK_F},
+    {"feed_settings_pane_max_age", "Maximum age (days)"},
+    {"feed_settings_pane_max_age_mnemonic", KeyEvent.VK_X},
+    {"feed_settings_pane_update_on_startup", "Update on startup"},
+    {"feed_settings_pane_update_on_startup_mnemonic", KeyEvent.VK_U},
+
     {"editfiledialog_cancel", "Cancel"},
     {"editfiledialog_save", "Save"},
     {"editfiledialog_save_mnemonic", KeyEvent.VK_S},

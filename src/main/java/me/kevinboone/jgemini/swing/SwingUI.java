@@ -11,6 +11,7 @@
 package me.kevinboone.jgemini.swing;
 import me.kevinboone.jgemini.base.*;
 
+import javax.swing.*;
 import java.io.*;
 import java.awt.*;
 
@@ -18,6 +19,9 @@ import java.awt.*;
     MainWindow. */
 public class SwingUI implements UI
   {
+  private FeedHandler feedHandler 
+    = DefaultFeedHandler.getInstance(); // Application-wide reference
+
   private MainWindow mainWindow;
 
   @Override
@@ -44,6 +48,11 @@ public class SwingUI implements UI
 
     mainWindow = new MainWindow();
     mainWindow.setVisible (true);
+
+    // Start the feed aggregator as soon as the 
+    //   application starts, if configured
+    if (Config.getConfig().getFeedsUpdateOnStartup())
+      SwingUtilities.invokeLater (() -> feedHandler.start());
     } 
 
   @Override

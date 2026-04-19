@@ -27,7 +27,6 @@ private JTextArea textArea;
 private File file;
 private boolean didSave = false;
 private Config config = Config.getConfig();
-private MainWindow mainWindow;
 private String docUrl;
 
 /*=========================================================================
@@ -35,12 +34,11 @@ private String docUrl;
   Constructor 
 
 =========================================================================*/
-public EditFileDialog (JFrame parent, MainWindow mainWindow, String caption, 
+public EditFileDialog (JFrame parent, String caption, 
           String filename, String docUrl) throws IOException
   {
   super (parent, Constants.APP_NAME, Dialog.ModalityType.DOCUMENT_MODAL);
   
-  this.mainWindow = mainWindow;
   this.docUrl = docUrl;
 
   file = new File (filename);
@@ -141,7 +139,7 @@ public boolean didSave() { return didSave; }
 =========================================================================*/
 private void handleDocs()
   {
-  mainWindow.newWindow (docUrl,
+  MainWindow.newWindow (docUrl,
     "New identity dialog"); // Caption will not show when loaded
   }
 

@@ -54,6 +54,11 @@ on Windows.
 Please note that 'binary' configuration values can take any of the values
 '1', 'yes', 'on', '0', 'no', 'off'.
 
+`feeds.aggregated.file`  
+The name of the file containing aggregated posts from feeds to which
+the user has subscribed. The default is `aggregated_feeds.gmi`
+in the `.jgemini` directory.
+
 `bookmark.file`  
 Set a custom bookmark filename, rather than `bookmarks.gmi` in the `.jgemini`
 directory. 
@@ -70,11 +75,27 @@ For more information, see the page on [client certificates](client_certs.md).
 
 `emoji.strip.bookmarks`  
 If set to 'yes', JGemini strips Unicode emojis from new bookmarks before
-storing them. It also prevents emojis being displayed in the Bookmarks menu in
-the main user interface. 
+storing them. It also prevents emojis being displayed in the main user
+interface -- and not just in the Bookmarks menu.
 
 The default is to leave emojis as they are, which might require the
-installation of additional fonts. 
+installation of additional fonts. The only good reason for
+stripping emojis is that you can't, for some reason, obtain fonts
+for your platform with emoji glyphs. 
+
+`feeds.file`  
+Name of the file containing the list of feeds to which the user
+has subscribed. The default is `feeds.gmi` in the `.jgemini` 
+directory. 
+
+`feeds.max_age`  
+The maximum age of a post in a feed, in days, for it still be included
+in the feed aggregation. Default is 14 days.
+
+`feeds.update_on_startup`  
+Controls whether the feed aggregator should run automatically,
+every time JGemini starts. The default is 'no', so you'll need
+to update feeds using menu commands or the "Feed aggregator" dialog.
 
 `gemtext.inline.images`  
 Controls whether to display images in-line in Gemtext documents.  Note that

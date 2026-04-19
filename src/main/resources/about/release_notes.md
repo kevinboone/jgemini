@@ -1,5 +1,10 @@
 # JGemini release notes
 
+## Version 3.1.0
+
+This version adds preliminary support for subscribing to feeds, and presenting
+the aggregated posts in date order.
+
 ## Version 3.0.0
 
 Version 3 is radically different, both internally and externally,

@@ -63,6 +63,18 @@ public class Menus extends ListResourceBundle
     {"edit_settings", "Settings..."},
     {"edit_settings_mnemonic", KeyEvent.VK_S},
 
+    {"feeds_aggregate", "Update subscriptions"},
+    {"feeds_aggregate_mnemonic", KeyEvent.VK_U},
+    {"feeds", "Subscriptions"},
+    {"feeds_mnemonic", KeyEvent.VK_S},
+    {"feeds_edit", "Edit..."},
+    {"feeds_edit_mnemonic", KeyEvent.VK_E},
+    {"feeds_subscribe", "Subscribe to this page"},
+    {"feeds_subscribe_mnemonic", KeyEvent.VK_S},
+    {"feeds_view_aggregated", "View aggregated posts"},
+    {"feeds_view_aggregated_mnemonic", KeyEvent.VK_V},
+
+
     {"file_close", "Close"},
     {"file_close_mnemonic", KeyEvent.VK_C},
     {"file_close_accel", (KeyStroke.getKeyStroke
@@ -135,6 +147,8 @@ public class Menus extends ListResourceBundle
 
     {"tools_downloads", "Downloads..."},
     {"tools_downloads_mnemonic", KeyEvent.VK_D},
+    {"tools_feed_manager", "Feed aggregator..."},
+    {"tools_feed_manager_mnemonic", KeyEvent.VK_F},
     {"tools_identity", "Set/manage idenity..."},
     {"tools_identity_mnemonic", KeyEvent.VK_S},
     {"tools_server_cert", "Server certificate info..."},

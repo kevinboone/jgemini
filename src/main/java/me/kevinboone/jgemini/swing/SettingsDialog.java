@@ -88,6 +88,11 @@ public SettingsDialog (MainWindow mainWindow)
      mediaSettingsPane, mediaSettingsPane.getTabName());
   tabbedPane.setMnemonicAt (6, mediaSettingsPane.getMnemonic());
 
+  FeedSettingsPane feedSettingsPane = new FeedSettingsPane (mainWindow);
+  tabbedPane.addTab (feedSettingsPane.getTabName(), null, 
+     feedSettingsPane, feedSettingsPane.getTabName());
+  tabbedPane.setMnemonicAt (7, feedSettingsPane.getMnemonic());
+
   JButton docsButton = createButton ("settingsdialog_docs"); 
   JButton submitButton = createButton ("settingsdialog_submit");
   JButton cancelButton = createButton ("settingsdialog_close");

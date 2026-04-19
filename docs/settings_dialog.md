@@ -71,6 +71,11 @@ file.
 The button "Clear handling defaults" resets any choice you may previously
 have made about how specific types of content should be handled.
 
+## Feeds tab
+
+Use this tab to change the behaviour of the feed aggregator (see 
+[Feeds and subscriptions](feeds_and_subscriptions.md) for more information.
+
 For more information on media support in JGemini, see the 
 [Media and streaming](media_and_streaming.md) page.
 

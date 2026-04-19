@@ -1,4 +1,4 @@
-# Things I'm conflicted about
+# Things I'm still conflicted about
 
 ## Gemtext images
 
@@ -21,9 +21,4 @@ gophermaps don't (so far as I know) provide any protocol information.
 
 All these things would be quite easy to support, but I'm not sure there are
 enough users to make it worthwhile.
-
-## feeds
-
-I'm unsure whether I want to put the hours into implementing a full feed
-aggregator.
 

@@ -163,3 +163,18 @@ error messages in the JGemini UI.
 There isn't a huge amount of streaming content in the Gemini world at present.
 If that changes, I might have to rethink how JGemini handles streaming.
 
+## Feed aggregation
+
+JGemini mostly handles gemsub-style feeds. These are Gemtext pages with
+lists of links, each of whose text begins with a date in YYYY-MM-DD
+format. It handles Atom feeds by using an XSLT transformation to
+convert them to Gemtext pages, and then treats them as gemsub feeds.
+It should be relatively easy to consume feeds in other formats, if
+there's any demand.
+
+The feed aggregation process runs in the background, and shouldn't disturb
+ordinary browsing. However, because the whole process is a bit flaky in
+the Gemini world. JGemini has a "Feed aggregator" dialog box that
+provides insight into what the aggregator is doing. It shouldn't be
+necessary to use it much, unless there are problems.
+

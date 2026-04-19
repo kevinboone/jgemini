@@ -34,9 +34,11 @@ JGemini might store the following on disk.
   application has finished with them or not. If you choose to save a 
   file in whatever application handled it then, of course, it will be
   saved permanently
-- Your URL history, but only if you have explicitly enabled this. 
+- Your URL history, but only if you have explicitly enabled this
   Otherwise, history is only stored in memory, for the duration of the session.
-- Bookmarks you explicitly save.
+- Bookmarks you explicitly save
+- Subscription feeds you explicitly save
+- The page of posts from aggregated feeds
 - User interface settings, like the window size.
 
 By default, all local state is saved in the `$HOME/.jgemini` directory.

@@ -92,7 +92,8 @@ public class Main
     }
 
   /** Returns true if closing a window now would (all being well)
-      lead to the application closing down. */
+      lead to the application closing down. 
+  */
   public static boolean closingWouldExit()
     {
     int topLevels = 0;
@@ -109,7 +110,7 @@ public class Main
     return false;
     }
 
-  /** Do a full exist, whether Swing wants to or not. It's more likely
+  /** Do a full exit, whether Swing wants to or not. It's more likely
       to want to, if we can clean up all the background downloads, which
       is more elegant than just shutting down the JVM.
   */
@@ -117,11 +118,15 @@ public class Main
     {
     DownloadMonitor downloadMonitor = DefaultDownloadMonitor.getInstance();
     downloadMonitor.cancelAll();
+    FeedHandler feedHandler = DefaultFeedHandler.getInstance();
+    feedHandler.cancelUpdate();
+
     System.exit (0);
     } 
 
   /** Returns true either if there are no ongoing background transfers,
-      or the user is willing for them to be cancelled. */
+      or the user is willing for them to be cancelled. 
+  */
   public static boolean okToExit ()
     {
     DownloadMonitor downloadMonitor = DefaultDownloadMonitor.getInstance();

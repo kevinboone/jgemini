@@ -17,7 +17,6 @@ JGemini is distributed as a single Java JAR file, and requires
 - Supplied as a single Java JAR file
 - Supports Gemini, Spartan, Gopher, and `nex` protocols
 - Displays Gemtext, CommonMark Markdown, and plain text
-- Renders local files as well as remote content
 - Authenticates using per-server client certificates
 - Built-in client certificate manager, which can create new certificates and
   incorporate existing ones
@@ -25,6 +24,8 @@ JGemini is distributed as a single Java JAR file, and requires
 - Text styling can be configured to suit the display and user preference
 - Fetches documents asynchronously to improve user interface responsiveness
 - Download manager with a user interface, to keep track of asynchronous downloads 
+- Aggregates Atom and gemsub feeds, with a user interface for management and
+  troubleshooting
 - Text selection with cut-and-paste
 - Supports multiple windows
 - Search in document
@@ -33,7 +34,6 @@ JGemini is distributed as a single Java JAR file, and requires
 - Reasonably comprehensive, hyperlinked documentation, with built-in viewer 
 - Rudimentary bookmark support
 - Rudimentary media streaming support, using an external player
-- Interprets Atom feeds
 
 
 [Documentation index](index.md)

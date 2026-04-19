@@ -18,6 +18,9 @@ import me.kevinboone.jgemini.base.*;
     get the singleton instance of this class. */
 public class Config extends Properties
   {
+  private final static ResourceBundle messagesBundle = 
+    ResourceBundle.getBundle ("me.kevinboone.jgemini.bundles.Messages");
+
   private int logLevel = Logger.ERROR;
   private int bookmarkMaxMenu = 10;
   private boolean gemtextInlineImages = false;
@@ -30,11 +33,14 @@ public class Config extends Properties
   public final static boolean DEFLT_GEMTEXT_INLINE_IMAGES = true;
   public final static String DEFLT_UI_DOCUMENT_CUSTOM_CSS = null;
   public final static boolean DEFLT_UI_ICONS_MONO = false;
+  public final static String DEFLT_FEEDS_FILE = null;
+  public final static String DEFLT_AGGREGATED_FEEDS_FILE = null;
   public final static String DEFLT_HISTORY_FILE = null;
   public final static String DEFLT_BOOKMARK_FILE = null;
   public final static int DEFLT_BOOKMARK_MAX_MENU = 10;
   public final static boolean DEFLT_HISTORY_ENABLED = false;
   public final static boolean DEFLT_URLBAR_SEARCH_ENABLED = true;
+  public final static boolean DEFLT_FEEDS_UPDATE_ON_STARTUP = false;
 
   private Vector<ConfigChangeListener> listeners = new Vector<ConfigChangeListener>();
 
@@ -126,6 +132,21 @@ public class Config extends Properties
 
 /*=========================================================================
   
+  ensureAggregatedFeedsFileExists 
+
+=========================================================================*/
+  public void ensureAggregatedFeedsFileExists() throws IOException
+    {
+    String filename = getAggregatedFeedsFile();
+    File file = new File (filename);
+    if (file.exists()) return;
+    file.createNewFile();
+    FileUtil.appendStringToFile (filename, messagesBundle.getString 
+      ("empty_aggregation_text"));
+    }
+
+/*=========================================================================
+  
   ensureBookmarksFileExists 
 
 =========================================================================*/
@@ -137,6 +158,21 @@ public class Config extends Properties
     file.createNewFile();
     FileUtil.appendStringToFile (filename, "# " 
       + Constants.BOOKMARKS_COMMENTS + "\n");
+    }
+
+/*=========================================================================
+  
+  ensureFeedsFileExists 
+
+=========================================================================*/
+  public void ensureFeedsFileExists() throws IOException
+    {
+    String filename = getFeedsFile();
+    File file = new File (filename);
+    if (file.exists()) return;
+    file.createNewFile();
+    FileUtil.appendStringToFile (filename, "# " 
+      + Constants.FEEDS_COMMENTS + "\n");
     }
 
 /*=========================================================================
@@ -207,6 +243,21 @@ public class Config extends Properties
 
 /*=========================================================================
   
+  getAggregatedFeedsFile
+
+=========================================================================*/
+  public String getAggregatedFeedsFile()
+    {
+    String feedsFile = getProperty (Constants.AGGREGATED_FEEDS_FILE, 
+      DEFLT_AGGREGATED_FEEDS_FILE);
+    if (feedsFile == null)
+      feedsFile = getStateDir() + File.separator 
+        + Constants.AGGREGATED_FEEDS_FILENAME;
+    return feedsFile;
+    }
+
+/*=========================================================================
+  
   getHomePage 
 
 =========================================================================*/
@@ -248,6 +299,32 @@ public class Config extends Properties
       bookmarkFile = getStateDir() + File.separator 
         + Constants.BOOKMARK_FILENAME;
     return bookmarkFile;
+    }
+
+/*=========================================================================
+  
+  getFeedsMaxAge
+
+=========================================================================*/
+  public int getFeedsMaxAge()
+    {
+    return Integer.parseInt (getProperty 
+        (Constants.FEEDS_MAX_AGE, Constants.DEFLT_FEEDS_MAX_AGE));
+    }
+
+/*=========================================================================
+  
+  getFeedsFile
+
+=========================================================================*/
+  public String getFeedsFile()
+    {
+    String feedsFile = getProperty (Constants.FEEDS_FILE, 
+      DEFLT_FEEDS_FILE);
+    if (feedsFile == null)
+      feedsFile = getStateDir() + File.separator 
+        + Constants.FEEDS_FILENAME;
+    return feedsFile;
     }
 
 /*=========================================================================
@@ -300,6 +377,17 @@ public class Config extends Properties
     {
     return Integer.parseInt (getProperty 
         (Constants.UI_NEW_WINDOW_MODE, Constants.DEFLT_UI_NEW_WINDOW_MODE));
+    }
+
+/*=========================================================================
+  
+  getFeedsUpdateOnStartup
+
+=========================================================================*/
+  public boolean getFeedsUpdateOnStartup()
+    {
+    return getBooleanProperty (Constants.FEEDS_UPDATE_ON_STARTUP, 
+      DEFLT_FEEDS_UPDATE_ON_STARTUP);
     }
 
 /*=========================================================================
@@ -726,6 +814,16 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
 
 /*=========================================================================
   
+  setFeedsMaxAge
+
+=========================================================================*/
+  public void setFeedsMaxAge (int n)
+    {
+    setProperty (Constants.FEEDS_MAX_AGE, "" + n);
+    }
+
+/*=========================================================================
+  
   setHomePage 
 
 =========================================================================*/
@@ -818,6 +916,16 @@ public KeystoreSpec getKeystoreSpecForIdent (String ident)
     setProperty (Constants.UI_ICON_SIZE, "" + w);
     }
 
+
+/*=========================================================================
+  
+  setFeedsUpdateOnStartup
+
+=========================================================================*/
+  public void setFeedsUpdateOnStartup (boolean f)
+    {
+    setProperty (Constants.FEEDS_UPDATE_ON_STARTUP, "" + f);
+    }
 
 /*=========================================================================
   

@@ -177,8 +177,11 @@ public class DownloadsDialog extends JFrame implements DownloadMonitorListener
     DownloadComponent comp = DownloadComponent.create (d);
     comp.setFields();
     listBox.add (comp);
-    JScrollBar vertical = scrollPane.getVerticalScrollBar();
-    vertical.setValue (vertical.getMaximum());
+    SwingUtilities.invokeLater(() -> 
+      {
+      JScrollBar bar = scrollPane.getVerticalScrollBar();
+      bar.setValue(bar.getMaximum());
+      });
     }
 
   /*=========================================================================

@@ -14,11 +14,10 @@ Streaming audio, such as Gemini radio stations, present more of a problem.
 
 When you click a link to a media document in JGemini's viewer, you'll be asked
 what to do with it. Options including saving a file, and streaming to a player.
-There is no way JGemini can make the determination itself which is more
-appropriate, because none of the protocols that JGemini supports provide any
-content-length indication. JGemini can't know -- it has no way to know --
-whether the document it is receiving from the server will ever complete, or
-will just continue indefinitely.
+There is no way JGemini can make the determination itself, because none of the
+protocols that JGemini supports provide any content-length indication. JGemini
+can't know -- it has no way to know -- whether the document it is receiving
+from the server will ever complete, or will just continue indefinitely.
 
 Consequently, JGemini leaves this decision to the user.
 

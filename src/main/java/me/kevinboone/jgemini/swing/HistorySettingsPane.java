@@ -2,7 +2,7 @@
   
   JGemini
 
-  HistoryettingsPane 
+  HistorySettingsPane 
 
   Copyright (c)2021 Kevin Boone, GPLv3.0 
 

@@ -4,31 +4,32 @@
 
   Constants
 
-  This file contains definitions of all the constants that are
-    referenced in more than one place. In the case of settings keys,
-    one of those places might be the documentation -- not everything in
-    this file is referenced more than once in Java code.
-
-  I haven't included here configuration defaults for which 'null' 
-    is a necessary default.
-
-  None of the strings need to be translated.
-
   Copyright (c)2026 Kevin Boone, GPLv3.0 
 
 =========================================================================*/
 package me.kevinboone.jgemini;
 
+/**
+  This file contains definitions of all the constants that are
+  referenced in more than one place. In the case of settings keys,
+  one of those places might be the documentation -- not everything in
+  this file is referenced more than once in Java code.
+  I haven't included here configuration defaults for which 'null' 
+  is a necessary default.
+  <i>None of the strings need to be translated.</i>
+*/
 public interface Constants
   {
   // General
 
   public final static String APP_NAME = "JGemini";
-  public final static String VERSION = "3.0.0";
+  public final static String VERSION = "3.1.0";
   // Header of user properties file
   public final static String PROPS_COMMENTS = "JGemini user configuration"; 
   // Header of bookmarks file
   public final static String BOOKMARKS_COMMENTS = "JGemini bookmarks"; 
+  // Header of feeds file
+  public final static String FEEDS_COMMENTS = "JGemini subscriptions"; 
 
   // Settings file tags
 
@@ -42,6 +43,10 @@ public interface Constants
   public final static String BOOKMARK_FILE = "bookmark.file";
   public final static String BOOKMARK_MAX_MENU = "bookmark.max.menu";
   public final static String EMOJI_STRIP_BOOKMARKS = "emoji.strip.bookmarks";
+  public final static String FEEDS_FILE = "feeds.file";
+  public final static String FEEDS_MAX_AGE = "feeds.max_age";
+  public final static String FEEDS_UPDATE_ON_STARTUP = "feeds.update_on_startup";
+  public final static String AGGREGATED_FEEDS_FILE = "feeds.aggregated.file";
   public final static String GEMTEXT_INLINE_IMAGES = "gemtext.inline.images";
   public final static String LOG_LEVEL = "log.level";
   public final static String HISTORY_FILE = "history.file";
@@ -65,6 +70,7 @@ public interface Constants
 
   // Settings file default values
 
+  public final static String DEFLT_FEEDS_MAX_AGE = "14"; // Days
   public final static String DEFLT_HISTORY_SIZE = "30";
   public final static String DEFLT_INLINE_IMAGE_WIDTH = "600";
   public final static String DEFLT_UI_CONTROL_FONT = "Sans 20; Emoji 20";
@@ -81,6 +87,8 @@ public interface Constants
   // File and directory names
 
   public final static String BOOKMARK_FILENAME = "bookmarks.gmi"; 
+  public final static String FEEDS_FILENAME = "feeds.gmi"; 
+  public final static String AGGREGATED_FEEDS_FILENAME = "aggregated_feeds.gmi"; 
   public final static String DOWNLOADS_DIRNAME = "downloads"; 
   public final static String HISTORY_FILENAME = "jgemini.history";
   public final static String IDENTS_DIRNAME = "idents"; 
@@ -116,6 +124,8 @@ public interface Constants
     "about:/settings_dialog.md"; 
   public final static String DOC_DOWNLOADS_DIALOG = 
     "about:/downloads_dialog.md"; 
+  public final static String DOC_FEED_MANAGER_DIALOG = 
+    "about:/feed_aggregator_dialog.md"; 
 
   // Sizes
 
